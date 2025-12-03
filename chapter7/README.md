@@ -35,6 +35,8 @@ The parameter format should be <groupId>:<artifactId>:<version>. The information
 https://mvnrepository.com/artifact/org.apache.sedona/sedona-common/1.8.0
 
 The information is:
+<img src="mvn.png" width="200">
+
 <!-- https://mvnrepository.com/artifact/org.apache.sedona/sedona-common -->
 <dependency>
     <groupId>org.apache.sedona</groupId>
@@ -78,6 +80,7 @@ cast
 
 FROM
 auxi_trip;
+
 
 
 
