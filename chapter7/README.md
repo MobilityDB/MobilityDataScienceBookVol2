@@ -8,3 +8,16 @@ It contains the datasets used in the book alongside with the scripts
 allowing you to input these datasets in the various tools and reproduce the
 examples and exercises in the book.
 
+
+## PROVISORIO  ##
+
+
+$ mkdir /software
+$ cd /software  
+$ export JAVA_HOME=/software/zulu21.46.19-ca-jdk21.0.9-linux_x64
+$ export SPARK_HOME=/software/spark-4.0.1-bin-hadoop3
+$ export PATH=JAVA_HOME/bin:$SPARK_HOME/bin:$PATH
+
+Apache Sedona is an external library that enables Spark with spatial funcionalities. 
+
+
