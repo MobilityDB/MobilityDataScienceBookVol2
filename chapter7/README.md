@@ -15,10 +15,11 @@ To run Spark applications we assume that Java 21 (download the zip version which
 
 
 $ mkdir /software
-$ cd /software  
+$ cd /software
 $ export JAVA_HOME=/software/zulu21.46.19-ca-jdk21.0.9-linux_x64
 $ export SPARK_HOME=/software/spark-4.0.1-bin-hadoop3
 $ export PATH=JAVA_HOME/bin:$SPARK_HOME/bin:$PATH
+
 
 Verify that the applications are accessible:
 $ javac  -version
@@ -54,6 +55,7 @@ $ spark-sql --packages org.apache.sedona:sedona-spark-shaded-4.0_2.13:1.8.0,org.
 
 
 The application first looks for the files indicated by the "--packages" parameter in the local .m2 repository (tipically within $HOME), If the files are not present, then they will be automatically downloaded into the $HOME/.ivy2.5.2/jars/  directory.
+
 
 
 
