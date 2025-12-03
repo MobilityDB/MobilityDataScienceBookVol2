@@ -54,9 +54,12 @@ $ spark-sql --packages org.apache.sedona:sedona-spark-shaded-4.0_2.13:1.8.0,org.
 
 
 
-The application first looks for the files indicated by the "--packages" parameter in the local .m2 repository (typically within $HOME), If the files are not present, then they will be automatically downloaded into the $HOME/.ivy2.5.2/jars/  directory.
+The application first looks for the files indicated by the "--packages" parameter in the local .m2 repository (typically within $HOME), If the files are not present, then they will be automatically downloaded into the $HOME/.ivy2.5.2/hjars/  directory.
 
+Sparq-sql runs locally by default with as many workers as logical cores are available on the running computer, ideal in a single-machine environment. You can restrict to less workers, by indicating master[3] or local[3].
+In a cluster environment, instead of local, we use extra parameters such as master and client. (https://spark.apache.org/docs/latest/submitting-applications.html)
 
+ 
 
 Once in the interactive shell we can import csv data (in our case we import all the csv file from the indicated directory) and generate additional columns: duration_ms and also  origin and target geo referenced points.
 
@@ -75,6 +78,7 @@ cast
 
 FROM
 auxi_trip;
+
 
 
 
