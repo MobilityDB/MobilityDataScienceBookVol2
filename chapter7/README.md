@@ -58,6 +58,25 @@ The application first looks for the files indicated by the "--packages" paramete
 
 
 
+Once in the interactive shell we can import csv data (in our case we import all the csv file from the indicated directory) and generate additional columns: duration_ms and also  origin and target geo referenced points.
+
+CREATE TEMPORARY VIEW auxi_trip USING csv OPTIONS (path '/home/mapr/2023-citibike-tripdata', header 'true', inferSchema 'true');
+
+
+CREATE TEMPORARY VIEW trip as 
+SELECT  
+st_setsrid( st_point( start_lng, start_lat), 4326) as origin,
+st_setsrid( st_point( end_lng, end_lat), 4326) as target,
+cast 
+(date_part('DAY', ended_at - started_at ) * 24 * 60 * 60 * 1000+
+ date_part('HOUR', ended_at - started_at ) * 60 * 1000 +
+ date_part('MINUTE', ended_at - started_at ) * 60 * 1000 +
+ date_part('SECOND', ended_at - started_at ) * 1000   as int) AS duration_ms, *
+
+FROM
+auxi_trip;
+
+
 
 
 
