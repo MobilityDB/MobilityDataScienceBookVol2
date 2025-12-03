@@ -11,7 +11,7 @@ examples and exercises in the book.
 
 ## PROVISORIO  ##
 
-To run Spark applications we assume that Java 21 (download the zip version which does not require any installation from https://www.azul.com/downloads) and Apache Spark 4.0.1 (download spark-4.0.1-bin-hadoop3.tgz file from https://spark.apache.org/downloads.html) have been donwloaded. Unzip the files (sudo unzip zulu21.46.19-ca-jdk21.0.9-linux_x64.zip and sudo tar xvfz spark-4.0.1-bin-hadoop3.tgz) and configure the following environment variables.
+To run Spark applications we assume that Java 21 (download the zip version which does not require any installation from https://www.azul.com/downloads) and Apache Spark 4.0.1 (download spark-4.0.1-bin-hadoop3.tgz file from https://spark.apache.org/downloads.html) files have been downloaded. Unzip the files (sudo unzip zulu21.46.19-ca-jdk21.0.9-linux_x64.zip and sudo tar xvfz spark-4.0.1-bin-hadoop3.tgz) and configure the following environment variables.
 
 
 $ mkdir /software
@@ -54,6 +54,7 @@ $ spark-sql --packages org.apache.sedona:sedona-spark-shaded-4.0_2.13:1.8.0,org.
 
 
 The application first looks for the files indicated by the "--packages" parameter in the local .m2 repository (tipically within $HOME), If the files are not present, then they will be automatically downloaded into the $HOME/.ivy2.5.2/jars/  directory.
+
 
 
 
