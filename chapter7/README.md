@@ -40,12 +40,13 @@ https://mvnrepository.com/artifact/org.apache.sedona/sedona-common/1.8.0
 
 The package parameter should be: org.apache.sedona:sedona-spark-shaded-4.0_2.13:1.8.0
 
-Finally, we can run sparq-sql with Sedona:
+Finally, we can run sparq-sql with Sedona (run spark-sql in a different directory containing the csv files because some extra files and directories are created and we do not want to consider theses data)
 
+$ /software
 $ spark-sql --packages org.apache.sedona:sedona-spark-shaded-4.0_2.13:1.8.0   --conf spark.serializer=org.apache.spark.serializer.KryoSerializer   --conf spark.kryo.registrator=org.apache.sedona.viz.core.Serde.SedonaVizKryoRegistrator   --conf spark.sql.extensions=org.apache.sedona.viz.sql.SedonaVizExtensions,org.apache.sedona.sql.SedonaSqlExtensions
 
 or optionally, for CRS transformations, ShapefileReader or GeoTiff reader the extra GeoTools library should be used.
-
+ 
 $ spark-sql --packages org.apache.sedona:sedona-spark-shaded-4.0_2.13:1.8.0,org.datasyslab:geotools-wrapper:1.8.0-33.1    --conf spark.serializer=org.apache.spark.serializer.KryoSerializer   --conf spark.kryo.registrator=org.apache.sedona.viz.core.Serde.SedonaVizKryoRegistrator   --conf spark.sql.extensions=org.apache.sedona.viz.sql.SedonaVizExtensions,org.apache.sedona.sql.SedonaSqlExtensions
 
 
@@ -58,6 +59,7 @@ In a cluster environment, instead of local, we use extra parameters such as mast
  
 
 Once in the interactive shell we can import csv data (in our case we import all the csv file from the indicated directory) and generate additional columns: duration_ms and also  origin and target geo referenced points.
+
 
 CREATE TEMPORARY VIEW auxi_trip USING csv OPTIONS (path '/home/mapr/2023-citibike-tripdata', header 'true', inferSchema 'true');
 
@@ -74,6 +76,7 @@ cast
 
 FROM
 auxi_trip;
+
 
 
 
