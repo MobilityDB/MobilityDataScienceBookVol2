@@ -43,10 +43,13 @@ The package parameter should be: org.apache.sedona:sedona-spark-shaded-4.0_2.13:
 Finally, we can run sparq-sql with Sedona (run spark-sql in a different directory containing the csv files because some extra files and directories are created and we do not want to consider theses data)
 
 $ /software
+
+Option 1:
 $ spark-sql --packages org.apache.sedona:sedona-spark-shaded-4.0_2.13:1.8.0   --conf spark.serializer=org.apache.spark.serializer.KryoSerializer   --conf spark.kryo.registrator=org.apache.sedona.viz.core.Serde.SedonaVizKryoRegistrator   --conf spark.sql.extensions=org.apache.sedona.viz.sql.SedonaVizExtensions,org.apache.sedona.sql.SedonaSqlExtensions
 
 or optionally, for CRS transformations, ShapefileReader or GeoTiff reader the extra GeoTools library should be used.
- 
+
+ Option 2:
 $ spark-sql --packages org.apache.sedona:sedona-spark-shaded-4.0_2.13:1.8.0,org.datasyslab:geotools-wrapper:1.8.0-33.1    --conf spark.serializer=org.apache.spark.serializer.KryoSerializer   --conf spark.kryo.registrator=org.apache.sedona.viz.core.Serde.SedonaVizKryoRegistrator   --conf spark.sql.extensions=org.apache.sedona.viz.sql.SedonaVizExtensions,org.apache.sedona.sql.SedonaSqlExtensions
 
 
@@ -60,6 +63,8 @@ In a cluster environment, instead of local, we use extra parameters such as mast
 
 Once in the interactive shell we can import csv data (in our case we import all the csv file from the indicated directory) and generate additional columns: duration_ms and also  origin and target geo referenced points.
 
+
+Since we want to load not only csv files but also shapefiles, it is neccesary to use Option 2 for GeoTools reader.
 
 CREATE TEMPORARY VIEW auxi_trip USING csv OPTIONS (path '/home/mapr/2023-citibike-tripdata', header 'true', inferSchema 'true');
 
@@ -78,6 +83,26 @@ FROM
 auxi_trip;
 
 
+In the same directory (/home/mapr/nybbwu_25d) shoud be the shp, dbf, shx and prj files.
+
+CREATE TEMPORARY VIEW boundary USING shapefile OPTIONS (path '/home/mapr/nybbwi_25d', header 'true', inferSchema 'true');
+
+
+
+Both views have different SRIDs, 4326 and 102718. They cannot participate of spatial joins in the same query. We transform geodesic coordinates to projected coordinates. Note that ST_Transform in Sedona needs not only the SRID but also de Authority.
+
+CREATE OR REPLACE TEMPORARY VIEW trip as 
+SELECT  
+st_transform( st_setsrid( st_point( start_lng, start_lat), 4326), 'EPSG:102718') as origin,
+st_transform( st_setsrid( st_point( end_lng, end_lat), 4326), 'EPSG:102718') as target,
+cast 
+(date_part('DAY', ended_at - started_at ) * 24 * 60 * 60 * 1000+
+ date_part('HOUR', ended_at - started_at ) * 60 * 1000 +
+ date_part('MINUTE', ended_at - started_at ) * 60 * 1000 +
+ date_part('SECOND', ended_at - started_at ) * 1000   as int) AS duration_ms, *
+
+FROM
+auxi_trip;
 
 
 
