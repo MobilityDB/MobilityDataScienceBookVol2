@@ -31,18 +31,12 @@ $ spark-submit
 Apache Sedona is an external library that enables Spark with spatial funcionalities. 
 
 To include an external Maven JAR in your Spark-SQL session, we can use the "--packages" parameter. 
-The parameter format should be <groupId>:<artifactId>:<version>. The information of the library can be find out in Maven Repository. We use the last Apache Sedona version:
+The parameter format should be "<groupId>":<artifactId>:<version>. The information of the library can be find out in Maven Repository. We use the last Apache Sedona version:
 https://mvnrepository.com/artifact/org.apache.sedona/sedona-common/1.8.0
 
 
 <img src="mvn.png" >
 
-<!-- https://mvnrepository.com/artifact/org.apache.sedona/sedona-common -->
-<dependency>
-    <groupId>org.apache.sedona</groupId>
-    <artifactId>sedona-common</artifactId>
-    <version>1.8.0</version>
-</dependency>
 
 The package parameter should be: org.apache.sedona:sedona-spark-shaded-4.0_2.13:1.8.0
 
@@ -80,6 +74,7 @@ cast
 
 FROM
 auxi_trip;
+
 
 
 
