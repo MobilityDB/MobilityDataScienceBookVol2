@@ -54,7 +54,8 @@ $ spark-sql --packages org.apache.sedona:sedona-spark-shaded-4.0_2.13:1.8.0,org.
 
 
 
-The application first looks for the files indicated by the "--packages" parameter in the local .m2 repository (tipically within $HOME), If the files are not present, then they will be automatically downloaded into the $HOME/.ivy2.5.2/jars/  directory.
+The application first looks for the files indicated by the "--packages" parameter in the local .m2 repository (typically within $HOME), If the files are not present, then they will be automatically downloaded into the $HOME/.ivy2.5.2/jars/  directory.
+
 
 
 
