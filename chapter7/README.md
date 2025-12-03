@@ -34,8 +34,8 @@ To include an external Maven JAR in your Spark-SQL session, we can use the "--pa
 The parameter format should be <groupId>:<artifactId>:<version>. The information of the library can be find out in Maven Repository. We use the last Apache Sedona version:
 https://mvnrepository.com/artifact/org.apache.sedona/sedona-common/1.8.0
 
-The information is:
-<img src="mvn.png" width="200">
+
+<img src="mvn.png" >
 
 <!-- https://mvnrepository.com/artifact/org.apache.sedona/sedona-common -->
 <dependency>
@@ -80,6 +80,7 @@ cast
 
 FROM
 auxi_trip;
+
 
 
 
