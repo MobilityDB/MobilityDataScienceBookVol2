@@ -18,7 +18,7 @@ $ mkdir /software
 $ cd /software
 $ export JAVA_HOME=/software/zulu21.46.19-ca-jdk21.0.9-linux_x64
 $ export SPARK_HOME=/software/spark-4.0.1-bin-hadoop3
-$ export PATH=JAVA_HOME/bin:$SPARK_HOME/bin:$PATH
+$ export PATH=$JAVA_HOME/bin:$SPARK_HOME/bin:$PATH
 
 
 Verify that the applications are accessible:
@@ -103,6 +103,7 @@ cast
 
 FROM
 auxi_trip;
+
 
 
 
