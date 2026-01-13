@@ -10,7 +10,7 @@ examples and exercises in the book.
 
 ### BerlinMOD Data Generator
 
-These files create the BerlinMOD benchmark for the city of Hanoiu, based on the hanoi.osm file that can be obtained from OpenStreetMap. To produce the database you shoul follow the step next.
+These files create the BerlinMOD benchmark for the city of Hanoi, based on the hanoi.osm file that can be obtained from OpenStreetMap. To produce the database you shoul follow the step next.
 
 --------------------------
 Create the database hanoi_sf0.05 (or your database name)
@@ -31,3 +31,4 @@ psql -d hanoi_sf0.05 -p 5432 (or your port) -h localhost
  select hanoi_datagenerator(0.05);
 
 ----------------------------------------
+
