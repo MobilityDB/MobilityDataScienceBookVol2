@@ -150,6 +150,24 @@ si no las toma revisar spark-defaults.conf
 
 
 
+----
+docker?
+----
+en el $HOME del usuario que ejecuta colocar directorio sedona_opt  con los directorios dentro
+para compartir volumen.
+Donde este el Dockerfile ejecutar
+
+docker build -t labex/my-app:latest .   
+
+
+docker run -d --name  thebook  -v c:\Users\lgomez\sedona_opt:/workspace -e  DRIVER_MEM=8g -e EXECUTOR_MEM=8g -p 18888:8888 -p 18080:8080 -p 18081:8081 -p 14040:4040 -p 18085:8085 -p 14041:4041 -u 0 labex/my-app:latest
+
+
+
+
+
+
+
 
 
 
