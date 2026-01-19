@@ -22,7 +22,7 @@ FROM Grid g, TripPoints p
 WHERE g.Box @> stbox(p.Geom);
 
 -- SELECT 7087619
--- Time: 55547.339 ms (00:55.547)
+-- Time: 38155.626 ms (00:38.156)
 
 CREATE INDEX TripPointsGrid_Geom_Quadtree_Idx ON TripPointsGrid USING SPGIST(Geom);
 
@@ -75,8 +75,8 @@ FROM IntervalStarts i, TripEnds e
 WHERE i.TripId = e.TripId
 ORDER BY i.TripId, i.StartTime;
 
--- SELECT 102727
--- Time: 36707.639 ms (00:36.708)
+-- SELECT 70881
+-- Time: 34820.179 ms (00:34.820)
 
 CREATE INDEX TripId_Idx ON GridCells(TripId);
 
@@ -128,8 +128,8 @@ FROM SectionsWithTime o, SelectedTrips s
 WHERE o.TripId = s.TripId
 ORDER BY o.TripId, o.T;
 
--- (5069 rows)
--- Time: 227.323 ms
+-- (2525 rows)
+-- Time: 169.812 ms
 
 -------------------------------------------------------------------------------
 /*
@@ -177,8 +177,8 @@ FROM Runs r, SelectedRunPairs s
 WHERE s.TripId = r.TripId AND r.RunId IN (s.IncRun, s.DecRun)
 ORDER BY r.TripId, r.StartTime;
 
--- (16485 rows)
--- Time: 691.041 ms
+-- (10302 rows)
+-- Time: 312.343 ms
 
 -------------------------------------------------------------------------------
 /*
@@ -229,8 +229,8 @@ FROM Runs r, SelectedRunPairs s
 WHERE s.TripId = r.TripId AND r.RunId IN (s.IncRun, s.DecRun)
 ORDER BY r.TripId, r.StartTime;
   
--- (8119 rows)
--- Time: 635.126 ms
+-- (5023 rows)
+-- Time: 307.512 ms
 
 -------------------------------------------------------------------------------
 /*
@@ -288,8 +288,8 @@ FROM Runs r, SelectedRunPairs s
 WHERE s.TripId = r.TripId AND r.RunId IN (s.IncRun, s.DecRun)
 ORDER BY r.TripId, r.StartTime;
 
--- (1375 rows)
--- Time: 719.221 ms
+-- (508 rows)
+-- Time: 387.433 ms
 
 -------------------------------------------------------------------------------
 /*
@@ -309,8 +309,8 @@ FROM Ordered
 WHERE Prev2Cell IS NOT NULL AND CellId = Prev2Cell AND PrevCell <> CellId
 ORDER BY TripId, StartTime;
 
--- (39237 rows)
--- Time: 180.333 ms
+-- (10478 rows)
+-- Time: 120.140 ms
 
 -------------------------------------------------------------------------------
 /*
@@ -340,8 +340,8 @@ WHERE Prev3Cell IS NOT NULL AND Prev2Cell IS NOT NULL AND
   PrevCell <> CellId          -- C ≠ A
 ORDER BY TripId, StartTime;
 
--- (810 rows)
--- Time: 159.610 m
+-- (102 rows)
+-- Time: 107.600 ms
 
 -------------------------------------------------------------------------------%%%%
 /*
@@ -371,8 +371,8 @@ FROM Ordered o, SelectedTrips s
 WHERE s.TripId = o.TripId AND (o.RowNo = 1 OR o.Pm25 > 180)
 ORDER BY o.TripId, o.StartTime;
 
--- (6126 rows)
--- Time: 211.133 ms
+-- (819 rows)
+-- Time: 144.715 ms
 
 -------------------------------------------------------------------------------
 /*
@@ -414,8 +414,8 @@ FROM Ordered o, SelectedTrips s
 WHERE s.TripId = o.TripId AND o.StartTime BETWEEN s.StartTime AND s.ExceedTime
 ORDER BY o.TripId, o.StartTime; 
 
--- (178 rows)
--- Time: 212.749 ms
+-- (288 rows)
+-- Time: 149.099 ms
 
 -------------------------------------------------------------------------------
 /*
@@ -451,8 +451,8 @@ FROM Ordered o, SelectedTrips s
 WHERE s.TripId = o.TripId AND o.PrevPm25 > 150 AND o.Pm25 > 150
 ORDER BY o.TripId, o.PrevStartTime;
 
--- (830 rows)
--- Time: 300.153 ms
+-- (3474 rows)
+-- Time: 205.405 ms
 
 -------------------------------------------------------------------------------
 /*
@@ -500,7 +500,7 @@ FROM Runs r, RunStats s
 WHERE s.TripId = r.TripId AND s.RunId = r.RunId AND r.Valid = 1
 ORDER BY r.TripId, r.StartTime; 
 
--- ((534 rows)
--- Time: 652.993 ms
+-- (234 rows)
+-- Time: 464.412 ms
 
 -------------------------------------------------------------------------------

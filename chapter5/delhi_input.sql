@@ -7,6 +7,7 @@ BEGIN
   CREATE EXTENSION IF NOT EXISTS mobilitydb CASCADE;
 
   SET TIMEZONE TO 'Asia/Kolkata';
+  SET DATESTYLE TO 'ISO, YMD';
 
   DROP TABLE IF EXISTS DelhiInput;
   CREATE TABLE DelhiInput (
@@ -58,8 +59,8 @@ BEGIN
     FROM DelhiInput d
     WINDOW w AS (PARTITION BY DeviceId ORDER BY T) ),
   DelhiGroup AS (
-    SELECT d.*, COUNT(StartInst) OVER (ORDER BY DeviceId, T) AS TripId
-    FROM DelhiStart d ),
+    SELECT *, COUNT(StartInst) OVER (ORDER BY DeviceId, T) AS TripId
+    FROM DelhiStart ),
   Trips(TripId, DeviceId, Trip, Pm1_0, Pm2_5, Pm10) AS (
     SELECT TripId, DeviceId,
       tgeompointSeq(array_agg(tgeompoint(d.Geom, d.T) ORDER BY d.T)),
