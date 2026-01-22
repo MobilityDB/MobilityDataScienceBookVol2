@@ -1,4 +1,7 @@
 
+SET TIMEZONE TO 'Asia/Kolkata';
+SET DATESTYLE TO 'ISO, YMD';
+  
 DROP TABLE IF EXISTS TripPoints;
 CREATE TABLE TripPoints(TripId integer, DeviceId text, T timestamptz, Uid text,
   Pm25 float, Geom geometry, Attributes jsonb, PRIMARY KEY(DeviceId, TripId, T));
@@ -31,15 +34,15 @@ CREATE INDEX TripPoints_Geom_Idx ON TripPoints USING SPGIST(Geom);
 
 -- DROP TABLE IF EXISTS Q5_29;
 -- CREATE TABLE Q5_29 AS
-WITH TripPm25(TripId, T, Pm25, PrevPm25) AS (
-  SELECT TripId, T, Pm25, LAG(Pm25) OVER (PARTITION BY TripId ORDER BY T)
+WITH TripPm25(TripId, T, Pm25, NextPm25) AS (
+  SELECT TripId, T, Pm25, LEAD(Pm25) OVER (PARTITION BY TripId ORDER BY T)
   FROM TripPoints ),
 TripsIncPm25(TripId) AS (
   SELECT TripId
   FROM TripPm25
-  WHERE PrevPm25 IS NOT NULL
+  WHERE NextPm25 IS NOT NULL
   GROUP BY TripId
-  HAVING bool_and(Pm25 > PrevPm25) )
+  HAVING bool_and(Pm25 < NextPm25) )
 SELECT p.TripId, MIN(p.T) AS StartTime, MAX(p.T) AS EndTime,
   array_agg(p.Pm25 ORDER BY p.T) AS Pm25Seq
 FROM TripPoints p, TripsIncPm25 i
@@ -49,11 +52,14 @@ ORDER BY TripId, StartTime;
 
 -- SELECT 708
 -- Time: 70 secs 
+-- EZ
+-- (708 rows)
+-- Time: 11001.128 ms (00:11.001)
 
 -- TEMPORAL VERSION
 
-DROP TABLE IF EXISTS TQ5_29;
-CREATE TABLE TQ5_29 AS
+-- DROP TABLE IF EXISTS TQ5_29;
+-- CREATE TABLE TQ5_29 AS
 WITH Segments(TripId, Segm) AS (
   SELECT TripId, unnest(segments(Pm2_5))
   FROM DelhiTrips
@@ -63,10 +69,10 @@ FROM DelhiTrips
 WHERE numInstants(Pm2_5) > 1 AND tripId NOT IN (
   SELECT DISTINCT TripId
   FROM Segments
-  WHERE startValue(Segm) > endValue(Segm) );
+  WHERE startValue(Segm) >= endValue(Segm) );
 
--- SELECT 1001
--- Time: 2622.876 ms (00:02.623)
+-- (708 rows)
+-- Time: 3166.353 ms (00:03.166)
 
 ------------------------------------------------------------------------------
 
@@ -80,87 +86,127 @@ strictly decreasing Pm25, also with a 1.5 minutes duration.
 [ (Pm25, @q), prev(Pm25) > @q ]{3-5}
 I+.D+
 */
-
+DROP TABLE IF EXISTS Q5_30;
+CREATE TABLE Q5_30 AS
 WITH TripPm25 (TripId, T, Pm25, Trend) AS (
   SELECT TripId, T, Pm25,
-   CASE
-    WHEN Pm25 > LAG(Pm25) OVER (PARTITION BY TripId ORDER BY T) THEN  1 
-    WHEN Pm25 < LAG(Pm25) OVER (PARTITION BY TripId ORDER BY T) THEN -1
-   	ELSE 0
- 	END
-  FROM TripPoints),
+    CASE
+      WHEN Pm25 > LAG(Pm25) OVER w THEN  1
+      WHEN Pm25 < LAG(Pm25) OVER w THEN -1
+      ELSE 0
+  END
+  FROM TripPoints
+  WINDOW w AS (PARTITION BY TripId ORDER BY T) ),
 Runs (TripId, T, Pm25, Trend, PrevT, PrevPm25, PrevTrend) AS (
-  SELECT TripId, T, Pm25, Trend,
-   LAG(T) OVER (PARTITION BY TripId ORDER BY T),
-   LAG(Pm25)  OVER (PARTITION BY TripId ORDER BY T),
-   LAG(Trend) OVER (PARTITION BY TripId ORDER BY T)
+  SELECT TripId, T, Pm25, Trend, LAG(T) OVER w, LAG(Pm25) OVER w,
+    LAG(Trend) OVER w
   FROM TripPm25
-  WHERE Trend <> 0),
+  WHERE Trend <> 0
+  WINDOW w AS (PARTITION BY TripId ORDER BY T) ),
 RunIds (TripId, RunId, T, Pm25, Trend, PrevT, PrevPm25) AS (
-  SELECT TripId, SUM(
-   CASE 
-    WHEN Trend = PrevTrend THEN 0 ELSE 1 END) OVER (PARTITION BY TripId 
-     ORDER BY T), T, Pm25, Trend, PrevT, PrevPm25
+  SELECT TripId, SUM(CASE WHEN Trend = PrevTrend THEN 0 ELSE 1 END) OVER 
+    (PARTITION BY TripId ORDER BY T), T, Pm25, Trend, PrevT, PrevPm25
   FROM Runs),
 RunTimes (TripId, RunId, Trend, StartTime, EndTime,  FirstT, LastT, Duration) AS (
   SELECT TripId, RunId, Trend, MIN(PrevT), MAX(T), MIN(T), MAX(T),
-   EXTRACT(EPOCH FROM MAX(T) - MIN(PrevT)) / 60.0
+    EXTRACT(EPOCH FROM MAX(T) - MIN(PrevT)) / 60.0
   FROM RunIds
   GROUP BY TripId, RunId, Trend
-  HAVING EXTRACT(EPOCH FROM MAX(T) - MIN(PrevT)) / 60.0 >= 1.5),
+  HAVING EXTRACT(EPOCH FROM MAX(T) - MIN(PrevT)) / 60.0 >= 1.5 ),
 RunBounds (TripId, RunId, Trend, StartTime, EndTime, Duration, StartPm25,
- EndPm25) AS (
-  SELECT r.TripId, r.RunId, r.Trend, r.StartTime, r.EndTime, r.Duration, sp.PrevPm25,
-   ep.Pm25
+    EndPm25) AS (
+  SELECT r.TripId, r.RunId, r.Trend, r.StartTime, r.EndTime, r.Duration,
+    sp.PrevPm25, ep.Pm25
   FROM RunTimes r, RunIds sp, RunIds ep
-  WHERE sp.TripId = r.TripId AND sp.T = r.FirstT AND ep.TripId = r.TripId 
+  WHERE sp.TripId = r.TripId AND sp.T = r.FirstT AND ep.TripId = r.TripId
    AND ep.T = r.LastT),
 SelectedRuns (TripId, IncRun, DecRun) AS (
-  SELECT r1.TripId, r1.RunId, r2.RunId
-  FROM RunBounds r1, RunBounds r2
-  WHERE r2.TripId = r1.TripId AND r2.RunId  = r1.RunId + 1 AND
-   r1.Trend  =  1 AND r2.Trend  = -1)
-SELECT r.TripId, r.RunId, r.Trend, r.StartTime, r.EndTime, r.Duration, r.StartPm25, 
- r.EndPm25
+  SELECT TripId, RunId, NextRunId
+  FROM (
+    SELECT TripId, RunId, Trend, EndPm25, LEAD(RunId) OVER w AS NextRunId,
+      LEAD(Trend) OVER w AS NextTrend, LEAD(StartPm25) OVER w AS NextStartPm25
+    FROM RunBounds
+    WINDOW w AS (PARTITION BY TripId ORDER BY StartTime) ) x
+  WHERE Trend =  1 AND NextTrend = -1 AND EndPm25 = NextStartPm25 )
+SELECT r.TripId, r.RunId, r.Trend, r.StartTime, r.EndTime, r.Duration,
+  r.StartPm25, r.EndPm25
 FROM RunBounds r, SelectedRuns s
 WHERE s.TripId = r.TripId AND r.RunId IN (s.IncRun, s.DecRun)
-ORDER BY r.TripId, r.RunId; 
+ORDER BY r.TripId, r.RunId;
 
--- 198 rows (93 trips)
--- 6 min 32 secs
+-- SELECT 286
+-- Time: 42424.672 ms (00:42.425)
 
 -- TEMPORAL VERSION
-/*
-DROP TABLE IF EXISTS TQ5_29;
-CREATE TABLE TQ5_29 AS
-WITH Segments(TripId, Segm) AS (
+
+DROP TABLE IF EXISTS TQ5_30;
+CREATE TABLE TQ5_30 AS
+WITH TripSegments(TripId, Segm) AS (
   SELECT TripId, unnest(segments(Pm2_5))
-  FROM DelhiTrips ),
-SegmTrend(TripId, Segm, Trend) AS (
+  FROM DelhiTrips
+  WHERE TripId = 5217
+  ),
+TripSegmTrend(TripId, Trend, T) AS (
   SELECT TripId,
     CASE
-      WHEN startValue(Segm) < endValue(Segm) THEN 1
-      WHEN startValue(Segm) > endValue(Segm) THEN -1
-      ELSE 0
-    END
-  FROM Segments ),
-Trend(TripId, Trend) AS (
-  SELECT TripId, array_agg(Trend
+      WHEN startValue(Segm) < endValue(Segm) THEN 'I'
+      WHEN startValue(Segm) > endValue(Segm) THEN 'D'
+      ELSE 'C'
+    END, startTimestamp(Segm)
+  FROM TripSegments ),
+TripTrend(TripId, Trend) AS (
+  SELECT TripId, ttextSeq(array_agg(ttext(Trend, T) ORDER BY T))
+  FROM TripSegmTrend
+  WHERE Trend <> 'C'
+  GROUP BY TripId ),
+TrendSegments(TripId, Segm) AS (
+  SELECT TripId, unnest(segments(Trend))
+  FROM TripTrend ),
+TripLabel(TripId, Label) AS (
+  SELECT TripId, string_agg(
     CASE
-      WHEN startValue(Segm) < endValue(Segm) THEN 1
-      WHEN startValue(Segm) > endValue(Segm) THEN -1
-      ELSE 0
-    END
-  FROM Segments ),
+      WHEN startValue(Segm) = 'I' AND duration(Segm) > '1.5 min' THEN 'A'
+      WHEN startValue(Segm) = 'D' AND duration(Segm) > '1.5 min' THEN 'B'
+      ELSE '.'
+    END, '' ORDER BY Segm)
+  FROM TrendSegments 
+  GROUP BY TripId ),
+TripMatches(TripId, Pm2_5, StartInst, EndInst) AS (
+  SELECT l.TripId, Pm2_5, instantN(Pm2_5, regexp_instr(Label, 'AB')),
+    instantN(Pm2_5, regexp_instr(Label, 'AB') + 
+      length(substring(Label FROM 'AB')) - 1)
+  FROM TripLabel l, DelhiTrips t
+  WHERE l.TripId = t.TripId AND Label ~ 'AB' )
+SELECT TripId, atTime(Pm2_5, span(getTimestamp(StartInst), 
+  getTimestamp(EndInst)))
+FROM TripMatches
+ORDER BY Tripid;
 
+-- SELECT 94
+-- Time: 21647.805 ms (00:21.648)
 
-TripsDecrSegm(TripId) AS (
-  SELECT DISTINCT TripId
-  FROM Segments
-  WHERE startValue(Segm) > endValue(Segm) )
-SELECT TripId, DeviceId, Pm2_5
-FROM DelhiTrips
-WHERE tripId NOT IN ( SELECT TripId FROM TripsDecrSegm );
+/*
+WITH Temp AS (
+  SELECT DISTINCT TripId FROM tq5_30
+  EXCEPT
+  SELECT DISTINCT TripId FROM q5_30 ORDER BY TripId)
+SELECT array_agg(TripId ORDER BY TripId) from Temp;
+
+ {5217,5559,6128,6223,6503,6609,11813,26862}
+(1 row)
+
+WITH Temp AS (
+  SELECT DISTINCT TripId FROM q5_30
+  EXCEPT
+  SELECT DISTINCT TripId FROM tq5_30 )
+SELECT array_agg(TripId ORDER BY TripId) from Temp;
+              array_agg
+-------------------------------------
+{305,444,450,461,525,635,750,770,890,911,1200,1236,1252,1255,1257,1259,1262,1285,1630,2005,2064,2156,2259,2265,2410,245
+6,2768,3056,3325,3784,3843,3970,4262,6194,6298,11398,11521,11571,25009,25164,25379,25422,25430,25480,25692,26594,26863,2
+6874,26891}
+(1 row)
+
 */
 -------------------------------------------------------------------------------
 
@@ -174,6 +220,8 @@ runs, the temperature was always higher than 20 degrees.
 [(Pm25, @q), prev(Pm25) > @q, Duration(@q, @first2) >= '2 minutes', (Temp, @tq), @tq > '20']+
 */
 
+DROP TABLE IF EXISTS Q5_32;
+CREATE TABLE Q5_32 AS
 WITH TripPm25Temp (TripId, T, Pm25, Temp, Trend) AS (
   SELECT TripId, T,
    (Attributes->>'Pm25')::numeric,
@@ -232,6 +280,58 @@ ORDER BY r.TripId, r.RunId;
 -- 3min 11secs
 -- select distinct (tripid) from Q5_32_PB;3265, 5098, 3226, 6254, 6284,
 -- 26611, 26738, 25774, 545
+
+-- TEMPORAL VERSION
+
+DROP TABLE IF EXISTS TQ5_32;
+CREATE TABLE TQ5_32 AS
+WITH TripSegments(TripId, Segm) AS (
+  SELECT TripId, unnest(segments(Pm2_5))
+  FROM DelhiTrips ),
+TripSegmWeather(TripId, Segm, Weather) AS (
+  SELECT TripId, Segm, w.Weather
+  FROM TripSegments t, WeatherHourly w
+  WHERE date_trunc('hour', startTimestamp(t.Segm)) = w.Time ),
+TripSegmTrend(TripId, Trend, T) AS (
+  SELECT TripId,
+    CASE
+      WHEN startValue(Segm) < endValue(Segm) THEN 'I'
+      WHEN startValue(Segm) > endValue(Segm) THEN 'D'
+      ELSE 'C'
+    END, startTimestamp(Segm), Weather
+    FROM TripSegmWeather
+    WHERE startValue(Segm) > 125 AND
+      (Weather->>'Temperature')::numeric > 20 ),
+TripTrend(TripId, Trend) AS (
+  SELECT TripId, ttextSeq(array_agg(ttext(Trend, T) ORDER BY T))
+  FROM TripSegmTrend
+  GROUP BY TripId ),
+TrendSegments(TripId, Segm) AS (
+  SELECT TripId, unnest(segments(Trend))
+  FROM TripTrend ),
+TripSegmLabel(TripId, Label, T) AS (
+  SELECT TripId,
+    CASE
+      WHEN startValue(Segm) = 'I' AND duration(Segm) > '5 min' THEN 'A'
+      WHEN startValue(Segm) = 'D' AND duration(Segm) > '2 min' THEN 'B'
+      ELSE 'X'
+    END, startTimestamp(Segm)
+  FROM TrendSegments ),
+TripLabel(TripId, Label) AS (
+  SELECT TripId, ttextSeq(array_agg(ttext(Label, T) ORDER BY T))
+  FROM TripSegmLabel
+  GROUP BY TripId ),
+TripPattern(TripId, Pat) AS (
+  SELECT TripId, string_agg(getValue(i.inst), '' ORDER BY i.Inst)
+  FROM TripLabel, LATERAL unnest(instants(Label)) AS i(Inst)
+  GROUP BY TripId )
+SELECT *
+FROM TripPattern
+WHERE Pat ~ 'AB'
+ORDER BY Tripid;
+
+-- SELECT 1
+-- Time: 5873.400 ms (00:05.873)
 
 -------------------------------------------------------------------------------
 
