@@ -9,6 +9,10 @@ BEGIN
   SET TIMEZONE TO 'Asia/Kolkata';
   SET DATESTYLE TO 'ISO, YMD';
 
+--------------------------------------------------------------
+
+  RAISE NOTICE 'Reading input files';
+
   DROP TABLE IF EXISTS DelhiInput;
   CREATE TABLE DelhiInput (
     Id int NOT NULL,
@@ -38,6 +42,10 @@ BEGIN
 
   UPDATE DelhiInput
   SET Geom = ST_Transform(ST_Point(Lon, Lat, 4326), 7760);
+
+--------------------------------------------------------------
+
+  RAISE NOTICE 'Creating the trips';
 
   DROP TABLE IF EXISTS DelhiTrips;
   CREATE TABLE DelhiTrips(
@@ -76,3 +84,4 @@ BEGIN
 
 END $$;
 
+--------------------------------------------------------------

@@ -2,6 +2,8 @@
 SET TIMEZONE TO 'Asia/Kolkata';
 SET DATESTYLE TO 'ISO, YMD';
 
+/* Compute the center point of the extent of the dataset 
+
 WITH Extent(MinLon, MinLat, MaxLon, MaxLat) AS (
   SELECT MIN(Lon), MIN(Lat), MAX(Lon), MAX(Lat)
   FROM DelhiInput )
@@ -12,12 +14,13 @@ FROM Extent;
 -- 77.21044149999999 | 28.603272625000002
 -- Time: 3490.939 ms (00:03.491)
 
--- OpenMeteo does not support IndiaStandardTime so we do not set the timezone
--- and thus the timezone will be GMT. Therefore, we need to set the timezone
--- to Asia/Koklata BEFORE loading the CSV file
--- We suppose that the CSV file is called delhi_weather.csv
-/*
+-- OpenMeteo should be set to automatically detect the timezone from the data,
+-- which in this case it would be Indian Standard Time or IST . Therefore, 
+-- we need to set the timezone to Asia/Koklata in PostgreSQL BEFORE loading
+-- the CSV file. We suppose that the CSV file is called delhi_weather.csv
+
 https://open-meteo.com/en/docs/historical-weather-api?start_date=2020-11-01&end_date=2020-12-31&latitude=28.603272&longitude=77.210441&hourly=temperature_2m,relative_humidity_2m,cloud_cover,rain,wind_speed_10m
+
 */
 
 DROP TABLE IF EXISTS WeatherInput;
@@ -56,3 +59,53 @@ WHERE date_trunc('hour', d.T) = w.Time;
 
 -- INSERT 0 7087619
 -- Time: 124838.994 ms (02:04.839)
+
+-- OLD VERSION that does not take into account hour boundaries
+
+DROP TABLE IF EXISTS TripsWeather;
+CREATE TABLE TripsWeather(TripId integer, Weather tjsonb, PRIMARY KEY(TripId));
+INSERT INTO TripsWeather
+WITH TripSegments(TripId, Segm) AS (
+  SELECT TripId, unnest(segments(Trip))
+  FROM DelhiTrips )
+SELECT TripId, tjsonbSeq(array_agg(tjsonb(w.Weather, startTimestamp(Segm))
+    ORDER BY startTimestamp(Segm)))
+  FROM TripSegments t, WeatherHourly w
+  WHERE date_trunc('hour', startTimestamp(t.Segm)) = w.Time
+GROUP BY TripId
+ORDER BY TripId;
+
+-- INSERT 0 27118
+-- Time: 28001.169 ms (00:28.001)
+
+/*****************************************************************************/
+
+-- NEW VERSION !!!
+
+DROP TABLE IF EXISTS TripsWeather;
+CREATE TABLE TripsWeather(TripId integer, Weather tjsonb, PRIMARY KEY(TripId));
+INSERT INTO TripsWeather
+WITH TripInstants(TripId, Inst) AS (
+  SELECT TripId, unnest(instants(Trip))
+  FROM DelhiTrips ),
+TempWeather(Weather) AS (
+  SELECT tjsonbSeq(array_agg(tjsonb(Weather, Time) ORDER BY Time))
+  FROM WeatherHourly ),
+WeatherAtTrip(TripId, Weather) AS (
+  SELECT TripId, atTime(w.Weather, getTime(Trip))
+  FROM DelhiTrips t, TempWeather w ),
+WeatherInstants(TripId, Instants) AS (
+  SELECT TripId, tjsonbseq(array_agg(tjsonb(w.Weather, getTimestamp(Inst))
+    ORDER BY getTimestamp(Inst)), 'Discrete' )
+  FROM TripInstants t, WeatherHourly w
+  WHERE date_trunc('hour', getTimestamp(Inst)) = w.Time
+  GROUP BY TripId)
+SELECT t.TripId, update(t.Weather, i.Instants)
+FROM WeatherAtTrip t, WeatherInstants i
+WHERE t.TripId = i.TripId
+ORDER BY TripId;
+
+-- INSERT 0 27118
+-- Time: 98817.356 ms (01:38.817)
+
+/*****************************************************************************/
