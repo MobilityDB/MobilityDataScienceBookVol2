@@ -155,11 +155,10 @@ Episode(TripId, EpisodeId, T, NextT, Pm25, NextPm25, Temp, NextTemp, Trend) AS (
 EpisodeTime(TripId, EpisodeId, Trend, StartTime, EndTime, StartPm25, EndPm25,
     StartTemp, EndTemp, Duration) AS (
   SELECT TripId, EpisodeId, Trend, MIN(T), MAX(NextT), MIN(Pm25),
-    MAX(NextPm25), MIN(Temp), MAX(NextTemp), 
-    EXTRACT(EPOCH FROM MAX(NextT) - MIN(T)) / 60.0
+    MAX(NextPm25), MIN(Temp), MAX(NextTemp), MAX(NextT) - MIN(T)
   FROM Episode
   GROUP BY TripId, EpisodeId, Trend
-  HAVING EXTRACT(EPOCH FROM MAX(NextT) - MIN(T)) / 60.0 >= 1.5 AND
+  HAVING MAX(NextT) - MIN(T) >= '1.5 minutes' AND
     bool_and(LEAST(NextTemp, Temp) > 20) ),
 Pattern(TripId, IncrEpisode, DecrEpisode) AS (
   SELECT r1.TripId, r1.EpisodeId AS IncrEpisode, r2.EpisodeId AS DecrEpisode
@@ -233,7 +232,7 @@ select t.tripid, atTime(weather, Incr) as Incr, atTime(weather, Decr) as decr fr
 
 /*
 Query 5.10. Trips that have at some point the \textsf{Pm25} lower than 100 and
-later reach a value higher than 400, but such that the elapsed time between
+later reach a value higher than 400, such that the elapsed time between
 the increase of values in less than thirty minutes.
 
 StartPm25: Trip[Pm25 < 100]
@@ -259,7 +258,7 @@ SELECT p.TripId, s.StartTime, e.EndTime,
 FROM TripPoints p, StartPm25 s, EndPm25 e
 WHERE p.TripId = s.TripId AND s.TripId = e.TripId AND 
   s.StartTime < e.EndTime AND p.T BETWEEN s.StartTime AND e.EndTime AND 
-  EXTRACT(EPOCH FROM (EndTime - StartTime)) / 60.0 < 30 
+  EndTime - StartTime < '30 minutes'
 GROUP BY p.TripId, s.StartTime, e.EndTime
 ORDER BY p.TripId;
 
@@ -331,8 +330,7 @@ Episode(TripId, EpisodeId, T, Pm25) AS (
     T, Pm25
   FROM LowerPm25 ),
 Pattern(TripId, EpisodeId, StartTime, EndTime, Duration, NumPoints) AS (
-  SELECT TripId, EpisodeId, MIN(T), MAX(T),
-    EXTRACT(EPOCH FROM MAX(T) - MIN(T)) / 60.0, COUNT(*)
+  SELECT TripId, EpisodeId, MIN(T), MAX(T), MAX(T) - MIN(T), COUNT(*)
   FROM Episode
   WHERE Pm25 > 150
   GROUP BY TripId, EpisodeId
@@ -408,14 +406,12 @@ Episodes AS (
     (PARTITION BY TripId ORDER BY T) AS EpisodeId
   FROM SegmentsPrev )
 SELECT TripId, EpisodeId, MIN(T) AS StartTime, MAX(T) AS EndTime,
-  EXTRACT(EPOCH FROM MAX(T) - MIN(T)) / 60.0 AS DurationMinutes,
-  array_agg(Pm25 ORDER BY T) AS Pm25Seq,
+  MAX(T) - MIN(T) AS Duration, array_agg(Pm25 ORDER BY T) AS Pm25Seq,
   array_agg(CloudCover ORDER BY T) AS CloudCoverSeq,
   array_agg(Humidity ORDER BY T) AS HumiditySeq
 FROM Episodes
 GROUP BY TripId, EpisodeId
-HAVING EXTRACT(EPOCH FROM MAX(T) - MIN(T)) / 60.0  >= 30 AND
-  BOOL_AND(Valid = 1)
+HAVING MAX(T) - MIN(T) >= '30 minutes' AND BOOL_AND(Valid = 1)
 ORDER BY TripId, StartTime;
 
 -- SELECT 71

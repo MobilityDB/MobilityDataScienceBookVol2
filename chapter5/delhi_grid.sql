@@ -1,213 +1,552 @@
+/*****************************************************************************/
+
+SET TIMEZONE TO 'Asia/Kolkata';
+SET DATESTYLE TO 'ISO, YMD';
+
 -------------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS TripCells;
+CREATE TABLE TripCells(TripId integer, StepNo integer, StartTime timestamptz,
+  EndTime timestamptz, CellId integer, Pm25 float, Weather jsonb,
+  PRIMARY KEY (TripId, CellId, StartTime));
+INSERT INTO TripCells
+WITH PointCells(TripId, T, Pm25, Geom, Weather, CellId, PrevCell) AS (
+  SELECT p.TripId, p.T, p.Pm25, p.Geom, p.Weather, g.CellId, 
+    LAG(CellId) OVER (PARTITION BY TripId ORDER BY T )
+  FROM TripPoints p, Grid g
+  WHERE g.Box @> stbox(p.Geom) ),
+StepStarts(TripId, T, Pm25, Geom, Weather, CellId, PrevCell, NewStep) AS (
+  SELECT *, 
+    CASE WHEN PrevCell IS NULL OR CellId <> PrevCell THEN 1 ELSE 0 END
+  FROM PointCells ),
+TripSteps(TripId, StepNo, T, Pm25, Geom, Weather, CellId, PrevCell) AS (
+  SELECT TripId, SUM(NewStep) OVER (PARTITION BY TripId ORDER BY T
+    ROWS UNBOUNDED PRECEDING), T, Pm25, Geom, Weather, CellId, PrevCell
+  FROM StepStarts )
+SELECT TripId, StepNo, MIN(T), MAX(T), MIN(CellId), /* CellId is unique in a group */
+  AVG(Pm25), jsonb_build_object(
+    'Temperature', AVG((Weather->>'Temperature')::float),
+    'Humidity', AVG((Weather->>'Humidity')::float),
+    'CloudCover', AVG((Weather->>'CloudCover')::float),
+    'Rain', AVG((Weather->>'Rain')::float),
+    'Wind', AVG((Weather->>'Wind')::float)) AS Weather
+FROM TripSteps
+GROUP BY TripId, StepNo
+ORDER BY TripId, StepNo;
+
+-- INSERT 0 70881
+-- Time: 112401.549 ms (01:52.402)
+
+DROP TABLE IF EXISTS TripCellsSeq;
+CREATE TABLE TripCellsSeq(TripId integer PRIMARY KEY, CellSeq int[]);
+INSERT INTO TripCellsSeq
+SELECT TripId, array_agg(CellId ORDER BY EndTime)
+FROM TripCells
+GROUP BY TripId
+ORDER BY TripId;
+
+-- INSERT 0 27118
+-- Time: 483.961 ms
+
+-- TEMPORAL VERSION
+
+DROP TABLE IF EXISTS TripTiles;
+CREATE TABLE TripTiles(TripId integer, StepNo integer, AtTime tstzspanset,
+  CellId integer, Trip tgeompoint, Trajectory geometry, Pm25 tfloat,
+  Weather tjsonb, PRIMARY KEY (TripId, StepNo) );
+INSERT INTO TripTiles
+WITH TripCells(TripId, CellId, Trip, Pm25, Weather) AS (
+  SELECT TripId, CellId, atStbox(t.Trip, g.Box, false), Pm25, Weather
+  FROM Trips t, Grid g
+  WHERE eIntersects(t.Trip, g.Geom) )
+SELECT TripId, ROW_NUMBER() OVER (PARTITION BY TripId ORDER BY getTime(Trip)),
+  getTime(Trip), CellId, Trip, trajectory(Trip), atTime(Pm25, getTime(Trip)),
+  atTime(Weather, getTime(Trip))
+FROM TripCells
+ORDER BY TripId, getTime(Trip);
+
+-- INSERT 0 50781
+-- Time: 208452.017 ms (03:28.452)
+
+DROP TABLE IF EXISTS TripTilesSeq;
+CREATE TABLE TripTilesSeq(TripId integer PRIMARY KEY, Cells tint, CellSeq int[]);
+INSERT INTO TripTilesSeq
+WITH Spans(TripId, CellId, Span) AS (
+  SELECT TripId, CellId, unnest(spans(AtTime))
+  FROM TripTiles )
+SELECT TripId, merge(array_agg(tint(CellId, Span) ORDER BY Span)),
+  array_agg(CellId ORDER BY Span)
+FROM Spans
+GROUP BY TripId
+ORDER BY TripId;
+
+-- INSERT 0 27118
+-- Time: 1033.352 ms (00:01.033)
+
 /*
-Query 5.29. Trajectories that continuously traverse cells with increasing Pm25 values.
+
+select TripId, Cells from TripTempCell WHERE numInstants(Cells) > 2 order by numInstants(Cells) limit 10;
+ tripid |                                              cells
+--------+-------------------------------------------------------------------------------------------------
+    228 | [47@2020-11-12 01:03:30+01, 46@2020-11-12 01:06:14.297877+01, 45@2020-11-12 01:10:17.344984+01]
+    207 | [38@2020-11-11 16:05:26+01, 48@2020-11-11 16:11:42.843841+01, 47@2020-11-11 16:14:37.918549+01]
+    214 | [86@2020-11-11 16:56:37+01, 87@2020-11-11 17:09:33.380065+01, 97@2020-11-11 17:09:37.199314+01]
+    223 | [47@2020-11-11 23:34:36+01, 46@2020-11-11 23:35:32.324437+01, 56@2020-11-12 00:12:18.621897+01]
+     10 | [48@2020-11-04 13:57:05+01, 47@2020-11-04 13:57:05.068142+01, 46@2020-11-04 14:02:27.056248+01]
+     12 | [35@2020-11-04 14:21:20+01, 34@2020-11-04 14:23:14.061347+01, 44@2020-11-04 14:25:36.772452+01]
+      7 | [46@2020-11-03 23:46:27+01, 47@2020-11-04 05:07:57.931644+01, 57@2020-11-04 05:43:49.520672+01]
+    240 | [45@2020-11-12 06:29:10+01, 46@2020-11-12 06:35:59.332971+01, 47@2020-11-12 06:43:52.2121+01]
+    200 | [63@2020-11-11 13:14:30+01, 64@2020-11-11 13:14:41.904839+01, 54@2020-11-11 13:15:30.718188+01]
+    252 | [38@2020-11-12 13:05:41+01, 48@2020-11-12 13:10:36.704281+01, 47@2020-11-12 13:13:32.237116+01]
+(10 rows)
+
+select TripId, numInstants(Cells) from TripTempCell order by numInstants(Cells) DESC limit 10;
+ tripid | numinstants
+--------+-------------
+      4 |          21
+    879 |          20
+    816 |          18
+    805 |          18
+    355 |          18
+    813 |          18
+    347 |          18
+    788 |          18
+    790 |          18
+    810 |          18
+(10 rows)
 */
 
--- Compute the change in Pm25 between consecutive sections of the same trip
-WITH Deltas(TripId, CellId, Weather, Pm25, Delta) AS (
-  SELECT TripId, CellId, Weather, Pm25,
-    Pm25 - LAG(Pm25) OVER (PARTITION BY TripId ORDER BY StartTime)
+-------------------------------------------------------------------------------
+/*
+Query 5.9. Trips  where the Pm25 increases throughout the entire trip.
+
+IncrPm25: Trip[sign(derivative(Pm25)) > 0]
+Trip[IncrPm25 AND getTime(IncrPm25) = getTime(Trip)]
+*/
+
+DROP TABLE IF EXISTS GQ5_9;
+CREATE TABLE GQ5_9(TripId, Cells, Pm25Seq) AS
+WITH TrendPm25(TripId, CellId, Weather, Pm25, Trend) AS (
+  SELECT TripId, CellId, Weather, Pm25, 
+    SIGN(Pm25 - LAG(Pm25) OVER (PARTITION BY TripId ORDER BY StartTime))
   FROM TripCells ),
--- Select only those trips whose Pm25 is strictly increasing throughout
-SelectedTrips(TripId) AS (
+SelectedTrip(TripId) AS (
   SELECT TripId 
-  FROM Deltas
+  FROM TrendPm25
   GROUP BY TripId 
-  HAVING COUNT(*) >= 2 AND COUNT(*) FILTER (WHERE Delta <= 0) = 0 )
-SELECT TripId, array_agg(ROW(CellId, ROUND(Pm25::numeric, 2))
-  ORDER BY StartTime) AS Pm25Seq
+  HAVING COUNT(*) >= 2 AND COUNT(*) FILTER (WHERE Trend <= 0) = 0 )
+SELECT TripId, 
+  array_agg(CellId ORDER BY StartTime) AS Cells,
+  array_agg(ROUND(Pm25::numeric, 2) ORDER BY StartTime) AS Pm25Seq
 FROM TripCells
-WHERE TripId IN (SELECT TripId FROM SelectedTrips)
+WHERE TripId IN (SELECT TripId FROM SelectedTrip)
 GROUP BY TripId
 ORDER BY TripId;
 
 -- 1102 rows
 -- Time: 138.142 ms
 
--------------------------------------------------------------------------------
-/*
-Query 5.30. Trajectories that have at least two continuous strictly increasing
-sections of Pm25, followed by at least two continuously strictly decreasing sections.
-*/
+-- TEMPORAL VERSION
 
--- DROP TABLE IF EXISTS GQ5_30;
--- CREATE TABLE GQ5_30 AS
-WITH Trends(TripId, CellId, StartTime, EndTime, Pm25, Trend) AS (
-  SELECT TripId, CellId, StartTime, EndTime, Pm25,
-    SIGN((LEAD(Pm25) OVER w) - Pm25) /* Compute the trend */
-  FROM TripCells
-  WINDOW w AS (PARTITION BY TripId ORDER BY StartTime) ),
-PhaseStarts(TripId, CellId, StartTime, EndTime, Pm25, Trend, NewPhase) AS (
-  SELECT *,
-    CASE
-      WHEN Trend = LAG(Trend) OVER (PARTITION BY TripId ORDER BY
-        StartTime) THEN 0 ELSE 1
-    END
-  FROM Trends
-  WHERE Trend <> 0 ),
-Phases(TripId, PhaseId, CellId, StartTime, EndTime, Pm25, Trend) AS (
-  SELECT TripId, SUM(NewPhase) OVER (PARTITION BY TripId ORDER BY
-    StartTime), CellId, StartTime, EndTime, Pm25, Trend
-  FROM PhaseStarts ),
-PhaseLengths(TripId, PhaseId, Trend, Length) AS (
-  SELECT TripId, PhaseId, Trend, COUNT(*)
-  FROM Phases
-  GROUP BY TripId, PhaseId, Trend ),
-PhasePairs(TripId, IncrPhase, DecrPhase) AS (
-  SELECT p1.TripId, p1.PhaseId, p2.PhaseId
-  FROM PhaseLengths p1, PhaseLengths p2
-  WHERE p2.TripId = p1.TripId AND p2.PhaseId = p1.PhaseId + 1 AND
-    p1.Trend =  1 AND p1.Length >= 2 AND p2.Trend = -1 AND p2.Length >= 2 )
-SELECT r.TripId, array_agg(ROW(r.CellId, ROUND(r.Pm25::numeric, 2),
-  CASE 
-    WHEN r.PhaseId = s.IncrPhase THEN 'I'
-    WHEN r.PhaseId = s.DecrPhase THEN 'D'
-  END) ORDER BY r.StartTime) AS Pm25Seq
-FROM Phases r, PhasePairs s
-WHERE s.TripId = r.TripId AND r.PhaseId IN (s.IncrPhase, s.DecrPhase)
-GROUP BY r.TripId
-ORDER BY r.TripId;
-
--- 1135 rows
--- Time: 334.852 ms
-
--------------------------------------------------------------------------------
-/*
-Query 5.31 Trajectories that have at least K (K >=2) continuous strictly
-increasing sections of Pm25, followed by M (M>=2) continuously strictly
-decreasing sections.
-*/
-
--- Minimum increasing and decreasing sections
-WITH Params(K, M) AS ( SELECT 2, 3 ),
-Trends(TripId, CellId, StartTime, EndTime, Pm25, Trend) AS (
-  SELECT TripId, CellId, StartTime, EndTime, Pm25,
-    SIGN((LEAD(Pm25) OVER w) - Pm25) /* Compute the trend */
-  FROM TripCells
-  WINDOW w AS (PARTITION BY TripId ORDER BY StartTime) ),
-Phases(TripId, PhaseId, CellId, StartTime, EndTime, Pm25, Trend) AS (
-  SELECT TripId, SUM(NewPhase) OVER (PARTITION BY TripId ORDER BY
-    StartTime), CellId, StartTime, EndTime, Pm25, Trend
-  FROM (
-    SELECT *,
-      CASE
-        WHEN Trend = LAG(Trend) OVER (PARTITION BY TripId ORDER BY
-          StartTime) THEN 0 ELSE 1
-      END AS NewPhase
-      FROM Trends
-      WHERE Trend <> 0 ) AS Temp ),
-PhaseLengths(TripId, PhaseId, Trend, Length) AS (
-  SELECT TripId, PhaseId, Trend, COUNT(*)
-  FROM Phases
-  GROUP BY TripId, PhaseId, Trend ),s
-SelectedPhasePairs AS (
-  SELECT p1.TripId, p1.PhaseId AS IncrPhase, p2.PhaseId AS DecrPhase
-  FROM PhaseLengths p1, PhaseLengths p2, Params p 
-  WHERE p1.TripId = p2.TripId AND p2.PhaseId = p1.PhaseId + 1 AND 
-    p1.Trend = 1 AND p1.Length >= p.K AND p2.Trend = -1 AND p2.Length >= p.M )
-SELECT r.TripId, array_agg(ROW(r.CellId, ROUND(r.Pm25::numeric, 2),
-  CASE
-    WHEN r.PhaseId = s.IncrPhase THEN 'I'
-    WHEN r.PhaseId = s.DecrPhase THEN 'D'
-  END) ORDER BY r.StartTime) AS Sequence
-FROM Phases r, SelectedPhasePairs s
-WHERE s.TripId = r.TripId AND r.PhaseId IN (s.IncrPhase, s.DecrPhase)
-GROUP BY r.TripId
-ORDER BY r.TripId;
-
--- 594 rows
--- Time: 283.175 ms
-
--------------------------------------------------------------------------------
-/*
-5.32 Trajectories that have at least three continuously increasing sections
-with values Pm25 higher than 125, followed by two continuously decreasing
-sections and such that in these sections the temperature was always higher
-than 20 degrees.
-*/
-
--- SHOULD START WITH THIS
-WITH Trends(TripId, CellId, StartTime, EndTime, Pm25, Weather, Trend) AS (
-  SELECT TripId, CellId, StartTime, EndTime, Pm25, Weather,
-    SIGN((LEAD(Pm25) OVER w) - Pm25) /* Compute the trend */
-  FROM TripCells
-  WINDOW w AS (PARTITION BY TripId ORDER BY StartTime) ),
-
-WITH TripsOrdered(TripId, CellId, StartTime, EndTime, Pm25, Weather, PrevPm25) AS (
-  SELECT TripId, CellId, StartTime, EndTime, Pm25, Weather,
-    LAG(Pm25) OVER (PARTITION BY TripId ORDER BY StartTime)
-  FROM TripCells ),
-Trends(TripId, CellId, StartTime, EndTime, Pm25, Weather, Trend) AS (
-  SELECT TripId, CellId, StartTime, EndTime, Pm25, Weather,
-    CASE
-      WHEN Pm25 > PrevPm25 THEN 1 WHEN Pm25 < PrevPm25 THEN -1 ELSE 0
-    END
-  FROM TripsOrdered ),
-PhaseStarts(TripId, CellId, StartTime, EndTime, Pm25, Weather, Trend, NewPhase) AS (
-  SELECT *,
-    CASE
-      WHEN Trend = LAG(Trend) OVER (PARTITION BY TripId ORDER BY StartTime)
-        THEN 0 ELSE 1
-    END
-  FROM Trends
-  WHERE Trend <> 0 ),
--- Assign a PhaseId to maximal contiguous segments with the same monotonic trend
-Phases(TripId, PhaseId, CellId, StartTime, EndTime, Pm25, Weather, Trend) AS (
-  SELECT TripId, SUM(NewPhase) OVER (PARTITION BY TripId ORDER BY StartTime),
-    CellId, StartTime, EndTime, Pm25, Weather, Trend
-  FROM PhaseStarts ),
--- Compute phase lengths and validates Pm25 and temperature constraints per phase
-PhaseLenghts AS (
-  SELECT TripId, PhaseId, Trend, COUNT(*) AS PhaseLen,
-    bool_and(Pm25 > 125) FILTER (WHERE Trend = 1) AS IncrPm25,
-    bool_and((Weather->>'Temperature')::numeric > 20) FILTER
-      (WHERE Trend = -1) AS DecrTemp
-  FROM Phases
-  GROUP BY TripId, PhaseId, Trend ),
--- Select adjacent increasing/decreasing phases that satisfy length and value conditions
-PhasePairs AS (
-  SELECT p1.TripId, p1.PhaseId AS IncrPhase, p2.PhaseId AS DecrPhase
-  FROM PhaseLenghts p1, PhaseLenghts p2
-  WHERE p2.TripId = p1.TripId AND p2.PhaseId = p1.PhaseId + 1 AND
-    p1.Trend = 1 AND p1.PhaseLen >= 3 AND p1.IncrPm25 AND p2.Trend = -1 AND
-    p2.PhaseLen >= 2 AND p2.DecrTemp )
--- Return every section (CellId) participating in a valid pattern.
-SELECT r.TripId, array_agg(ROW(r.CellId, ROUND(r.Pm25::numeric, 2),
-  (r.Weather->>'Temperature')::numeric,
-  CASE
-    WHEN r.PhaseId = s.IncrPhase THEN 'I'
-    WHEN r.PhaseId = s.DecrPhase THEN 'D'
-  END) ORDER BY r.StartTime) AS Sequence
-FROM Phases r, PhasePairs s
-WHERE s.TripId = r.TripId AND r.PhaseId IN (s.IncrPhase, s.DecrPhase)
-GROUP BY r.TripId
-ORDER BY r.TripId;
-
--- 67 rows
-
--------------------------------------------------------------------------------
-/*
-Query 5.33. Trips that traversed at least twice the same cell with exactly
-one different cell in between.
-*/
-
--- Order each trip by time and expose the previous two cells
-WITH Ordered(TripId, CellId, StartTime, Prev2Cell, PrevCell) AS (
-  SELECT TripId, CellId, StartTime, LAG(CellId, 2) OVER w, 
-    LAG(CellId, 1) OVER w
-  FROM TripCells
-  WINDOW w AS (PARTITION BY TripId ORDER BY StartTime) )
-SELECT TripId, array_agg(ROW(Prev2Cell, PrevCell, CellId, StartTime)
-  ORDER BY StartTime) AS Patterns
-FROM Ordered
-WHERE Prev2Cell IS NOT NULL AND CellId = Prev2Cell AND PrevCell <> CellId
+DROP TABLE IF EXISTS TGQ5_9;
+CREATE TABLE TGQ5_9(TripId, Cells, Pm25Seq) AS
+WITH TrendPm25(TripId, CellId, Weather, Pm25, Trend) AS (
+  SELECT TripId, CellId, Weather, Pm25, trend(Pm25)
+  FROM TripTiles
+  WHERE trend(Pm25) %> 0 ),
+SelectedTrip(TripId) AS (
+  SELECT TripId 
+  FROM TrendPm25
+  GROUP BY TripId 
+  HAVING COUNT(*) >= 2 )
+SELECT TripId, tintSeq(array_agg(tint(CellId, lower(AtTime)) ORDER BY AtTime))
+  AS Cells, merge(array_agg(Pm25 ORDER BY AtTime)) AS Pm25
+FROM TripTiles
+WHERE TripId IN (SELECT TripId FROM SelectedTrip)
 GROUP BY TripId
 ORDER BY TripId;
 
--- 2213 rows
+-- SELECT 155
+-- Time: 5431.992 ms (00:05.432)
+
 -------------------------------------------------------------------------------
 /*
-Query 5.34. Trips that traversed at least twice the same cell with exactly
+5.10. Trips where the Pm25 increases for at least 1.5 minutes and
+then decreases for at least 1.5 minutes, such that in both episodes the Pm25
+is higher than 125 and the temperature is higher than 20 degrees.
+
+IncrPm25: Trip[sign(derivative(Pm25)) > 0]
+DecrPm25: Trip[sign(derivative(Pm25)) < 0]
+IncrDecrSpeed: Trip[before([IncrPm25 AND duration(IncrPm25) >= '1.5 minutes'],
+  [DecrPm25 AND duration(DecrPm25) >= '1.5 minutes'])]
+Trip[IncrDecrSpeed AND Pm25 > 125 AND Temperature > 20]
+*/
+
+DROP TABLE IF EXISTS GQ5_10;
+CREATE TABLE GQ5_10(TripId, EpisodeId, StartTime, EndTime, Duration, Cells,
+  Trend, Pm25seq) AS
+WITH TrendPm25(TripId, StartTime, EndTime, CellId, Pm25, Trend) AS (
+  SELECT TripId, StartTime, EndTime, CellId, Pm25, SIGN(Pm25 -
+    (LAG(Pm25) OVER (PARTITION BY TripId ORDER BY StartTime)))
+  FROM TripCells ),
+EpisodeStart(TripId, StartTime, EndTime, CellId, Pm25, Trend,
+    NewEpisode) AS (
+  SELECT TripId, StartTime, EndTime, CellId, Pm25, Trend,
+    CASE
+      WHEN Trend IS NULL OR Trend <> LAG(Trend) OVER
+        (PARTITION BY TripId ORDER BY StartTime) THEN 1 ELSE 0
+    END
+  FROM TrendPm25 ),
+Episode(TripId, EpisodeId, StartTime, EndTime, CellId, Pm25, Trend) AS (
+  SELECT TripId, SUM(NewEpisode) OVER (PARTITION BY TripId ORDER BY
+    StartTime), StartTime, EndTime, CellId, Pm25, Trend
+  FROM EpisodeStart ),
+EpisodeDuration(TripId, EpisodeId, StartTime, EndTime, Trend, Duration, Cells,
+    Pm25seq) AS (
+  SELECT TripId, EpisodeId, MIN(StartTime), MAX(EndTime), 
+    MIN(Trend), /* Trend is the same for all episode */
+    MAX(EndTime) - MIN(StartTime), array_agg(CellId ORDER BY StartTime),
+    array_agg(ROUND(Pm25::numeric, 2) ORDER BY StartTime)
+  FROM Episode
+  GROUP BY TripId, EpisodeId
+  HAVING MAX(StartTime) - MIN(StartTime) >= interval '1.5 minutes' AND
+    COUNT(*) >= 2 ),
+EpisodePair(TripId, IncrEpisode, DecrEpisode) AS (
+  SELECT e1.TripId, e1.EpisodeId, e2.EpisodeId
+  FROM EpisodeDuration e1, EpisodeDuration e2
+  WHERE e1.TripId = e2.TripId AND e1.EpisodeId + 1 = e2.EpisodeId AND
+    e1.Trend = 1 AND e2.Trend = -1 )
+SELECT e.TripId, EpisodeId, StartTime, EndTime, Duration, Cells, Trend, Pm25seq
+FROM EpisodeDuration e, EpisodePair p
+WHERE e.TripId = p.TripId AND e.EpisodeId IN (p.IncrEpisode, p.DecrEpisode)
+ORDER BY e.TripId;
+
+-- SELECT SELECT 3386
+-- Time: 562.254 ms
+
+-- TEMPORAL VERSION
+
+DROP TABLE IF EXISTS TGQ5_10;
+CREATE TABLE TGQ5_10(TripId, EpisodeId, AtTime, Duration, Cells,
+  Trend, Pm25) AS
+WITH TrendPm25(TripId, AtTime, CellId, Pm25, Trend) AS (
+  SELECT TripId, AtTime, CellId, Pm25, trend(Pm25)
+  FROM TripTiles ),
+EpisodeStart(TripId, AtTime, CellId, Pm25, Trend, NewEpisode) AS (
+  SELECT TripId, AtTime, CellId, Pm25, Trend,
+    CASE
+      WHEN Trend IS NULL OR Trend <> LAG(Trend) OVER
+        (PARTITION BY TripId ORDER BY AtTime) THEN 1 ELSE 0
+    END
+  FROM TrendPm25 ),
+Episode(TripId, EpisodeId, AtTime, CellId, Pm25, Trend) AS (
+  SELECT TripId, SUM(NewEpisode) OVER (PARTITION BY TripId ORDER BY
+    AtTime), AtTime, CellId, Pm25, Trend
+  FROM EpisodeStart ),
+EpisodeDuration(TripId, EpisodeId, AtTime, Trend, Cells, Pm25) AS (
+  SELECT TripId, EpisodeId, spanUnion(AtTime ORDER BY AtTime),
+    merge(array_agg(Trend ORDER BY Trend)),
+    tintSeq(array_agg(tint(CellId, lower(AtTime)) ORDER BY AtTime)),
+    merge(array_agg(Pm25 ORDER BY Pm25))
+  FROM Episode
+  GROUP BY TripId, EpisodeId
+  HAVING duration(spanUnion(AtTime ORDER BY AtTime)) >= interval '1.5 minutes'
+    AND COUNT(*) >= 2 ),
+EpisodePair(TripId, IncrEpisode, DecrEpisode) AS (
+  SELECT e1.TripId, e1.EpisodeId, e2.EpisodeId
+  FROM EpisodeDuration e1, EpisodeDuration e2
+  WHERE e1.TripId = e2.TripId AND e1.EpisodeId + 1 = e2.EpisodeId AND
+    startValue(e1.Trend) = 1 AND startValue(e2.Trend) = -1 )
+SELECT e.TripId, EpisodeId, AtTime, duration(AtTime), Cells, Trend, Pm25
+FROM EpisodeDuration e, EpisodePair p
+WHERE e.TripId = p.TripId AND e.EpisodeId IN (p.IncrEpisode, p.DecrEpisode)
+ORDER BY e.TripId;
+
+-------------------------------------------------------------------------------
+
+/*
+Query 5.11. Trips that have at some point the \textsf{Pm25} lower than 100 and
+later reach a value higher than 400, such that the elapsed time between
+the increase of values in less than 1 minute.
+
+StartPm25: Trip[Pm25 < 100]
+EndPm25: Trip[Pm25 > 400]
+Trip[before(StartPm25, EndPm25) AND
+  lower(EndPm25) - lower(StartPm25) < '1 minute']
+*/
+
+DROP TABLE IF EXISTS GQ5_11;
+CREATE TABLE GQ5_11(TripId, StartTime, EndTime, Duration, Cells, Pm25seq) AS
+WITH StartPm25(TripId, StartStep, StartCell, StartTime, StartPm25) AS (
+  SELECT TripId, StepNo, CellId, StartTime, Pm25
+  FROM TripCells c1
+  WHERE StepNo = (
+    SELECT MIN(StepNo)
+    FROM TripCells c2
+    WHERE c1.TripId = c2.Tripid AND Pm25 < 100 ) ),
+EndPm25(TripId, EndStep, EndCell, EndTime, EndPm25) AS (
+  SELECT TripId, StepNo, CellId, EndTime, Pm25
+  FROM TripCells c1
+  WHERE StepNo = (
+    SELECT MIN(StepNo)
+    FROM TripCells c2
+    WHERE c1.TripId = c2.Tripid AND Pm25 > 400 ) ),
+Episode(TripId, StartTime, EndTime, Duration) AS (
+  SELECT s.TripId, StartTime, EndTime, EndTime - StartTime
+  FROM StartPm25 s, EndPm25 e
+  WHERE s.TripId = e.Tripid AND StartTime < EndTime AND
+    EndTime - StartTime >= '1 minute' )
+SELECT t.TripId, e.StartTime, e.EndTime, e.Duration,
+  array_agg(t.CellId ORDER BY t.StartTime) AS Cells,
+  array_agg(ROUND(t.Pm25::numeric, 2) ORDER BY t.StartTime) AS Pm25seq
+FROM TripCells t, Episode e
+WHERE t.TripId = e.TripId AND t.StartTime BETWEEN e.StartTime AND e.EndTime
+GROUP BY t.TripId, e.StartTime, e.EndTime, e.Duration
+ORDER BY TripId, StartTime;
+
+-- SELECT 10
+-- Time: 974.391 ms
+
+-- TEMPORAL VERSION
+
+DROP TABLE IF EXISTS TGQ5_11;
+CREATE TABLE TGQ5_11(TripId, AtTime, Duration, Cells, Pm25seq) AS
+WITH StartPm25(TripId, StartStep, StartCell, StartTime, StartPm25) AS (
+  SELECT TripId, StepNo, CellId, lower(AtTime), Pm25
+  FROM TripTiles c1
+  WHERE StepNo = (
+    SELECT MIN(StepNo)
+    FROM TripTiles c2
+    WHERE c1.TripId = c2.Tripid AND Pm25 ?< 100 ) ),
+EndPm25(TripId, EndStep, EndCell, EndTime, EndPm25) AS (
+  SELECT TripId, StepNo, CellId, upper(AtTime), Pm25
+  FROM TripTiles c1
+  WHERE StepNo = (
+    SELECT MIN(StepNo)
+    FROM TripTiles c2
+    WHERE c1.TripId = c2.Tripid AND Pm25 ?> 400 ) ),
+Episode(TripId, AtTime, Duration) AS (
+  SELECT s.TripId, span(StartTime, EndTime), duration(span(StartTime, EndTime))
+  FROM StartPm25 s, EndPm25 e
+  WHERE s.TripId = e.Tripid AND StartTime < EndTime AND
+    EndTime - StartTime >= '1 minute' )
+SELECT t.TripId, e.AtTime, e.Duration,
+  tintSeq(array_agg(tint(CellId, lower(t.AtTime)) ORDER BY t.AtTime)),
+  array_agg(ROUND(t.Pm25, 2) ORDER BY t.AtTime) AS Pm25seq
+FROM TripTiles t, Episode e
+WHERE t.TripId = e.TripId AND t.AtTime && e.AtTime
+GROUP BY t.TripId, e.AtTime, e.Duration
+ORDER BY TripId, AtTime;
+
+-------------------------------------------------------------------------------
+/*
+Query 5.12. Trips that travel all their way under a temperature higher than
+25 degrees and such that at in at least two episodes longer than thirty minutes,
+the Pm25 is higher than 150.
+*/
+
+DROP TABLE IF EXISTS GQ5_12;
+CREATE TABLE GQ5_12(TripId, EpisodeId, StartTime, EndTime, Duration, Cells, Pm25seq) AS
+WITH TripTemp(TripId) AS (
+  SELECT TripId 
+  FROM TripCells
+  GROUP BY TripId
+  HAVING MIN((Weather->>'Temperature')::numeric) > 25 ),
+LowerPm25(TripId, StartTime, EndTime, CellId, Pm25, StartEpisode) AS (
+  SELECT TripId, StartTime, EndTime, CellId, Pm25,
+    CASE
+      WHEN whenTrue(Pm25 #> 150)
+      THEN 1 ELSE 0
+    END
+  FROM TripCells
+  WHERE TripId IN (SELECT TripId FROM TripTemp) ),
+Episode(TripId, EpisodeId, StartTime, EndTime, CellId, Pm25) AS (
+  SELECT TripId, SUM(StartEpisode) OVER 
+    (PARTITION BY TripId ORDER BY StartTime), StartTime, EndTime, CellId, Pm25
+  FROM LowerPm25 ),
+Pattern(TripId, EpisodeId, StartTime, EndTime, Duration, Cells, Pm25seq) AS (
+  SELECT TripId, EpisodeId, MIN(StartTime), MAX(EndTime),
+    MAX(EndTime) - MIN(StartTime), array_agg(CellId ORDER BY StartTime),
+    array_agg(ROUND(Pm25::numeric, 2) ORDER BY StartTime)
+  FROM Episode
+  WHERE Pm25 > 150
+  GROUP BY TripId, EpisodeId
+  HAVING MAX(EndTime) - MIN(StartTime) >= interval '10 minutes' AND
+    COUNT(*) >= 2 ),
+SelectedTrip(TripId) AS (
+  SELECT TripId
+  FROM Pattern
+  GROUP BY TripId
+  HAVING COUNT(*) >= 2 )
+SELECT TripId, EpisodeId, StartTime, EndTime, Duration, Cells, Pm25seq
+FROM Pattern 
+WHERE TripId IN (SELECT TripId FROM SelectedTrip)
+ORDER BY TripId, StartTime;
+
+-- SELECT 4
+-- Time: 107.508 ms
+
+-- TEMPORAL VERSION
+
+DROP TABLE IF EXISTS TGQ5_12;
+CREATE TABLE TGQ5_12(TripId, EpisodeId, AtTime, Duration, Cells, Pm25) AS
+WITH TripTemp(TripId) AS (
+  SELECT TripId 
+  FROM TripTiles
+  WHERE tfloat(Weather, 'Temperature', 'step') %> 25 ),
+LowerPm25(TripId, AtTime, CellId, Pm25, StartEpisode) AS (
+  SELECT TripId, AtTime, CellId, Pm25,
+    CASE
+      WHEN Pm25 <= 150 OR LAG(Pm25) OVER
+        (PARTITION BY TripId ORDER BY StartTime) <= 150
+      THEN 1 ELSE 0
+    END
+  FROM TripTiles
+  WHERE TripId IN (SELECT TripId FROM TripTemp) ),
+Episode(TripId, EpisodeId, StartTime, EndTime, CellId, Pm25) AS (
+  SELECT TripId, SUM(StartEpisode) OVER 
+    (PARTITION BY TripId ORDER BY StartTime), StartTime, EndTime, CellId, Pm25
+  FROM LowerPm25 ),
+Pattern(TripId, EpisodeId, StartTime, EndTime, Duration, Cells, Pm25seq) AS (
+  SELECT TripId, EpisodeId, MIN(StartTime), MAX(EndTime),
+    MAX(EndTime) - MIN(StartTime), array_agg(CellId ORDER BY StartTime),
+    array_agg(ROUND(Pm25::numeric, 2) ORDER BY StartTime)
+  FROM Episode
+  WHERE Pm25 > 150
+  GROUP BY TripId, EpisodeId
+  HAVING MAX(EndTime) - MIN(StartTime) >= interval '10 minutes' AND
+    COUNT(*) >= 2 ),
+SelectedTrip(TripId) AS (
+  SELECT TripId
+  FROM Pattern
+  GROUP BY TripId
+  HAVING COUNT(*) >= 2 )
+SELECT TripId, EpisodeId, StartTime, EndTime, Duration, Cells, Pm25seq
+FROM Pattern 
+WHERE TripId IN (SELECT TripId FROM SelectedTrip)
+ORDER BY TripId, StartTime;
+
+-------------------------------------------------------------------------------
+/*
+Query 5.13.
+Trips such that there is at least a 30-minute episode where the \textsf{Pm25}
+is higher than 300 in cloudy conditions and with humidity higher than 80\%.
+
+HighPm25: Trip[Pm25 > 300]
+Episode: Trip[HighPm25 AND duration(HighPm25) > interval '30 minutes']
+Trip[Episode AND CloudCover > 0 AND Humidity > 80]
+
+*/
+
+DROP TABLE IF EXISTS Q5_13;
+CREATE TABLE Q5_13 AS
+WITH Segment(TripId, StartTime, EndTime, Pm25, CloudCover, Humidity, Valid) AS (
+  SELECT TripId, StartTime, EndTime, Pm25, (Weather->>'CloudCover')::numeric,
+    (Weather->>'Humidity')::numeric,
+    CASE
+      WHEN Pm25 > 300 AND (Weather->>'CloudCover')::numeric > 0 AND
+        (Weather->>'Humidity')::numeric > 80
+      THEN 1 ELSE 0
+    END 
+  FROM TripCells ),
+SegmentPrev(TripId, StartTime, EndTime, Pm25, CloudCover, Humidity, Valid,
+    PrevValid) AS (
+  SELECT *, LAG(Valid) OVER (PARTITION BY TripId ORDER BY StartTime)
+  FROM Segment ),
+Episode(TripId, EpisodeId, StartTime, EndTime, Pm25, CloudCover, Humidity, Valid,
+    PrevValid) AS (
+  SELECT TripId, SUM(CASE WHEN Valid = PrevValid THEN 0 ELSE 1 END) OVER
+    (PARTITION BY TripId ORDER BY StartTime), StartTime, EndTime, Pm25,
+    CloudCover, Humidity, Valid, PrevValid
+  FROM SegmentPrev )
+SELECT TripId, EpisodeId, MIN(StartTime) AS StartTime,
+  MAX(EndTime) AS EndTime, MAX(StartTime) - MIN(StartTime) AS Duration, 
+  array_agg(Pm25 ORDER BY StartTime) AS Pm25Seq,
+  array_agg(CloudCover ORDER BY StartTime) AS CloudCoverSeq,
+  array_agg(Humidity ORDER BY StartTime) AS HumiditySeq
+FROM Episode
+GROUP BY TripId, EpisodeId
+HAVING MAX(EndTime) - MIN(StartTime) >= '30 minutes' AND BOOL_AND(Valid = 1)
+ORDER BY TripId, StartTime;
+
+-- SELECT 92
+-- Time: 408.906 ms
+
+-- TEMPORAL VERSION
+
+DROP TABLE IF EXISTS TQ5_13;
+CREATE TABLE Q5_13 AS
+WITH Segment(TripId, StartTime, EndTime, Pm25, CloudCover, Humidity, Valid) AS (
+  SELECT TripId, StartTime, EndTime, Pm25, (Weather->>'CloudCover')::numeric,
+    (Weather->>'Humidity')::numeric,
+    CASE
+      WHEN Pm25 > 300 AND (Weather->>'CloudCover')::numeric > 0 AND
+        (Weather->>'Humidity')::numeric > 80
+      THEN 1 ELSE 0
+    END 
+  FROM TripTiles ),
+SegmentPrev(TripId, StartTime, EndTime, Pm25, CloudCover, Humidity, Valid,
+    PrevValid) AS (
+  SELECT *, LAG(Valid) OVER (PARTITION BY TripId ORDER BY StartTime)
+  FROM Segment ),
+Episode(TripId, EpisodeId, StartTime, EndTime, Pm25, CloudCover, Humidity, Valid,
+    PrevValid) AS (
+  SELECT TripId, SUM(CASE WHEN Valid = PrevValid THEN 0 ELSE 1 END) OVER
+    (PARTITION BY TripId ORDER BY StartTime), StartTime, EndTime, Pm25,
+    CloudCover, Humidity, Valid, PrevValid
+  FROM SegmentPrev )
+SELECT TripId, EpisodeId, MIN(StartTime) AS StartTime,
+  MAX(EndTime) AS EndTime, MAX(StartTime) - MIN(StartTime) AS Duration, 
+  array_agg(Pm25 ORDER BY StartTime) AS Pm25Seq,
+  array_agg(CloudCover ORDER BY StartTime) AS CloudCoverSeq,
+  array_agg(Humidity ORDER BY StartTime) AS HumiditySeq
+FROM Episode
+GROUP BY TripId, EpisodeId
+HAVING MAX(EndTime) - MIN(StartTime) >= '30 minutes' AND BOOL_AND(Valid = 1)
+ORDER BY TripId, StartTime;
+
+-------------------------------------------------------------------------------
+/*
+Query 5.14. Trips that traversed at least twice the same cell with exactly
+one different cell in between.
+*/
+
+-- Add the previous two cells to the rows
+
+DROP TABLE IF EXISTS Q5_14;
+CREATE TABLE Q5_14 AS
+WITH CellSeq(TripId, CellId, StartTime, EndTime, Prev2Cell, Prev2StartTime,
+    PrevCell, PrevStartTime) AS (
+  SELECT TripId, CellId, StartTime, EndTime, LAG(CellId, 2) OVER w, 
+    LAG(StartTime, 2) OVER w, LAG(CellId, 1) OVER w, LAG(StartTime, 1) OVER w
+  FROM TripCells
+  WINDOW w AS (PARTITION BY TripId ORDER BY StepNo) )
+SELECT TripId, Prev2StartTime, EndTime, Prev2Cell, PrevCell, CellId
+FROM CellSeq
+WHERE Prev2Cell IS NOT NULL AND CellId = Prev2Cell AND PrevCell <> CellId
+ORDER BY TripId;
+
+-- (10478 rows)
+-- Time: 137.398 ms
+
+-- TEMPORAL VERSION
+
+DROP TABLE IF EXISTS TQ5_14;
+CREATE TABLE TQ5_14 AS
+WITH CellSeq(TripId, StepNo, CellId, AtTime, Prev2Cell, PrevCell) AS (
+  SELECT TripId, StepNo, CellId, AtTime, LAG(CellId, 2) OVER w, 
+    LAG(CellId, 1) OVER w
+  FROM TripTiles
+  WINDOW w AS (PARTITION BY TripId ORDER BY StepNo) )
+SELECT TripId, Prev2Cell, PrevCell, CellId
+FROM CellSeq
+WHERE Prev2Cell IS NOT NULL AND PrevCell IS NOT NULL AND
+  CellId = Prev2Cell AND PrevCell <> CellId
+ORDER BY TripId;
+
+-------------------------------------------------------------------------------
+/*
+Query 5.15. Trips that traversed at least twice the same cell with exactly
 two different cells in between. In this case we are asking for patterns like
 A -> B -> C -> A, with the following constraints:
 • The first and last cells are the same
@@ -215,193 +554,45 @@ A -> B -> C -> A, with the following constraints:
 different, that is B <> C, B <> A, C <> A
 */
 
--- Order each trip and expose the three previous visited cells
-WITH Ordered(TripId, CellId, StartTime, Prev3Cell, Prev2Cell, PrevCell) AS (
-  SELECT TripId, CellId, StartTime,
-    LAG(CellId, 3) OVER (PARTITION BY TripId ORDER BY StartTime),
-    LAG(CellId, 2) OVER (PARTITION BY TripId ORDER BY StartTime),
-    LAG(CellId, 1) OVER (PARTITION BY TripId ORDER BY StartTime)
-    FROM TripCells )
-SELECT TripId, array_agg(ROW(Prev3Cell, Prev2Cell, PrevCell,CellId, StartTime) 
-  ORDER BY StartTime) AS Patterns
-FROM Ordered
-WHERE Prev3Cell IS NOT NULL AND Prev2Cell IS NOT NULL AND PrevCell  IS NOT NULL
-  AND CellId = Prev3Cell       -- A → B → C → A
-  AND Prev2Cell <> PrevCell    -- B ≠ C
-  AND Prev2Cell <> CellId      -- B ≠ A
-  AND PrevCell  <> CellId      -- C ≠ A
+DROP TABLE IF EXISTS Q5_15;
+CREATE TABLE Q5_15 AS
+-- Get the three previous visited cells
+WITH CellSeq(TripId, CellId, StartTime, Prev3Cell, Prev2Cell, PrevCell) AS (
+  SELECT TripId, CellId, StartTime, LAG(CellId, 3) OVER w,
+    LAG(CellId, 2) OVER w,  LAG(CellId, 1) OVER w
+  FROM TripCells
+  WINDOW w AS (PARTITION BY TripId ORDER BY StartTime) )
+SELECT TripId, array_agg(Prev3Cell::text || ':' || Prev2Cell::text || ':' ||
+  PrevCell::text || ':' || CellId::text ORDER BY StartTime) AS Patterns
+FROM CellSeq
+WHERE Prev3Cell IS NOT NULL AND Prev2Cell IS NOT NULL AND
+  PrevCell IS NOT NULL AND CellId = Prev3Cell AND Prev2Cell <> PrevCell AND 
+  Prev2Cell <> CellId AND PrevCell <> CellId
 GROUP BY TripId
 ORDER BY TripId;
 
--- 63 rows
+-- SELECT 63
+-- Time: 99.441 ms
 
--------------------------------------------------------------------------------%%%%
-/*
-Query 5.35. Trips that started from a Pm25 lower   than 100 (
-OR at some point dropped below 100) and at some
-point reached a value higher than 400.
-*/
+DROP TABLE IF EXISTS TQ5_15;
+CREATE TABLE TQ5_15 AS
 
--- Order each trip and expose the first Pm25 value
-WITH Ordered(TripId, CellId, StartTime, EndTime, Pm25, RowNo) AS (
-  SELECT TripId, CellId, StartTime, EndTime, Pm25,
-    ROW_NUMBER() OVER (PARTITION BY TripId ORDER BY StartTime)
-  FROM TripCells),
--- Select trips whose first section starts with Pm25 < 100
--- and that later reaches Pm25 > 400
-SelectedTrips AS (
-  SELECT DISTINCT o1.TripId
-  FROM Ordered o1, Ordered o2
-  WHERE o1.TripId = o2.TripId AND o1.RowNo = 1 AND o1.Pm25 < 100
-    AND o2.Pm25 > 400)
--- One row per trip, aggregate the selected sections
-SELECT o.TripId, array_agg(ROW(o.RowNo, o.CellId, o.StartTime, o.EndTime,
-  ROUND(o.Pm25::numeric, 2),
-  CASE
-    WHEN o.RowNo = 1 THEN 'start (<100)'
-    WHEN o.Pm25 > 400 THEN 'exceeds 400'
-  END) ORDER BY o.StartTime) AS Sections
-FROM Ordered o, SelectedTrips s
-WHERE s.TripId = o.TripId AND (o.RowNo = 1 OR o.Pm25 > 400)
-GROUP BY o.TripId
-ORDER BY o.TripId;
+DROP TABLE IF EXISTS TQ5_15;
+CREATE TABLE TQ5_15 AS
+-- Get the three previous visited cells
+WITH CellSeq(TripId, CellId, AtTime, Prev3Cell, Prev2Cell, PrevCell) AS (
+  SELECT TripId, CellId, AtTime, LAG(CellId, 3) OVER w,
+    LAG(CellId, 2) OVER w, LAG(CellId, 1) OVER w
+  FROM TripTiles
+  WHERE TripId = 1704
+  WINDOW w AS (PARTITION BY TripId ORDER BY AtTime) )
+SELECT TripId, array_agg(Prev3Cell::text || ':' || Prev2Cell::text || ':' ||
+  PrevCell::text || ':' || CellId::text ORDER BY AtTime) AS Patterns
+FROM CellSeq
+WHERE Prev3Cell IS NOT NULL AND Prev2Cell IS NOT NULL AND 
+  PrevCell IS NOT NULL AND CellId = Prev3Cell AND Prev2Cell <> PrevCell AND 
+  Prev2Cell <> CellId AND PrevCell <> CellId
+GROUP BY TripId
+ORDER BY TripId;
 
--- 5 rows
--------------------------------------------------------------------------------
-/*
-Query 5.36. Same as Query 5.35, but such that the elapsed time between
-the increase of values is less than five minutes.
-*/
-
--- Order each trip and assign a sequence number to each section
-WITH Ordered(TripId, CellId, StartTime, EndTime, Pm25, RowNo) AS (
-  SELECT TripId, CellId, StartTime, EndTime, Pm25,
-    ROW_NUMBER() OVER (PARTITION BY TripId ORDER BY StartTime)
-  FROM TripCells ),
--- Identify the starting section of each trip with Pm25 < 130
-Starts AS (
-  SELECT TripId, CellId AS StartCell, StartTime, Pm25 AS StartPm25
-  FROM Ordered
-  WHERE RowNo = 1 AND Pm25 < 100 ),
--- Find for each trip the first section where Pm25 exceeds 180
-FirstExceed AS (
-  SELECT DISTINCT ON (TripId) TripId, CellId AS ExceedCell,
-    StartTime AS ExceedTime, Pm25 AS ExceedPm25
-  FROM Ordered
-  WHERE Pm25 > 400
-  ORDER BY TripId, StartTime ),
--- Keep only trips where the increase happens within 5 minutes
-SelectedTrips(TripId, StartTime, ExceedTime, ElapsedTime) AS (
-  SELECT s.TripId, s.StartTime, f.ExceedTime, (f.ExceedTime - s.StartTime)
-  FROM Starts s, FirstExceed f
-  WHERE f.TripId = s.TripId AND
-    f.ExceedTime - s.StartTime < interval '5 minutes' )
--- Show the concrete sections satisfying the pattern with elapsed time
-SELECT o.TripId, s.ElapsedTime,
-  array_agg(ROW(o.CellId, o.StartTime, o.EndTime, ROUND(o.Pm25::numeric, 2),
-      CASE
-        WHEN o.StartTime = s.StartTime THEN 'start (<100)'
-        WHEN o.StartTime = s.ExceedTime THEN 'first (>400)'
-        ELSE 'intermediate'
-      END) ORDER BY o.StartTime) AS Sections
-FROM Ordered o, SelectedTrips s
-WHERE s.TripId = o.TripId
-  AND o.StartTime BETWEEN s.StartTime AND s.ExceedTime
-GROUP BY o.TripId, s.ElapsedTime
-ORDER BY o.TripId;
--- 2 rows
-
--------------------------------------------------------------------------------
-/*
-Query 5.37. Trips traveling all their way under a Temperature higher
-than 20 degrees and such that at in at least any two consecutive sections,
-the Pm25 was higher than 150.
-*/
-
--- Order each trip and expose the previous section values
-WITH Ordered(TripId, CellId, StartTime, EndTime, Pm25, Weather,
-  PrevCellId, PrevStartTime, PrevPm25, PrevAttributes) AS (
-  SELECT TripId, CellId, StartTime, EndTime, Pm25, Weather,
-    LAG(CellId) OVER (PARTITION BY TripId ORDER BY StartTime),
-    LAG(StartTime) OVER (PARTITION BY TripId ORDER BY StartTime),
-    LAG(Pm25) OVER (PARTITION BY TripId ORDER BY StartTime),
-    LAG(Weather) OVER (PARTITION BY TripId ORDER BY StartTime)
-  FROM TripCells ),
--- Keep only trips where ALL sections have temperature > 20
-SelectedTrips AS (
-  SELECT TripId
-  FROM TripCells
-  GROUP BY TripId
-  HAVING bool_and((Weather->>'Temperature')::numeric > 20) )
--- Return the concrete consecutive sections satisfying the condition
-SELECT o.TripId,
-  array_agg(
-    ROW(
-      -- first section
-      o.PrevCellId, o.PrevStartTime, ROUND(o.PrevPm25::numeric, 2),
-      (o.PrevAttributes->>'Temperature')::numeric,
-      -- second section
-      o.CellId, o.StartTime, ROUND(o.Pm25::numeric, 2),
-      (o.Weather->>'Temperature')::numeric)
-    ORDER BY o.PrevStartTime) AS SectionPairs
-FROM Ordered o, SelectedTrips s
-WHERE s.TripId = o.TripId
-  AND o.PrevPm25 > 150
-  AND o.Pm25 > 150
-GROUP BY o.TripId
-ORDER BY o.TripId;
-
--- 1035 rows
-
--------------------------------------------------------------------------------
-/*
-Query 5.38. Trips that traversed at least three consecutive sections under
-cloudy conditions (CloudCover > 0) with Pm25 higher than 300 and with humidity higher
-than 80.
-*/
-
--- Order each trip and extract the relevant variables
-WITH Ordered(TripId, CellId, StartTime, EndTime, Pm25, Humidity, CloudCover,
-    Rain) AS (
-  SELECT TripId, CellId, StartTime, EndTime, Pm25,
-    (Weather->>'Humidity')::numeric, (Weather->>'CloudCover')::numeric,
-    (Weather->>'Rain')::numeric
-  FROM TripCells ),
--- Mark sections that satisfy all per-section constraints
-Selected AS (
-  SELECT *,
-    CASE
-      WHEN Pm25 > 300 AND Humidity > 80 AND CloudCover > 0 THEN 1 ELSE 0
-    END AS Valid
-    FROM Ordered ),
-Phases AS (
-  -- Assigns a PhaseId to consecutive sections satisfying the constraints.
-  SELECT *,
-    SUM(NewPhase) OVER (PARTITION BY TripId ORDER BY StartTime ) AS PhaseId
-  FROM (
-    SELECT *,
-      CASE
-        WHEN Valid = 1 AND LAG(Valid) OVER (PARTITION BY TripId ORDER BY
-          StartTime) = 1 THEN 0 ELSE 1
-      END AS NewPhase
-    FROM Selected ) AS Temp ),
--- Compute the length of each selected phase
-PhaseLenghts AS (
-  SELECT TripId, PhaseId, COUNT(*) AS PhaseLen
-  FROM Phases
-  WHERE Valid = 1
-  GROUP BY TripId, PhaseId
-  HAVING COUNT(*) >= 3 )
--- Return the concrete sections belonging to the selected phases
-SELECT r.TripId,
-  array_agg(
-    ROW(r.CellId, r.StartTime, r.EndTime, ROUND(r.Pm25::numeric, 2), r.Humidity,
-      r.CloudCover, r.Rain) ORDER BY r.StartTime) AS PhaseSections
-FROM Phases r, PhaseLenghts s
-WHERE s.TripId = r.TripId AND s.PhaseId  = r.PhaseId AND r.Valid = 1
-GROUP BY r.TripId
-ORDER BY r.TripId; 
-
--- 87 rows
-
------------------------------
+/*****************************************************************************/

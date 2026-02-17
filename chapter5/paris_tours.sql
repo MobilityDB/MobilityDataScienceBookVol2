@@ -187,6 +187,48 @@ ORDER BY TourId, HiltonStep;
 /*****************************************************************************/
 
 /*
+ Tours that visit a museum and then a restaurant.
+
+Tour[before([Category = 'Museum'],[Category = 'Restaurant'])]
+*/
+
+WITH Museum AS (
+  SELECT *
+  FROM TourPoI
+  WHERE PoI->>'Category' = 'Museum'),
+Restaurant AS (
+  SELECT *
+  FROM TourPoI
+  WHERE PoI->>'Category' = 'Restaurant')
+SELECT DISTINCT m.TourId, m.StepNo AS MuseumStep, m.PoI->>'Name' AS MuseumName,
+  r.StepNo AS RestStep, r.PoI->>'Name' AS RestName
+FROM Museum m, Restaurant r
+WHERE m.TourId = r.TourId AND m.StepNo < s.StepNo
+ORDER BY TourId, FirstStep;
+
+-- TEMPORAL VERSION
+
+WITH Museum(TourId, Tour) AS (
+  SELECT TourId, atTime(Tour, unnest(spans(
+    getTime(atValues(Tour->>'Category', text 'Museum'))))))
+  FROM TempTour
+  WHERE getTime(atValues(Tour->>'Category', text 'Museum')) IS NOT NULL ),
+Restaurant(TourId, Tour) AS (
+  SELECT TourId, atTime(Tour, unnest(spans(
+    getTime(atValues(Tour->>'Category', text 'Restaurant')))))
+  FROM TempTour
+  WHERE getTime(atValues(Tour->>'Category', text 'Restaurant')) IS NOT NULL ),
+SELECT DISTINCT m.TourId, startValue(m.Tour->>'StepNo')::integer AS MuseumStep,
+  startValue(m.Tour->>'Name') AS MuseumName,
+  startValue(r.Tour->>'StepNo')::integer AS RestStep, 
+  startValue(r.Tour->>'Name') AS RestName
+FROM Museum m, Restaurant r 
+WHERE m.TourId = r.TourId AND m.Tour < r.Tour
+ORDER BY TourId, MuseumStep;
+
+/*****************************************************************************/
+
+/*
 Tours where the first step is a French restaurant, and the next step is any museum
 
 Tour[before(^[Category = 'Restaurant' AND TypeOfFood = 'French'],
