@@ -29,8 +29,8 @@ CREATE TABLE WeatherInput(T timestamptz PRIMARY KEY, Temperature float,
 COPY WeatherInput (T, Temperature, Humidity, CloudCover, Rain, Wind)
 FROM '/home/esteban/data/delhi/delhi_weather.csv' DELIMITER ',' CSV HEADER;
 
--- COPY 360
--- Time: 7.408 ms
+-- COPY 1464
+-- Time: 14.176 ms
 
 DROP TABLE IF EXISTS WeatherHourly;
 CREATE TABLE WeatherHourly(T timestamptz PRIMARY KEY,
@@ -92,105 +92,5 @@ ORDER BY TripId;
 CREATE INDEX Trips_Trip_Quadtree_Idx ON Trips USING SPGIST(Trip);
 
 -- Time: 53780.456 ms (00:53.780)
-
-DROP TABLE IF EXISTS Grid;
-CREATE TABLE Grid(CellId integer PRIMARY KEY, Box stbox, Geom geometry);
-INSERT INTO Grid(CellId, Box, Geom)
-WITH MBR(Box) AS ( SELECT extent(Geom::stbox) FROM DelhiInput )
-SELECT (rec).Index, (rec).Tile, (rec).Tile::geometry
-FROM ( SELECT spaceTiles(Box, 2500) AS rec FROM MBR );
-
--- 120 rows
--- Time: 2958.447 ms (00:02.958)
-
-CREATE INDEX Grid_Box_Quadtree_Idx ON Grid USING SPGIST(Box);
-CREATE INDEX Grid_Geom_Quadtree_Idx ON Grid USING SPGIST(Geom);
-
---
-
-DROP TABLE IF EXISTS TripCells;
-CREATE TABLE TripCells(TripId integer, CellId integer, StartTime timestamptz,
-  EndTime timestamptz, Pm25Min float, Pm25Max float, Pm25Avg float, Weather jsonb,
-  PRIMARY KEY (TripId, CellId, StartTime));
-INSERT INTO TripCells
-WITH TripPointCells(TripId, CellId, T, Pm25, Geom, Weather) AS (
-  SELECT p.TripId, g.CellId, p.T, p.Pm25, p.Geom, p.Weather
-  FROM TripPoints p, Grid g
-  WHERE g.Box @> stbox(p.Geom) ),
-TripPointCellsLagged(TripId, CellId, T, Pm25, Geom, Weather, PrevCell) AS (
-  SELECT *, LAG(CellId) OVER (PARTITION BY TripId ORDER BY T ) AS PrevCell
-  FROM TripPointCells ),
-TripCellGrouped(TripId, CellId, T, Pm25, Geom, Weather, PrevCell, NewGroup) AS (
-  SELECT *, 
-    CASE WHEN PrevCell IS NULL OR CellId <> PrevCell THEN 1 ELSE 0 END
-  FROM TripPointCellsLagged ),
-TripGroups(TripId, CellId, T, Pm25, Geom, Weather, PrevCell, NewGroup, GroupId) AS (
-  SELECT *, SUM(NewGroup) OVER (PARTITION BY TripId ORDER BY T
-    ROWS UNBOUNDED PRECEDING)
-  FROM TripCellGrouped )
-SELECT TripId, CellId, MIN(T), MAX(T), MIN(Pm25), MAX(Pm25), AVG(Pm25),
-  jsonb_build_object(
-    'Temperature', AVG((Weather->>'Temperature')::float),
-    'Humidity', AVG((Weather->>'Humidity')::float),
-    'CloudCover', AVG((Weather->>'CloudCover')::float),
-    'Rain', AVG((Weather->>'Rain')::float),
-    'Wind', AVG((Weather->>'Wind')::float)) AS Weather
-FROM TripGroups
-GROUP BY TripId, CellId, GroupId
-ORDER BY TripId, CellId;
-
--- 70881 rows
--- Time: 116866.677 ms (01:56.867)
-
--- NEW VERSION
-
-DROP TABLE IF EXISTS TripCells;
-CREATE TABLE TripCells(TripId integer, CellId integer, StartTime timestamptz,
-  EndTime timestamptz, Pm25Min float, Pm25Max float, Pm25 float, Weather jsonb,
-  PRIMARY KEY (TripId, CellId, StartTime));
-INSERT INTO TripCells
-WITH TripPointCells(TripId, CellId, T, Pm25, Geom, Weather, PrevCell) AS (
-  SELECT p.TripId, g.CellId, p.T, p.Pm25, p.Geom, p.Weather,
-    LAG(CellId) OVER (PARTITION BY TripId ORDER BY T )
-  FROM TripPoints p, Grid g
-  WHERE g.Box @> stbox(p.Geom) ),
-TripCellGrouped(TripId, CellId, T, Pm25, Geom, Weather, PrevCell, NewGroup) AS (
-  SELECT *, 
-    CASE WHEN PrevCell IS NULL OR CellId <> PrevCell THEN 1 ELSE 0 END
-  FROM TripPointCells ),
-TripGroups(TripId, GroupId, CellId, T, Pm25, Geom, Weather, PrevCell) AS (
-  SELECT TripId, SUM(NewGroup) OVER (PARTITION BY TripId ORDER BY T
-    ROWS UNBOUNDED PRECEDING), CellId, T, Pm25, Geom, Weather, PrevCell
-  FROM TripCellGrouped )
-SELECT TripId, CellId, MIN(T), MAX(T), MIN(Pm25), MAX(Pm25), AVG(Pm25),
-  jsonb_build_object(
-    'Temperature', AVG((Weather->>'Temperature')::float),
-    'Humidity', AVG((Weather->>'Humidity')::float),
-    'CloudCover', AVG((Weather->>'CloudCover')::float),
-    'Rain', AVG((Weather->>'Rain')::float),
-    'Wind', AVG((Weather->>'Wind')::float)) AS Weather
-FROM TripGroups
-GROUP BY TripId, CellId, GroupId
-ORDER BY TripId, CellId;
-
-
-
-DROP TABLE TripsTiled;
-CREATE TABLE TripsTiled(TripId integer, CellId integer, TimeCell tstzspan,
-  TripCell tgeompoint, Traj geometry, Speed tfloat, Weather tjsonb, 
-  PRIMARY KEY (TripId, CellId, TimeCell) );
-INSERT INTO TripsTiled
-WITH TripCells(TripId, CellId, TimeCell, TripCell, Weather) AS (
-  SELECT TripId, CellId, unnest(spans(getTime(atStbox(t.Trip, g.Box)))),
-    atStbox(t.Trip, g.Box), Weather
-  FROM Trips t, Grid g
-  WHERE eIntersects(t.Trip, g.Geom) )
-SELECT TripId, CellId, TimeCell, TripCell, trajectory(TripCell), speed(TripCell),
-  atTime(Weather, TimeCell)
-FROM TripCells
-ORDER BY TripId, CellId;
-
--- 71278 rows
--- Time: 155921.229 ms (02:35.921)
 
 /*****************************************************************************/

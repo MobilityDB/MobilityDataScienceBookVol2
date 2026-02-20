@@ -80,8 +80,14 @@ INSERT INTO Tour(TourId, StepNo, PoI, AtTime) VALUES
 (8, 3, 'Bistro les Artizans', '[2025-09-12 20:00, 2025-09-12 22:00)'),
 -- Trip 9
 (9, 1, 'Musee d''Orsay', '[2025-09-12 09:00, 2025-09-12 10:00)'),
-(9, 2, 'Le Petit Italien', '[2025-09-12 10:30, 2025-09-12 11:00)');
-
+(9, 2, 'Le Petit Italien', '[2025-09-12 10:30, 2025-09-12 11:00)'),
+-- Trip 10
+(10,	1,	'Musee d''Orsay',	'[2025-09-09 00:00:00+00, 2025-09-09 12:00:00+00)'),
+(10,	2,	'Le Meurice',	'[2025-09-09 12:30:00+00, 2025-09-09 14:00:00+00)'),
+(10,	3,	'Musee du Louvre', '[2025-09-09 14:30:00+00, 2025-09-09 18:30:00+00)'),
+(10,	4,	'Le Petit Italien',	'[2025-09-09 19:30:00+00, 2025-09-09 21:30:00+00)'),
+(10,	5,	'Musee d''Orsay',	'[2025-09-13 10:00:00+00, 2025-09-13 15:00:00+00)')
+;
 /*****************************************************************************/
 
 DROP VIEW IF EXISTS TourPOI;
@@ -192,7 +198,8 @@ ORDER BY TourId, HiltonStep;
 Tour[before([Category = 'Museum'],[Category = 'Restaurant'])]
 */
 
-WITH Museum AS (
+
+ WITH Museum AS (
   SELECT *
   FROM TourPoI
   WHERE PoI->>'Category' = 'Museum'),
@@ -203,8 +210,9 @@ Restaurant AS (
 SELECT DISTINCT m.TourId, m.StepNo AS MuseumStep, m.PoI->>'Name' AS MuseumName,
   r.StepNo AS RestStep, r.PoI->>'Name' AS RestName
 FROM Museum m, Restaurant r
-WHERE m.TourId = r.TourId AND m.StepNo < s.StepNo
-ORDER BY TourId, FirstStep;
+WHERE m.TourId = r.TourId AND m.StepNo < r.StepNo
+ORDER BY TourId, MuseumStep;
+ 
 
 -- TEMPORAL VERSION
 
@@ -616,4 +624,6 @@ ORDER BY TourId, Tour;
 */
 
 /*****************************************************************************/
+
+
 

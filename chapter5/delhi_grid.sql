@@ -5,6 +5,21 @@ SET DATESTYLE TO 'ISO, YMD';
 
 -------------------------------------------------------------------------------
 
+DROP TABLE IF EXISTS Grid;
+CREATE TABLE Grid(CellId integer PRIMARY KEY, Box stbox, Geom geometry);
+INSERT INTO Grid(CellId, Box, Geom)
+WITH MBR(Box) AS ( SELECT extent(Geom::stbox) FROM DelhiInput )
+SELECT (rec).Index, (rec).Tile, (rec).Tile::geometry
+FROM ( SELECT spaceTiles(Box, 2500) AS rec FROM MBR );
+
+-- 120 rows
+-- Time: 2958.447 ms (00:02.958)
+
+CREATE INDEX Grid_Box_Quadtree_Idx ON Grid USING SPGIST(Box);
+CREATE INDEX Grid_Geom_Quadtree_Idx ON Grid USING SPGIST(Geom);
+
+-------------------------------------------------------------------------------
+
 DROP TABLE IF EXISTS TripCells;
 CREATE TABLE TripCells(TripId integer, StepNo integer, StartTime timestamptz,
   EndTime timestamptz, CellId integer, Pm25 float, Weather jsonb,
@@ -511,10 +526,62 @@ Query 5.14. Trips that traversed at least twice the same cell with exactly
 one different cell in between.
 */
 
--- Add the previous two cells to the rows
+-- Overlapping patterns
+DROP TABLE IF EXISTS Q5_14_Over;
+CREATE TABLE Q5_14 AS
+SELECT s.TripId, g.Pos, s.CellSeq[g.Pos : g.Pos + 2] AS MatchSeq
+FROM TripCellsSeq s
+CROSS JOIN LATERAL generate_series(1, array_length(s.CellSeq, 1) - 2) AS g(Pos)
+WHERE s.CellSeq[g.Pos] = s.CellSeq[g.Pos + 2] AND
+s.CellSeq[g.Pos] <> s.CellSeq[g.Pos + 1]
+ORDER BY s.TripId;
+
+-- Disjoint patterns
+DROP TABLE IF EXISTS Q5_14_Disj;
+CREATE TABLE Q5_14_Disj AS
+WITH AllMatches AS (
+  SELECT s.TripId, g.Pos, s.CellSeq[g.Pos:g.Pos + 2] AS MatchSeq
+  FROM TripCellsSeq s
+  CROSS JOIN LATERAL generate_series(1, array_length(s.CellSeq, 1) - 2) AS g(Pos)
+  WHERE s.CellSeq[g.Pos] = s.CellSeq[g.Pos + 2] AND
+  s.CellSeq[g.Pos] <> s.CellSeq[g.Pos + 1] ),
+Ranked AS (
+  SELECT *, LAG(Pos) OVER (PARTITION BY TripId ORDER BY Pos) AS PrevPos
+  FROM AllMatches )
+SELECT TripId, Pos, MatchSeq
+FROM Ranked
+WHERE PrevPos IS NULL OR Pos >= PrevPos + 3
+ORDER BY TripId, Pos;
+
+-- Overlapping patterns of A.*A
+DROP TABLE IF EXISTS Q5_14_AnyLen;
+CREATE TABLE Q5_14_AnyLen AS
+SELECT s.TripId, g1.StartPos, g2.EndPos,
+  s.CellSeq[g1.StartPos : g2.EndPos] AS MatchSeq
+FROM TripCellsSeq s
+  CROSS JOIN LATERAL generate_series(1, array_length(s.CellSeq, 1) - 1) AS g1(StartPos)
+  CROSS JOIN LATERAL generate_series(g1.StartPos + 2, array_length(s.CellSeq, 1)) AS g2(EndPos)
+WHERE s.CellSeq[g1.StartPos] = s.CellSeq[g2.EndPos]
+AND NOT EXISTS (
+  SELECT 1
+  FROM generate_series(g1.StartPos + 1, g2.EndPos - 1) AS g(MidPos)
+  WHERE s.CellSeq[g.MidPos] = s.CellSeq[g1.StartPos] )
+ORDER BY s.TripId, g1.StartPos;
+
+-- SELECT 20193
+-- Time: 1574.928 ms (00:01.575)
+
+-------------------------------------------------------------------------------
+-- OLD VERSIONS WITH LAG
+-------------------------------------------------------------------------------
+/*
+Query 5.14. Trips that traversed at least twice the same cell with exactly
+one different cell in between.
+*/
 
 DROP TABLE IF EXISTS Q5_14;
 CREATE TABLE Q5_14 AS
+-- Add the previous two cells to the rows
 WITH CellSeq(TripId, CellId, StartTime, EndTime, Prev2Cell, Prev2StartTime,
     PrevCell, PrevStartTime) AS (
   SELECT TripId, CellId, StartTime, EndTime, LAG(CellId, 2) OVER w, 
