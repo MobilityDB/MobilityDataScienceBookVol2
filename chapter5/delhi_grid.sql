@@ -6,10 +6,12 @@ SET DATESTYLE TO 'ISO, YMD';
 -------------------------------------------------------------------------------
 
 DROP TABLE IF EXISTS Grid;
-CREATE TABLE Grid(CellId integer PRIMARY KEY, Box stbox, Geom geometry);
-INSERT INTO Grid(CellId, Box, Geom)
+CREATE TABLE Grid(CellId integer PRIMARY KEY, Box stbox, Geom geometry,
+ Boundary geometry);
+INSERT INTO Grid(CellId, Box, Geom, Boundary)
 WITH MBR(Box) AS ( SELECT extent(Geom::stbox) FROM DelhiInput )
-SELECT (rec).Index, (rec).Tile, (rec).Tile::geometry
+SELECT (rec).Index, (rec).Tile, (rec).Tile::geometry, 
+  ST_Boundary((rec).Tile::geometry)
 FROM ( SELECT spaceTiles(Box, 2500) AS rec FROM MBR );
 
 -- 120 rows
