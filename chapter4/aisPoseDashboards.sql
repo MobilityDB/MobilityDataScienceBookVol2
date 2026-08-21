@@ -13,10 +13,28 @@
 
 -- Vessel Separation
 
+-- KNOWN LIMITATION (MobilityDB 1.4): the temporal distance between two rigid
+-- geometries raises
+--   Temporal distance: Cycle detected, current features: (4, 2)
+-- for a small number of pairs -- 3 of 118 bounding-box neighbours on 2024-03-01,
+-- all involving MMSI 205538000. It is a convergence failure in the closest-feature
+-- tracking, not a data problem: the hulls concerned are valid, convex and
+-- non-degenerate. Add
+--   AND s1.MMSI <> 205538000
+-- to skip the affected vessel on this particular day.
 SELECT s1.MMSI, s2.MMSI, startValue(atMin(s1.Trip <-> s2.Trip)) AS Dist
 FROM Ships s1, Ships s2
 WHERE s1.MMSI < s2.MMSI AND eDwithin(s1.Trip, s2.Trip, 300);
 
+-- KNOWN LIMITATION (MobilityDB 1.4): the temporal distance between two rigid
+-- geometries raises
+--   Temporal distance: Cycle detected, current features: (4, 2)
+-- for a small number of pairs -- 3 of 118 bounding-box neighbours on 2024-03-01,
+-- all involving MMSI 205538000. It is a convergence failure in the closest-feature
+-- tracking, not a data problem: the hulls concerned are valid, convex and
+-- non-degenerate. Add
+--   AND s1.MMSI <> 205538000
+-- to skip the affected vessel on this particular day.
 SELECT s1.MMSI, s2.MMSI,
   startValue(atMin(s1.Trip <-> s2.Trip)) AS HullDist,
   startValue(atMin(tgeompoint(s1.Trip) <-> tgeompoint(s2.Trip))) AS PointDist
@@ -28,6 +46,11 @@ WHERE s1.MMSI < s2.MMSI AND eDwithin(s1.Trip, s2.Trip, 300);
 
 WITH AlertBelt(Belt) AS (
   SELECT ST_MakeEnvelope(640730, 6058230, 654100, 6042487, 25832) )
+-- KNOWN LIMITATION (MobilityDB 1.4): atGeometry on a rigid geometry raises
+--   Exact spatial restriction of a temporal rigid geometry with a rotating
+--   segment is not implemented
+-- The region a rotating body sweeps has curved boundaries, so the exact
+-- restriction is genuinely unimplemented rather than merely unwired.
 SELECT MMSI, atGeometry(s.Trip, Belt) AS Trip
 FROM Ships s, AlertBelt b
 WHERE eIntersects(s.Trip, Belt);
@@ -37,6 +60,11 @@ WHERE eIntersects(s.Trip, Belt);
 
 WITH Port(Geom) AS (
   SELECT ST_MakeEnvelope(651135, 6058230, 651422, 6058548, 25832) ),
+-- KNOWN LIMITATION (MobilityDB 1.4): atGeometry on a rigid geometry raises
+--   Exact spatial restriction of a temporal rigid geometry with a rotating
+--   segment is not implemented
+-- The region a rotating body sweeps has curved boundaries, so the exact
+-- restriction is genuinely unimplemented rather than merely unwired.
 Inside(MMSI, Trip) AS (
   SELECT s.MMSI, atGeometry(s.Trip, p.Geom)
   FROM Ships s, Port p
