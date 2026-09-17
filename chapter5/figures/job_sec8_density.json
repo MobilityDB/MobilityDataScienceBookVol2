@@ -1,0 +1,38 @@
+{
+ "output": "C:\\Windows\\Temp\\tessfig\\tess_traffic_h3.png",
+ "crs": "EPSG:25832",
+ "extent_crs": "EPSG:4326",
+ "extent": [7.6, 54.35, 15.4, 58.1],
+ "size": [2400, 2400],
+ "dpi": 300,
+ "land": "#efeae2",
+ "layers": [
+  {"type": "shortbread", "water": "#f4f7fa"},
+  {"type": "vector", "path": "C:\\Windows\\Temp\\tessfig\\sec8_cells.gpkg", "layer": "cells",
+   "filter": "\"hours\" < 1", "kind": "fill",
+   "style": {"color": "#fee5d9", "outline_style": "no"}},
+  {"type": "vector", "path": "C:\\Windows\\Temp\\tessfig\\sec8_cells.gpkg", "layer": "cells",
+   "filter": "\"hours\" >= 1 AND \"hours\" < 5", "kind": "fill",
+   "style": {"color": "#fcae91", "outline_style": "no"}},
+  {"type": "vector", "path": "C:\\Windows\\Temp\\tessfig\\sec8_cells.gpkg", "layer": "cells",
+   "filter": "\"hours\" >= 5 AND \"hours\" < 20", "kind": "fill",
+   "style": {"color": "#fb6a4a", "outline_style": "no"}},
+  {"type": "vector", "path": "C:\\Windows\\Temp\\tessfig\\sec8_cells.gpkg", "layer": "cells",
+   "filter": "\"hours\" >= 20 AND \"hours\" < 100", "kind": "fill",
+   "style": {"color": "#de2d26", "outline_style": "no"}},
+  {"type": "vector", "path": "C:\\Windows\\Temp\\tessfig\\sec8_cells.gpkg", "layer": "cells",
+   "filter": "\"hours\" >= 100", "kind": "fill",
+   "style": {"color": "#67000d", "outline_style": "no"}},
+  {"type": "vector", "path": "C:\\Windows\\Temp\\tessfig\\sec8_busiest.gpkg", "layer": "busiest",
+   "kind": "marker",
+   "style": {"name": "circle", "color": "#00000000", "outline_color": "#252525", "outline_width": "0.5", "size": "4"},
+   "label": {"field": "label", "size": 8, "color": "#252525"}}
+ ],
+ "legend": {
+  "origin": [0.04, 0.80],
+  "title": "Vessel-hours per cell",
+  "font_px": 44,
+  "items": [["under 1", "#fee5d9"], ["1 to 5", "#fcae91"], ["5 to 20", "#fb6a4a"],
+            ["20 to 100", "#de2d26"], ["100 or more", "#67000d"]]
+ }
+}

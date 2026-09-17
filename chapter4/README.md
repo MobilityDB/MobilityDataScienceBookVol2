@@ -23,7 +23,12 @@ MobilityDB 1.4**. `yaw(trgeometry)` requires a MobilityDB built after the
 pose_examples.sql: every example of the sections introducing `pose`, `tpose` and
 `trgeometry`, in the order the chapter gives them. It needs no dataset, so it is
 the quickest way to check that an installation has the pose family compiled in.
-The comment under each statement is the answer it produced.
+The comment under each statement is the answer it produced. The examples of the
+restriction and spatial functions follow the vessel of the chapter that sails
+and then turns in place; the position of its bow halfway through the turn is
+linearly interpolated only in a MobilityDB built after `bodyPointTrajectory`
+and `centroid` kept the interpolation of the rigid geometry, and a build before
+it answers the position at the start of the turn.
 
 geopose.sql: the OGC GeoPose 1.0 examples, including the frame registry and the
 encoders for the Basic, Advanced, Chain and Series targets.

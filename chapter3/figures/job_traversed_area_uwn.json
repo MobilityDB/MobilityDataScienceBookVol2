@@ -1,0 +1,69 @@
+{
+ "output": "C:\\Windows\\Temp\\tessfig\\chap3\\traversed_area_uwn.png",
+ "crs": "EPSG:25832",
+ "extent": [
+  612978,
+  6348037,
+  636120,
+  6386567
+ ],
+ "size": [
+  1800,
+  2997
+ ],
+ "dpi": 300,
+ "land": "#efeae2",
+ "layers": [
+  {
+   "type": "shortbread",
+   "water": "#dfe9f2"
+  },
+  {
+   "type": "vector",
+   "path": "C:\\Windows\\Temp\\tessfig\\chap3\\areas.gpkg",
+   "layer": "areas",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "166,118,29,255",
+    "outline_width": "0.25"
+   },
+   "filter": "\"id\" <> 22"
+  },
+  {
+   "type": "vector",
+   "path": "C:\\Windows\\Temp\\tessfig\\chap3\\areas.gpkg",
+   "layer": "areas",
+   "kind": "fill",
+   "style": {
+    "color": "166,118,29,110",
+    "outline_color": "127,90,20,255",
+    "outline_width": "0.4"
+   },
+   "filter": "\"id\" = 22"
+  },
+  {
+   "type": "vector",
+   "path": "C:\\Windows\\Temp\\tessfig\\chap3\\noise.gpkg",
+   "layer": "noise",
+   "kind": "fill",
+   "style": {
+    "color": "77,175,74,120",
+    "outline_color": "47,125,45,255",
+    "outline_width": "0.3"
+   },
+   "filter": "\"mmsi\" = '219013538'"
+  },
+  {
+   "type": "vector",
+   "path": "C:\\Windows\\Temp\\tessfig\\chap3\\traj.gpkg",
+   "layer": "traj",
+   "kind": "line",
+   "style": {
+    "line_color": "0,0,0,255",
+    "line_width": "0.5"
+   },
+   "filter": "\"mmsi\" = '219013538'"
+  }
+ ]
+}
