@@ -1,7 +1,7 @@
 ## Mobility Data Science: In-Memory, Large-Scale and Stream Processing
 ### Leticia Gómez, Alejandro Vaisman, Esteban Zimányi
 
-### Chapter 10: GenAI in Mobility 
+### Chapter 10: Mobility Data Pipelines
 
 This is the companion website of the book published by Springer.
 It contains the datasets used in the book alongside with the scripts
