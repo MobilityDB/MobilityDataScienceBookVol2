@@ -119,6 +119,11 @@ computes the wind speed of ERA5 for any day on a 5 km grid.
       raquet-io convert raster data/ddm/ddm_50m_25832.tif data/raquet/bathymetry.parquet --overviews none --resampling near
       python3 load_raquet.py data/raquet/bathymetry.parquet BathymetryRaquet "dbname=tess"
 
+- sec8_raquet_series.sql: tiles that carry a validity period, read by joining
+  them on the cells of the trip and on the overlap of the periods. It gives the
+  tiles of the bathymetry the two halves of the trip as their periods, and the
+  reading merges into the reading of the whole trip.
+
 - exercises.sql: the answers of the exercises.
 
 ### Figures
