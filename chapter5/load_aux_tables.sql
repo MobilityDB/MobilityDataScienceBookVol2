@@ -1,5 +1,7 @@
 -- Ports and protected areas of the case study, with the table definitions of
--- the chapter 3 loader, read from the directory data/ below the working directory.
+-- the chapter 3 loader, read from data/port.csv and data/natural_areas.csv.gz
+-- (built by build_aux_data.sh) in the directory $DATA, by default data/ below
+-- the working directory.
 DROP TABLE IF EXISTS Port;
 CREATE TABLE Port (
   Id        integer PRIMARY KEY,
@@ -13,7 +15,7 @@ CREATE TABLE Port (
   Traffic   integer,
   Geom      geometry(Polygon,25832)
 );
-\copy Port (id, PortId, DataSrc, PortCoor, CntrCode, PortName, RepMarL, Source, Traffic, Geom) FROM 'data/port.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',')
+\copy Port (id, PortId, DataSrc, PortCoor, CntrCode, PortName, RepMarL, Source, Traffic, Geom) FROM PROGRAM 'cat "${DATA:-data}/port.csv"' WITH (FORMAT csv, HEADER true, DELIMITER ',')
 
 DROP TABLE IF EXISTS NaturalAreas CASCADE;
 CREATE TABLE NaturalAreas (
@@ -53,7 +55,7 @@ CREATE TABLE NaturalAreas (
   OecmAsmt varchar(80),
   Geom geometry(MultiPolygon,25832)
 );
-\copy NaturalAreas (Id, SiteId, SitePid, SiteType, NameEng, Name, Desig, DesigEng, DesigType, IucnCat, IntCrit, Realm, RepMArea, GisMArea, RepArea, GisArea, NoTake, NoTkArea, Status, StatusYr, GovType, GovSubType, OwnType, OwnSubType, MangAuth, MangPlan, Verif, Metadataid, PrntISO3, ISO3, SuppInfo, ConsObj, InlndWtrs, OecmAsmt, Geom) FROM PROGRAM 'gzip -dc data/natural_areas.csv.gz' WITH (FORMAT csv, HEADER true, DELIMITER ',')
+\copy NaturalAreas (Id, SiteId, SitePid, SiteType, NameEng, Name, Desig, DesigEng, DesigType, IucnCat, IntCrit, Realm, RepMArea, GisMArea, RepArea, GisArea, NoTake, NoTkArea, Status, StatusYr, GovType, GovSubType, OwnType, OwnSubType, MangAuth, MangPlan, Verif, Metadataid, PrntISO3, ISO3, SuppInfo, ConsObj, InlndWtrs, OecmAsmt, Geom) FROM PROGRAM 'gzip -dc "${DATA:-data}/natural_areas.csv.gz"' WITH (FORMAT csv, HEADER true, DELIMITER ',')
 
 CREATE INDEX IF NOT EXISTS PortGeomGix ON Port USING GIST (Geom);
 CREATE INDEX IF NOT EXISTS NaturalAreasGeomGist ON NaturalAreas USING GIST (Geom);

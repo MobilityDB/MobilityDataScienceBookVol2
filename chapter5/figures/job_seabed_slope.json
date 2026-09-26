@@ -1,0 +1,119 @@
+{
+ "output": "seabed_slope.png",
+ "crs": "EPSG:25832",
+ "extent": [
+  627100,
+  6362182,
+  639900,
+  6374511
+ ],
+ "size": [
+  1500,
+  1445
+ ],
+ "dpi": 300,
+ "land": "#efeae2",
+ "layers": [
+  {
+   "type": "shortbread",
+   "water": "#dfe9f2"
+  },
+  {
+   "type": "raster",
+   "path": "seabed_slope.tif",
+   "name": "slope",
+   "ramp": [
+    [
+     0,
+     "#ffffcc"
+    ],
+    [
+     0.5,
+     "#fed976"
+    ],
+    [
+     1,
+     "#fd8d3c"
+    ],
+    [
+     2,
+     "#e31a1c"
+    ],
+    [
+     4,
+     "#800026"
+    ]
+   ]
+  },
+  {
+   "type": "raster",
+   "path": "seabed_hillshade.tif",
+   "name": "hill",
+   "opacity": 0.45,
+   "ramp": [
+    [
+     60,
+     "#000000"
+    ],
+    [
+     180,
+     "#808080"
+    ],
+    [
+     255,
+     "#ffffff"
+    ]
+   ]
+  },
+  {
+   "type": "vector",
+   "path": "seabed_area.gpkg",
+   "layer": "area",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#1b7837",
+    "outline_width": "0.7"
+   }
+  }
+ ],
+ "colorbar": {
+  "rect": [
+   0.05,
+   0.09,
+   0.5,
+   0.035
+  ],
+  "title": "Slope (degrees)",
+  "font_px": 66,
+  "ramp": [
+   [
+    0,
+    "#ffffcc"
+   ],
+   [
+    0.5,
+    "#fed976"
+   ],
+   [
+    1,
+    "#fd8d3c"
+   ],
+   [
+    2,
+    "#e31a1c"
+   ],
+   [
+    4,
+    "#800026"
+   ]
+  ],
+  "ticks": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ]
+ }
+}

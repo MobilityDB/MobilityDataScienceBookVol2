@@ -1,0 +1,74 @@
+SET
+SET
+== mean and highest wave height of the field per hour (0.93 in the morning, 1.36 and 3.68 at 23:00)
+ hour  | meanhs | maxhs 
+-------+--------+-------
+ 00:00 |   1.02 |  3.32
+ 01:00 |   0.99 |  3.27
+ 02:00 |   0.97 |  3.19
+ 03:00 |   0.96 |  3.14
+ 04:00 |   0.95 |  3.09
+ 05:00 |   0.94 |  3.06
+ 06:00 |   0.93 |  3.02
+ 07:00 |   0.93 |  2.97
+ 08:00 |   0.93 |  2.99
+ 09:00 |   0.94 |  2.99
+ 10:00 |   0.94 |  3.03
+ 11:00 |   0.95 |  3.07
+ 12:00 |   0.94 |  3.10
+ 13:00 |   0.94 |  3.12
+ 14:00 |   0.95 |  3.15
+ 15:00 |   0.97 |  3.19
+ 16:00 |   1.00 |  3.21
+ 17:00 |   1.04 |  3.21
+ 18:00 |   1.09 |  3.23
+ 19:00 |   1.14 |  3.25
+ 20:00 |   1.20 |  3.27
+ 21:00 |   1.26 |  3.40
+ 22:00 |   1.31 |  3.52
+ 23:00 |   1.36 |  3.68
+
+== Query: vessels that met waves of at least 1, 1.5, and 2 m, and for how long
+DROP TABLE
+SELECT 2403
+ vessels | over1 | over15 | over2 | maxhs 
+---------+-------+--------+-------+-------
+    2403 |   443 |     95 |    26 |  2.70
+
+   mmsi    | maxhs |  over2   
+-----------+-------+----------
+ 219438000 |  2.45 | 03:59:52
+ 257243000 |  2.65 | 03:54:39
+ 314545000 |  2.23 | 03:18:35
+
+== the 26 vessels that met waves of at least 2 m: longitudes of their highest waves, and how many after 20:00 (3.4 | 7.3 | 23)
+ vessels | minlon | maxlon | after20 
+---------+--------+--------+---------
+      26 |    3.4 |    7.3 |      23
+
+== Query: did the vessels that met waves of at least 1.5 m sail slower in them
+DROP TABLE
+SELECT 95
+ shiptype  | vessels | soghigh | soglow | slower | faster 
+-----------+---------+---------+--------+--------+--------
+ Cargo     |      12 |    10.0 |   10.9 |      3 |      1
+ Fishing   |       3 |     6.6 |    6.6 |      0 |      1
+ Other     |       1 |    10.6 |   10.0 |      0 |      0
+ Reserved  |       1 |     7.7 |    4.7 |      0 |      1
+ SAR       |       1 |     5.9 |    5.2 |      0 |      1
+ Tanker    |      15 |    10.7 |   11.4 |      5 |      0
+ Undefined |       1 |    13.5 |   13.9 |      0 |      0
+           |      34 |    10.0 |   10.5 |      8 |      4
+
+== Query: vessels flagged by the highest waves of the day read along their trajectories
+DROP TABLE
+SELECT 48
+ vessels | over1 | over15 | over2 
+---------+-------+--------+-------
+    2403 |   681 |    217 |    55
+
+== tiles of the table WaveMax (48)
+ tiles 
+-------
+    48
+

@@ -1,0 +1,85 @@
+{
+ "output": "depth_under_vessel.png",
+ "crs": "EPSG:25832",
+ "extent": [
+  631793,
+  6117325,
+  632399,
+  6117799
+ ],
+ "size": [
+  2400,
+  1877
+ ],
+ "dpi": 300,
+ "land": "#efeae2",
+ "layers": [
+  {
+   "type": "vector",
+   "path": "vessel_pixels.gpkg",
+   "layer": "pixels",
+   "filter": "\"depth\" >= 20",
+   "kind": "fill",
+   "style": {
+    "color": "#9ecae1",
+    "outline_color": "#ffffff",
+    "outline_width": "0.3"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "vessel_pixels.gpkg",
+   "layer": "pixels",
+   "filter": "\"depth\" < 20",
+   "kind": "fill",
+   "style": {
+    "color": "#fdd49e",
+    "outline_color": "#ffffff",
+    "outline_width": "0.3"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "vessel_trip.gpkg",
+   "layer": "trip",
+   "kind": "line",
+   "style": {
+    "line_color": "#252525",
+    "line_width": "0.8"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "vessel_shallow.gpkg",
+   "layer": "shallow",
+   "kind": "line",
+   "style": {
+    "line_color": "#d7301f",
+    "line_width": "2.4",
+    "capstyle": "flat"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "vessel_reports.gpkg",
+   "layer": "reports",
+   "kind": "marker",
+   "style": {
+    "name": "circle",
+    "color": "#252525",
+    "outline_color": "#ffffff",
+    "size": "3.2"
+   },
+   "label": {
+    "expression": true,
+    "field": "substr(\"label\", 4)",
+    "size": 12,
+    "color": "#1a1a1a",
+    "placement": "OverPoint",
+    "quadrant": "BelowRight",
+    "distance": 1.2,
+    "display_all": true
+   }
+  }
+ ]
+}

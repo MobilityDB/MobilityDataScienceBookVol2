@@ -73,6 +73,11 @@ SELECT MMSI,
 FROM AISNoJump
 GROUP BY MMSI;
 
+-- 5. The trips in longitude and latitude, transformed once here for the global grids, so
+--    that no query transforms a trip.
+ALTER TABLE Ships ADD COLUMN TripLonLat tgeompoint;
+UPDATE Ships SET TripLonLat = transform(Trip, 4326);
+
 -- What each step did.
 SELECT 'input rows' AS step, count(*) AS n FROM AISInput
 UNION ALL SELECT '1. usable positions', count(*) FROM AISClean

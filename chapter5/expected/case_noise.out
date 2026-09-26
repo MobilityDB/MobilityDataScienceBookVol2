@@ -1,0 +1,70 @@
+SET
+SET
+== Query: the noise of the fishing vessel of chapter 3 with spreading depending on the depth
+DROP TABLE
+SELECT 1
+    depthtime    | area  | areadepth 
+-----------------+-------+-----------
+ 01:22:20.905166 | 204.2 |     624.4
+
+== time over the bathymetry (05:15), and time with the radius at the cap of 10 km (39 minutes)
+   depthknown    |   cappedtime    
+-----------------+-----------------
+ 05:14:37.115279 | 00:39:13.746848
+
+== time the noise spends in each protected area it reaches, spherical and depending on the depth
+ id  |                nameeng                 |    spherical    |   depthaware    
+-----+----------------------------------------+-----------------+-----------------
+ 200 | Læsø Kommune public                    | 22:36:20.945563 | 23:01:03.804914
+ 129 | N                                      | 01:05:55.489208 | 01:23:34.108399
+  14 | Havet omkring Nordre Rønner            | 01:05:52.504638 | 01:23:21.816616
+  22 | Læsø Trindel og Tønneberg Banke        | 00:29:01.135545 | 00:55:53.273667
+   1 | Læsø Trindel/Tønneberg Bank            | 00:28:17.615115 | 00:55:49.312639
+ 264 | Nordvestlige Kattegat                  | 00:14:57.477705 | 00:39:41.740987
+   4 | Waters around Læsø                     | 00:14:57.460168 | 00:39:41.184218
+  35 | Strandenge på Læsø og havet syd herfor |                 | 00:17:10.450491
+
+== Listing: the ambient noise level along the trips from the wind of ERA5
+DROP TABLE
+SELECT 2110
+== wind and ambient noise met by the fishing vessel (7.1 to 13.1 m/s, 80.5 to 82.2 dB)
+ minwind | maxwind | minnl | maxnl 
+---------+---------+-------+-------
+     7.1 |    13.1 |  80.5 |  82.2
+
+== highest wind of the day in the ERA5 field (21.5 m/s)
+ maxwind 
+---------
+    21.5
+
+== the noise of every trip with spreading depending on the depth
+DROP TABLE
+SELECT 2111
+CREATE INDEX
+CREATE INDEX
+ANALYZE
+== trips, and trips whose spreading depends on the depth at some time (2111 | 577)
+ trips | depthtrips 
+-------+------------
+  2111 |        577
+
+== pairs reached with spherical spreading and depending on the depth, and the pairs and areas the depth adds (4147 | 4334 | 191 | 103)
+ spherical | depthaware | depthonly | depthonlyareas 
+-----------+------------+-----------+----------------
+      4147 |       4334 |       191 |            103
+
+== the noise of every trip depending on the depth and on the wind
+DROP TABLE
+SELECT 2111
+CREATE INDEX
+ANALYZE
+== area of the noise of the fishing vessel with both fields (596.5 km2)
+ areaenv 
+---------
+   596.5
+
+== Table: pairs reached under the three models, and the pairs gained and lost with both fields (4147 | 4334 | 4263 | 30 | 146)
+ spherical | depthaware | depthwind | lostwithwind | gainedwithenv 
+-----------+------------+-----------+--------------+---------------
+      4147 |       4334 |      4263 |           30 |           146
+
