@@ -1,0 +1,94 @@
+{
+ "output": "seabed_tpi.png",
+ "crs": "EPSG:25832",
+ "extent": [
+  627100,
+  6362182,
+  639900,
+  6374511
+ ],
+ "size": [
+  1500,
+  1445
+ ],
+ "dpi": 300,
+ "land": "#efeae2",
+ "layers": [
+  {
+   "type": "shortbread",
+   "water": "#dfe9f2"
+  },
+  {
+   "type": "raster",
+   "path": "seabed_tpi.tif",
+   "name": "tpi",
+   "ramp": [
+    [
+     1,
+     "#2166ac"
+    ],
+    [
+     2,
+     "#f7f7f7"
+    ],
+    [
+     3,
+     "#d6604d"
+    ]
+   ]
+  },
+  {
+   "type": "raster",
+   "path": "seabed_hillshade.tif",
+   "name": "hill",
+   "opacity": 0.45,
+   "ramp": [
+    [
+     60,
+     "#000000"
+    ],
+    [
+     180,
+     "#808080"
+    ],
+    [
+     255,
+     "#ffffff"
+    ]
+   ]
+  },
+  {
+   "type": "vector",
+   "path": "seabed_area.gpkg",
+   "layer": "area",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#1b7837",
+    "outline_width": "0.7"
+   }
+  }
+ ],
+ "legend": {
+  "origin": [
+   0.05,
+   0.1
+  ],
+  "font_px": 66,
+  "title": "Position",
+  "items": [
+   [
+    "hollow",
+    "#2166ac"
+   ],
+   [
+    "plain",
+    "#f7f7f7"
+   ],
+   [
+    "bank",
+    "#d6604d"
+   ]
+  ]
+ }
+}

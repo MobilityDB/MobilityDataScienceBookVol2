@@ -1,0 +1,85 @@
+SET
+SET
+== Query: vessels with a draught of at least 10 m and less than 5 m, less than 2 m, and less than 0 m of clearance
+DROP TABLE
+SELECT 163
+SELECT 104
+ vessels | under5 | under2 | negative 
+---------+--------+--------+----------
+     104 |     32 |      8 |        7
+
+== vessels that reported a draught of at least 10 m (163)
+ vessels 
+---------
+     163
+
+== the seven negative clearances: in a port area at the minimum, and the speed from the positions (m/s)
+   mmsi    | minclear | inport | speed 
+-----------+----------+--------+-------
+ 255805672 |    -12.5 | t      |   0.0
+ 538010052 |     -8.1 | t      |   0.6
+ 538010662 |     -7.2 | f      |  12.3
+ 636024484 |     -7.1 | t      |   0.5
+ 305530000 |     -5.3 | t      |      
+ 636024511 |     -2.9 | f      |   0.3
+ 219018501 |     -1.1 | f      |   0.8
+
+== Query: vessels under way outside the ports with the smallest clearance
+DROP TABLE
+SELECT 1
+SELECT 163
+SELECT 163
+SELECT 99
+   mmsi    | draught | minclear |     under2      |  lon   |  lat   
+-----------+---------+----------+-----------------+--------+--------
+ 636024511 |    13.2 |      0.7 | 00:48:00.708846 | 10.249 | 56.159
+ 636023850 |    10.5 |      1.9 | 00:00:26.658441 | 10.881 | 54.766
+ 538010052 |      10 |      2.0 |                 | 10.362 | 56.242
+ 636024484 |      10 |      2.2 |                 | 10.238 | 56.153
+ 636023680 |      15 |      2.3 |                 | 12.668 | 54.748
+ 636018579 |      15 |      2.3 |                 | 12.362 | 54.632
+ 265079640 |      15 |      2.4 |                 | 12.362 | 54.633
+ 219018501 |    11.6 |      2.4 |                 | 10.273 | 56.152
+ 636022653 |    14.4 |      2.5 |                 | 12.651 | 54.751
+ 229859000 |    14.3 |      2.5 |                 | 11.172 | 56.448
+
+== vessels under way over the bathymetry, and with less than 5, 2, and 0 m of clearance (99 | 29 | 2 | 0)
+ vessels | under5 | under2 | negative 
+---------+--------+--------+----------
+      99 |     29 |      2 |        0
+
+== the vessel approaching Aarhus while its clearance is less than 2 m: km sailed and mean reported speed (7.2 | 4.8)
+ km  | avgsog 
+-----+--------
+ 7.2 |    4.8
+
+== the vessel moored at Grenaa: highest reported speed, and clearance when under way by the speed from the positions (0.0 | -7.2)
+ maxsog 
+--------
+    0.0
+
+   mmsi    | minclear 
+-----------+----------
+ 538010662 |     -7.2
+
+== Query: when was there water less than 20 m deep within 100 m of the vessel
+ periods |      total      
+---------+-----------------
+      12 | 00:25:58.197711
+
+== the periods, to compare with those under the reported positions
+                             period                             
+----------------------------------------------------------------
+ [2026-01-20 01:27:19.206283+00, 2026-01-20 01:29:26.522941+00)
+ [2026-01-20 01:29:33.781926+00, 2026-01-20 01:29:48.118189+00)
+ [2026-01-20 02:13:40.433644+00, 2026-01-20 02:14:45.91793+00)
+ [2026-01-20 02:14:54.153177+00, 2026-01-20 02:15:42.842486+00)
+ [2026-01-20 07:01:24.755486+00, 2026-01-20 07:04:23.009863+00)
+ [2026-01-20 07:59:10.814547+00, 2026-01-20 08:07:16.407509+00)
+ [2026-01-20 08:07:26.220792+00, 2026-01-20 08:13:17.408208+00)
+ [2026-01-20 08:13:25.288723+00, 2026-01-20 08:13:36.092462+00)
+ [2026-01-20 08:14:02.812026+00, 2026-01-20 08:14:04.305974+00)
+ [2026-01-20 08:48:18.938243+00, 2026-01-20 08:49:40.99363+00)
+ [2026-01-20 08:49:43.091749+00, 2026-01-20 08:49:52.732323+00)
+ [2026-01-20 08:52:00.079904+00, 2026-01-20 08:55:03.422696+00)
+

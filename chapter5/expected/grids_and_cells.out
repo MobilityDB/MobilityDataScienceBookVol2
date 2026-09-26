@@ -1,0 +1,67 @@
+SET
+SET
+== Listing: the cell of a position near Frederikshavn on each grid
+ r |       h3        |  km2  
+---+-----------------+-------
+ 7 | 871f24272ffffff | 3.979
+ 8 | 881f24272bfffff | 0.568
+ 9 | 891f24272b7ffff | 0.081
+
+ z  |     quadbin      | quadbincelltotile 
+----+------------------+-------------------
+ 13 | 48d60b7e2fffffff | {4337,2491,13}
+ 14 | 48e60b7e2cffffff | {8674,4982,14}
+ 15 | 48f60b7e2c3fffff | {17348,9964,15}
+
+ l  | s2celltotoken 
+----+---------------
+ 13 | 464f3c4c
+ 14 | 464f3c4f
+ 15 | 464f3c4ec
+
+== areas of the QUADBIN cell of zoom 13 and of the cells closest in area (6.919, 0.432, 0.318 km2)
+ quadbin13 | quadbin15 | s2level14 
+-----------+-----------+-----------
+     6.919 |     0.432 |     0.318
+
+== Listing: the descendants of an S2 cell lie between two identifiers
+    s2rangemin    |    s2rangemax    
+------------------+------------------
+ 464f3c4800000001 | 464f3c4fffffffff
+
+== Listing: the H3 cells of resolution 7 of a trip
+                                                                                                                                                                                 th3index                                                                                                                                                                                  
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ [871f2420dffffff@2025-01-01 08:00:00+00, 871f24272ffffff@2025-01-01 08:02:07.801206+00, 871f24270ffffff@2025-01-01 08:08:00.339359+00, 871f24271ffffff@2025-01-01 08:13:56.99568+00, 871f24262ffffff@2025-01-01 08:21:49.166915+00, 871f24244ffffff@2025-01-01 08:21:55.446083+00, 871f24263ffffff@2025-01-01 08:26:25.301364+00, 871f24263ffffff@2025-01-01 08:30:00+00]
+
+== cells of the trip: H3 resolution 8 crossed (16) against the cells of its two positions (2), QUADBIN 13 (6), S2 13 (12)
+ h3r8crossed | h3r8positions | quadbin13 | s2level13 
+-------------+---------------+-----------+-----------
+          16 |             2 |         6 |        12
+
+== Listing: time spent in each cell (seven cells, 30 minutes in total)
+      cell       |   timeincell    
+-----------------+-----------------
+ 871f2420dffffff | 00:02:07.801206
+ 871f24272ffffff | 00:05:52.538153
+ 871f24270ffffff | 00:05:56.656321
+ 871f24271ffffff | 00:07:52.171235
+ 871f24262ffffff | 00:00:06.279168
+ 871f24244ffffff | 00:04:29.855281
+ 871f24263ffffff | 00:03:34.698636
+
+== the first 200 vessels of the day in the order of their MMSI, and the protected areas in longitude and latitude
+DROP TABLE
+SELECT 200
+ALTER TABLE
+UPDATE 283
+== Listing: cells as a filter for the marine protected areas
+ pairs | tripmeets | cellsmeet | triponly 
+-------+-----------+-----------+----------
+   550 |        60 |       119 |        0
+
+== Listing: parents of the cells at a finer resolution against the cells at the coarser one
+ h3missed | quadbindiffer 
+----------+---------------
+       30 |             0
+

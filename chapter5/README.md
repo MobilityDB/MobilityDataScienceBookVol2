@@ -9,123 +9,147 @@ allowing you to input these datasets in the various tools and reproduce the
 examples and exercises in the book.
 
 The chapter reads fields (bathymetry, waves, temperature, salinity, wind) along
-the trips of vessels, and aggregates the trips over discrete global grids. The
-scripts run against **PostgreSQL 18, PostGIS 3.6 and MobilityDB 1.4** built with
-all its families, GDAL 3.8, and QGIS 3.40 for the figures.
+the trips of vessels, computes new fields with map algebra, and aggregates the
+trips over discrete global grids. The scripts below download every dataset,
+load the database, run every query of the chapter in the order of its
+sections, compare the results with those printed in the book, and draw every
+map figure.
 
 Every geometry and raster is transformed ONCE, when the data are prepared, to
 EPSG:25832, or kept in longitude and latitude in the columns whose name ends in
 `LonLat`; no query transforms a geometry.
 
+### Software
+
+- PostgreSQL 18 with PostGIS 3.6 (extensions `postgis` and `postgis_raster`),
+  and the extensions `h3` ([h3-pg](https://github.com/zachasme/h3-pg)) and
+  `pointcloud` ([pgPointcloud](https://github.com/pgpointcloud/pointcloud)),
+  which the MobilityDB extension requires.
+- MobilityDB 1.4 at commit 4306c5092b of its master branch, built with all its
+  families against the H3 library 4:
+
+      git clone https://github.com/MobilityDB/MobilityDB && cd MobilityDB
+      git checkout 4306c5092b
+      cmake -S . -B build -DALL=ON -DCMAKE_BUILD_TYPE=Release
+      cmake --build build && sudo cmake --install build
+
+  `expected/` holds the results of this commit. The temporal cells, the reading
+  of rasters and RaQuet tiles, and the moving regions of the noise case study
+  depend on the MobilityDB version: another commit may move an instant or a
+  count.
+- GDAL 3.8 with its Python bindings, and the PostGIS loader `raster2pgsql`.
+- Python 3 with the packages `copernicusmarine` 2.4.1, `cdsapi`, `psycopg2`,
+  `pyarrow`, `Pillow`, and `raquet-io` 0.9.0.
+- QGIS 3.40 for the figures.
+
+The scripts connect to PostgreSQL through the usual environment variables
+(`PGDATABASE`, `PGHOST`, `PGPORT`, ...), and read the datasets from the
+directory named by the environment variable `DATA`, by default `data/` below
+the working directory.
+
 ### Datasets
 
-The scripts read the datasets from a directory `data/` below the working
-directory, or from the directory named by the environment variable `DATA`, and
-connect to PostgreSQL through the usual environment variables (`PGDATABASE`,
-`PGHOST`, ...). None of the datasets is redistributed here.
+None of the datasets is redistributed here; `fetch_data.sh` downloads each of
+them from its publisher. Its parts `cmems` and `era5` need free accounts: the
+Copernicus Marine Service (`copernicusmarine login`, whose username is the
+e-mail of the account) and the Copernicus Climate Data Store (an API key in
+`~/.cdsapirc` and the terms of the ERA5 dataset accepted on its page).
 
-- **AIS**: one day of the Danish Maritime Authority, 2026-01-20,
-  http://aisdata.ais.dk/aisdk-2026-01-20.zip
-- **Bathymetry**: Denmark's Depth Model, 50 m, layer `ddm_50m.dybde`, from the
-  Danish Geodata Agency (https://eng.gst.dk/danish-hydrographic-office/denmark-depth-model).
-  Attribution: "Indeholder data fra Geodatastyrelsen, Danmarks Dybdemodel, 50 m
-  opløsning"; the model is not suitable for navigation.
-- **Ports and protected areas**: the files `port.csv` and
-  `natural_areas.csv.gz` used by chapter 3.
-- **Ocean model fields**: the Copernicus Marine Service hourly products of the
-  Baltic Sea (`BALTICSEA_ANALYSISFORECAST_PHY_003_006`,
-  `BALTICSEA_ANALYSISFORECAST_WAV_003_010`) and of the North West Shelf
-  (`NWSHELF_ANALYSISFORECAST_PHY_004_013`, `NWSHELF_ANALYSISFORECAST_WAV_004_014`).
-  They require a free account and the Copernicus Marine Toolbox:
+| Data | Source | Terms |
+|---|---|---|
+| AIS of 2026-01-20 | [Danish Maritime Authority](http://aisdata.ais.dk/) | as stated by the portal |
+| Denmark's Depth Model, 50 m, layer `ddm_50m.dybde` | [Danish Geodata Agency](https://eng.gst.dk/danish-hydrographic-office/denmark-depth-model) | "Indeholder data fra Geodatastyrelsen, Danmarks Dybdemodel, 50 m opløsning"; not suitable for navigation |
+| Ports | [GISCO ports 2013](https://ec.europa.eu/eurostat/web/gisco/geodata/transport-networks), Eurostat | © European Union, reuse with acknowledgement |
+| Protected areas | [World Database on Protected Areas](https://www.protectedplanet.net), Denmark | UNEP-WCMC and IUCN, Protected Planet; no redistribution, no commercial use |
+| Waves, temperature, salinity | Copernicus Marine Service, `BALTICSEA_ANALYSISFORECAST_PHY_003_006`, `BALTICSEA_ANALYSISFORECAST_WAV_003_010`, `NWSHELF_ANALYSISFORECAST_PHY_004_013`, `NWSHELF_ANALYSISFORECAST_WAV_004_014` | "Generated using E.U. Copernicus Marine Service Information" |
+| Wind | ERA5 hourly data on single levels, 10 m wind, days 2026-01-20 and 2025-01-01 | CC-BY-4.0 |
+| Cell grids figure | `doc/images/cellindex.png` of the MobilityDB manual | as the manual |
 
-      pip install copernicusmarine==2.4.1
-      copernicusmarine login        # the username is the e-mail of the account
-      B="-x 3 -X 16.5 -y 53.5 -Y 58.5 -t 2026-01-20T00:00:00 -T 2026-01-21T00:00:00 -o data/cmems"
-      copernicusmarine subset -i cmems_mod_bal_phy_anfc_PT1H-i -v thetao -v so -v sla -v mlotst --minimum-depth 0 --maximum-depth 1 $B -f bal_phy_20260120.nc
-      copernicusmarine subset -i cmems_mod_bal_wav_anfc_PT1H-i -v VHM0 -v VMDR $B -f bal_wav_20260120.nc
-      copernicusmarine subset -i cmems_mod_nws_phy-sst_anfc_1.5km-2D_PT1H-i -v thetao $B -f nws_sst_20260120.nc
-      copernicusmarine subset -i cmems_mod_nws_phy-sss_anfc_1.5km-2D_PT1H-i -v so $B -f nws_sss_20260120.nc
-      copernicusmarine subset -i cmems_mod_nws_wav_anfc_1.5km_PT1H-i -v VHM0 -v VMDR $B -f nws_wav_20260120.nc
+`build_aux_data.sh` builds `data/port.csv` and `data/natural_areas.csv.gz`,
+the files that `load_aux_tables.sql` and the loader of chapter 3 read. The
+ports are the 139 Danish ports of GISCO and the four terminals of
+`aux/extra_ports.csv`, each as a buffer of 1000 m, with the names and traffic
+flags of `aux/gisco_ports_traffic.csv`. The protected areas are the 283 areas of
+the WDPA of Denmark listed, with the identifier the book uses, in
+`aux/natural_areas_sites.csv`. Protected Planet serves only its current monthly
+release; the release of September 2026 gives the geometries of the book, and
+the script stops if a listed area is absent from the release it reads
+(`WDPA_RELEASE` selects the release, for instance `Sep2026`).
 
-  Attribution: "Generated using E.U. Copernicus Marine Service Information".
-- **Wind**: ERA5 hourly data on single levels, 10 m wind components, from the
-  Copernicus Climate Data Store, which requires an account, an API key in
-  `~/.cdsapirc`, and accepting the terms of the dataset on its page. The
-  request of the scripts is the area [58.5, 3, 53.5, 16.5] for the days
-  2026-01-20 and 2025-01-01, written as `data/era5/era5_wind10m_<YYYYMMDD>.nc`.
-  Licence CC-BY-4.0.
+### Reproducing the chapter
 
-### Loading
+    bash fetch_data.sh                 # all datasets into $DATA
+    createdb tess                      # any database; export PGDATABASE=tess
+    bash load_all.sh                   # AIS, ports and protected areas, bathymetry,
+                                       # hourly fields, RaQuet tiles
+    bash run_all.sh                    # every script, out/ compared with expected/
+    OUT=/mnt/c/Temp/figs bash figures/make_figures.sh    # every map figure
 
-    psql -f ais_load.sql
-    unzip -p aisdk-2026-01-20.zip | PGOPTIONS='-c datestyle=ISO,DMY' psql -c "\copy AISInput(T, TypeOfMobile, MMSI, Latitude, Longitude, NavigationalStatus, ROT, SOG, COG, Heading, IMO, CallSign, Name, ShipType, CargoType, Width, Length, TypeOfPositionFixingDevice, Draught, Destination, ETA, DataSourceType, SizeA, SizeB, SizeC, SizeD) FROM STDIN CSV HEADER"
-    psql -f ais_pipeline.sql
-    psql -f load_aux_tables.sql
+`load_all.sh` runs, in this order: `ais_load.sql`, the copy of the AIS file,
+and `ais_pipeline.sql`, which clean the day into the tables `AISClean` and
+`AISNoJump` and build the trips of the table `Ships`, split where a vessel is
+silent for more than 3 minutes or moves more than one nautical mile between two
+positions; `build_aux_data.sh` and `load_aux_tables.sql`; the reprojection of
+the bathymetry to EPSG:25832 with `gdalwarp` and its loading into the table
+`Bathymetry` with `raster2pgsql`; `prep_waves.sh`, `load_waves.sh`,
+`prep_fields.sh`, and `load_field.sh`, which merge the Baltic Sea and North West
+Shelf products (the Baltic value where the Baltic model has one), reproject
+them once to a 1 km grid (5 km for the wind), and load them as tables
+`(ValidTime, Rast)` with one row per tile of each hourly step; and the
+conversion of the bathymetry to RaQuet tiles with `raquet-io` and their loading
+into the table `BathymetryRaquet` with `load_raquet.py`. Each part can be run
+alone, for instance `bash load_all.sh fields`.
 
-ais_load.sql and ais_pipeline.sql: the input table of the AIS day, and its
-cleaning into the tables `AISClean` and `AISNoJump` and the trips of the table
-`Ships`, split where a vessel is silent for more than 3 minutes or moves more
-than one nautical mile between two positions.
+`run_all.sh` writes the output of each script to `out/` and compares it with
+`expected/`, which holds the output that gives the answers of the book. Each
+script states, before each listing of the chapter, the answer the book prints.
 
-The bathymetry is reprojected once and loaded as a tiled raster:
+### Scripts of the sections
 
-    gdalwarp -t_srs EPSG:25832 -tr 50 50 -tap -r near ddm_50m.dybde.tiff data/ddm/ddm_50m_25832.tif
-    raster2pgsql -s 25832 -t 256x256 -I -C -M -F data/ddm/ddm_50m_25832.tif public.Bathymetry | psql
+| Section of the chapter | Script |
+|---|---|
+| Raster Data in PostGIS | `raster_tutorial.sql` |
+| Map Algebra | `map_algebra.sql` |
+| From PostGIS to MobilityDB: the Depth under a Vessel | `depth_under_vessel.sql` |
+| Reading Fields along Trajectories | `fields_along_trips.sql` |
+| Discrete Global Grid Systems, Temporal Cells | `grids_and_cells.sql` |
+| Case Study: Under-Keel Clearance | `case_clearance.sql` |
+| Case Study: Sea State | `case_sea_state.sql`, and `check_wave_overlap.sh` for the agreement of the two wave products |
+| Case Study: Underwater Noise and the Depth of the Water | `case_noise.sql` |
+| Case Study: Traffic over a Global Grid | `case_traffic.sql` |
+| Case Study: Fields in Cloud-Native Storage | `case_raquet.sql` |
+| Exercises | `exercises.sql` |
 
-The hourly fields are merged, reprojected once, and loaded as tables
-`(ValidTime, Rast)` with one row per tile of each hourly step:
+The scripts run in this order, since later ones use tables of earlier ones:
+`map_algebra.sql` builds the rasters `Seabed`, `SeabedMean`, and
+`BathymetryMin100`, and `grids_and_cells.sql` the table `Ships200` of the first
+200 vessels of the day.
 
-    bash prep_waves.sh && bash load_waves.sh
-    bash prep_fields.sh
-    bash load_field.sh data/cmems/sst25832 SurfaceTemperature
-    bash load_field.sh data/cmems/sss25832 SurfaceSalinity
-    bash load_field.sh data/era5/wind25832 WindSpeed 50x50
+The noise case study runs on the database of chapter 3 (AIS day 2025-01-01),
+loaded as its README states, with the bathymetry and the wind of that day
+added:
 
-prep_waves.sh and prep_fields.sh keep, for each hour, the value of the Baltic
-Sea product where it has one and the value of the North West Shelf product
-elsewhere, on a 1 km grid with nearest-neighbour resampling. prep_wind.sh
-computes the wind speed of ERA5 for any day on a 5 km grid.
-
-### Scripts of the Sections
-
-- sec2_postgis_raster.sql: the PostGIS raster tutorial (values, zonal
-  statistics, reclassification, map algebra).
-- sec3_postgis_only.sql and sec3_depth_under_vessel.sql: the depth under a
-  vessel with PostGIS alone and with MobilityDB.
-- sec4_field_along_trip.sql: the synthetic rasters of the section on reading
-  fields along trajectories, including fields that change over time.
-- sec5_sec6_cells.sql, sec6_filter.sql and sec6_nesting.sql: the grids, the
-  temporal cells of a trip, the cells as a filter, and the nesting of the cells
-  across resolutions.
-- sec8_clearance.sql and sec8_clearance_underway.sql: under-keel clearance,
-  with the vessels under way defined by the speed over ground they report.
-- sec8_seastate.sql and sec8_speed_waves.sql: the wave height along the trips
-  and the speed of the vessels in higher waves.
-- sec8_noise_depth_one.sql, sec8_noise_depth_radius.sql,
-  sec8_noise_depth_all.sql and sec8_noise_env_all.sql: the underwater noise of
-  chapter 3 with spreading depending on the depth and ambient noise depending on
-  the wind. They run on the database of chapter 3 (AIS day 2025-01-01) with the
-  tables `Bathymetry` and `WindSpeed` of that day added:
-
-      bash prep_wind.sh 20250101
-      bash load_field.sh data/era5/wind25832_20250101 WindSpeed 50x50 20250101
-
-- sec8_density.sql and sec8_rollup.sql: vessel-hours per H3 cell, and the
-  roll-up of resolution 7 to resolution 5.
-- sec8_raquet.sql: the bathymetry stored as RaQuet tiles. The tiles are
-  produced by the official converter and loaded with load_raquet.py:
-
-      pip install raquet-io==0.9.0
-      raquet-io convert raster data/ddm/ddm_50m_25832.tif data/raquet/bathymetry.parquet --overviews none --resampling near
-      python3 load_raquet.py data/raquet/bathymetry.parquet BathymetryRaquet "dbname=tess"
-
-- exercises.sql: the answers of the exercises.
+    bash fetch_data.sh era5
+    PGDATABASE=<chapter 3 database> bash load_all.sh ddm
+    bash prep_wind.sh 20250101
+    PGDATABASE=<chapter 3 database> bash load_field.sh $DATA/era5/wind25832_20250101 WindSpeed 50x50 20250101
+    NOISE_DB=<chapter 3 database> bash run_all.sh case_noise
 
 ### Figures
 
-The directory figures/ holds the scripts that draw the figures of the chapter
-with QGIS: render_map.py renders a job file (the layers, their styles, the
-extent and the size), render.sh calls it with the Python of QGIS (set
-`QGIS_PY`, whose default is the QGIS 3.40 installation of Windows called from
-WSL), and the export scripts write the layers of each figure from the database
-as GeoPackage files.
+`figures/make_figures.sh` draws the map figures of the chapter into `$OUT`:
+for each figure, `export_<figure>.sh` writes its layers from the database, and
+`render.sh` draws `job_<figure>.json` (the layers, their styles, the extent,
+and the size) with `render_map.py` in the Python of QGIS. `QGIS_PY` names that
+Python, for instance `python3` on a Linux installation of QGIS; by default it is
+the QGIS 3.40 installation of Windows called from WSL, which needs `$OUT` on a
+Windows drive. `cellgrids.py` lays out the image of the three cell grids of the
+MobilityDB manual as the figure of the chapter.
+
+| Figure | Scripts |
+|---|---|
+| Bathymetry around the island of Læsø | `export_bathymetry_laeso.sh`, `job_bathymetry_laeso.json` |
+| The seabed of a reef area north-east of Læsø | `export_seabed.sh`, `job_seabed_slope.json`, `job_seabed_tpi.json` |
+| The depth under a vessel between two reports | `export_depth_under_vessel.sh`, `job_depth_under_vessel.json` |
+| An AIS track on the H3, QUADBIN, and S2 grids | `cellgrids.py` |
+| Vessel-hours per H3 cell | `export_traffic_h3.sh`, `job_traffic_h3.json` |

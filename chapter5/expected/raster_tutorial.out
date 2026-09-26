@@ -1,0 +1,22 @@
+SET
+SET
+== tiles of the bathymetry and size of the table (886 tiles, 173 MB)
+ tiles |  size  
+-------+--------
+   886 | 173 MB
+
+== Listing: metadata of a tile
+ upperleftx | upperlefty | width | height | scalex | scaley | skewx | skewy | srid  | numbands 
+------------+------------+-------+--------+--------+--------+-------+-------+-------+----------
+     550300 |    6466200 |   256 |    256 |     50 |    -50 |     0 |     0 | 25832 |        1
+
+== Query: depth at a position in the roads of Frederikshavn (8.88)
+      depth       
+------------------
+ 8.88465690612793
+
+== Query: resample the tile under the roads of Frederikshavn to pixels of 500 m (26 | 500)
+ width | scalex 
+-------+--------
+    26 |    500
+

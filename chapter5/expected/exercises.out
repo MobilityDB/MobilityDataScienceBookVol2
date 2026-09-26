@@ -1,0 +1,49 @@
+SET
+SET
+== 1. time during which vessel 273277840 sailed over water between 20 and 30 m deep
+    duration     
+-----------------
+ 05:40:10.467178
+
+== 2. for each of the first 200 vessels, the highest wave met and when
+   mmsi    | maxhs |            attime             
+-----------+-------+-------------------------------
+ 209672000 |  2.30 | 2026-01-20 23:54:54.823452+00
+ 205198000 |  1.50 | 2026-01-20 22:21:28.857571+00
+ 209313000 |  1.31 | 2026-01-20 00:54:27.336111+00
+
+== 3. time-weighted average surface temperature met by the first 200 vessels
+   mmsi    | avgtemp 
+-----------+---------
+ 211138490 |    0.75
+ 211200150 |    0.75
+ 211205810 |    0.76
+
+== 4. distinct vessels per QUADBIN tile of zoom 10 among the first 200 vessels
+       tile       | vessels 
+------------------+---------
+ 48a6241fffffffff |      17
+ 48a62178ffffffff |      16
+ 48a6242effffffff |      16
+
+== 5. cells of H3 resolution 7 crossed by exactly one of the first 200 vessels
+ cells | onevessel 
+-------+-----------
+  4924 |      3509
+
+== 6. directions faced by the slopes of at least 1 degree of the seabed of the reef area (Seabed of map_algebra.sql)
+ direction |  km2  
+-----------+-------
+         0 | 78.00
+         1 |  1.59
+         2 |  3.99
+         3 |  3.22
+         4 |  0.49
+
+== 7. hours with the largest area of the sea with waves of at least 2 m
+ hour  |  km2  
+-------+-------
+ 23:00 | 69999
+ 22:00 | 64468
+ 21:00 | 58100
+

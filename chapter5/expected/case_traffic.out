@@ -1,0 +1,71 @@
+SET
+SET
+== Query: vessels and vessel-hours per H3 cell of resolution 7
+DROP TABLE
+SELECT 26602
+      cell       | vessels | vesselhours 
+-----------------+---------+-------------
+ 871f24a59ffffff |      64 |       910.5
+ 871f3562cffffff |      42 |       624.0
+ 871f2414cffffff |      42 |       547.9
+
+== cells crossed and vessel-hours (26602 | 33628)
+ cells | vesselhours 
+-------+-------------
+ 26602 |       33628
+
+== Query: vessel-hours of resolution 5 computed from the trips and rolled up from resolution 7
+DROP TABLE
+SELECT 1344
+ cells | oneside | differ | overcount | directhours | rolledhours 
+-------+---------+--------+-----------+-------------+-------------
+  1372 |      46 |    483 |      1223 |       33628 |       33628
+
+== among the cells whose two values differ by more than 100 vessel-hours, the largest ratio (851f26d3fffffff: 11.1 against 418.6)
+      cell       | directhours | rolledhours 
+-----------------+-------------+-------------
+ 851f26d3fffffff |        11.1 |       418.6
+
+== its child with the most vessel-hours, and the share of the child inside the parent (871f26d1bffffff: 408.2 h, 50.1%)
+      cell       | vesselhours 
+-----------------+-------------
+ 871f26d1bffffff |       408.2
+
+ pctinparent 
+-------------
+        50.1
+
+== Query: vessel-hours by the mean depth of the H3 cells of resolution 7
+DROP TABLE
+SELECT 26602
+CREATE INDEX
+SELECT 17090
+ meandepth | cells | vesselhours 
+-----------+-------+-------------
+ < 10 m    |   917 |       11604
+ 10-20 m   |  2293 |        3460
+ 20-50 m   |  7949 |        4128
+ >= 50 m   |  3511 |        2104
+ no depth  | 11932 |       12332
+
+== cells with a mean depth of less than 10 m that meet a port area, and their vessel-hours (169 | 8854)
+ cells | vesselhours 
+-------+-------------
+   169 |        8854
+
+== mean depth of the three busiest cells (6.3, 3.3, 8.4)
+      cell       | meandepth 
+-----------------+-----------
+ 871f24a59ffffff |       6.3
+ 871f3562cffffff |       3.3
+ 871f2414cffffff |       8.4
+
+== Listing: the cells crossed by most vessels and the depth in them
+      cell       | vessels | meandepth | mindepth 
+-----------------+---------+-----------+----------
+ 871f22252ffffff |      78 |      36.3 |     17.7
+ 871f2226dffffff |      78 |      36.9 |     19.9
+ 871f23c9effffff |      77 |      33.7 |     15.3
+ 871f22268ffffff |      76 |      36.2 |     17.7
+ 871f23c9cffffff |      75 |      31.7 |     21.4
+

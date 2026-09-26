@@ -1,0 +1,152 @@
+SET
+SET
+== Listing: the raster Depth of 4 x 4 pixels of 100 m
+DROP TABLE
+CREATE TABLE
+INSERT 0 1
+                     st_dumpvalues                     
+-------------------------------------------------------
+ {{12,14,16,18},{11,13,15,17},{9,10,12,14},{6,8,9,11}}
+
+== Listing: local operation, the clearance under a draught of 10 m
+                 st_dumpvalues                 
+-----------------------------------------------
+ {{2,4,6,8},{1,3,5,7},{-1,0,2,4},{-4,-2,-1,1}}
+
+== Listing: reclassification into three depth classes
+               st_dumpvalues               
+-------------------------------------------
+ {{2,3,3,3},{2,2,3,3},{1,2,2,3},{1,1,1,2}}
+
+== Query: pixels of the tile under the roads of Frederikshavn with less than 17 m of water
+ shallowpixels | seapixels 
+---------------+-----------
+         32577 |     51887
+
+== Query: area of the water shallower than 6 m in the protected area south of Laeso
+ shallowkm2 
+------------
+     109.49
+
+== area of the protected area south of Laeso (365.2 km2, all of it water)
+ areakm2 
+---------
+   365.2
+
+== Query: how did the wave height change between 12:00 and 23:00
+ mean |  min  | max  | pixels 
+------+-------+------+--------
+ 0.42 | -0.51 | 0.98 | 282134
+
+== Listing: the bathymetry and the wave height are not aligned
+SET
+psql:map_algebra.sql:85: NOTICE:  The rasters have different scales on the X axis
+ st_samealignment 
+------------------
+ f
+
+SET
+== Query: water less than 20 m deep under waves of at least 1 m at 23:00
+DROP TABLE
+SELECT 879
+ class |   km2   
+-------+---------
+     0 | 95600.2
+     1 |  1149.8
+     2 |     0.3
+
+== water less than 20 m deep in the whole model (31,346.5 km2)
+ shallow20km2 
+--------------
+      31346.5
+
+== Listing: focal operation, mean of the 3 x 3 window
+                                                                             st_dumpvalues                                                                             
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {{12.5,13.5,15.5,16.5},{11.5,12.44444465637207,14.333333015441895,15.333333015441895},{9.5,10.333333015441895,12.11111068725586,13},{8.25,9,10.666666984558105,11.5}}
+
+== Listing: the seabed of Laeso Trindel og Toenneberg Banke
+DROP TABLE
+SELECT 1
+== size of the assembled raster (256 x 512) and of the area (87.3 km2)
+ width | height | areakm2 
+-------+--------+---------
+   256 |    512 |    87.3
+
+== Query: slope and ruggedness of the seabed in the reef area
+ meanslope | maxslope | meantri | maxtri 
+-----------+----------+---------+--------
+      0.50 |     5.29 |    0.36 |   3.53
+
+== Query: banks and hollows of the reef area, window of 150 m and of 1 km
+ class |  km2  
+-------+-------
+     1 |  0.12
+     2 | 86.89
+     3 |  0.28
+
+DROP TABLE
+SELECT 1
+ class |  km2  
+-------+-------
+     1 | 10.04
+     2 | 65.30
+     3 | 11.94
+
+== Listing: shallowest water within 100 m, on the tiles crossed by the vessel (51 tiles)
+DROP TABLE
+SELECT 51
+ tiles 
+-------
+    51
+
+== Listing: zonal operation with the zones of a raster
+ zone | pixels | meandepth 
+------+--------+-----------
+    1 |      4 |      8.00
+    2 |      6 |     11.50
+    3 |      6 |     15.67
+
+== Listing: zonal operation with the regions of the zones
+ zone | meandepth 
+------+-----------
+    1 |      8.00
+    2 |     11.00
+    2 |     11.60
+    3 |     15.67
+
+== Query: depth statistics of the protected areas around Laeso
+          nameeng          |       mindepth       |     meandepth     |      maxdepth      
+---------------------------+----------------------+-------------------+--------------------
+ Waters around Læsø        | 0.010012147016823292 | 6.072144185119726 |  43.76261901855469
+ Læsø, sydlige del         |    4.286408424377441 | 7.704982156717303 | 25.704204559326172
+ Ålborg Bugt, østlige del  | 0.010217606090009212 |   9.3091881040404 | 24.082761764526367
+ Nordvestlige Kattegat     | 0.010012147016823292 | 10.12253327318829 |   72.4932861328125
+ Skagens Gren og Skagerrak |  0.03272806853055954 |   92.443989285507 | 215.65846252441406
+
+== Query: area of three protected areas around Laeso in each class of depth
+             nameeng             | depthclass |  km2  
+---------------------------------+------------+-------
+ Læsø Trindel og Tønneberg Banke |          1 |   3.0
+ Læsø Trindel og Tønneberg Banke |          2 |  60.6
+ Læsø Trindel og Tønneberg Banke |          3 |  23.7
+ Læsø, sydlige del               |          1 | 312.6
+ Læsø, sydlige del               |          2 |  51.7
+ Læsø, sydlige del               |          3 |   0.9
+ Waters around Læsø              |          1 | 884.6
+ Waters around Læsø              |          2 |  96.8
+ Waters around Læsø              |          3 |  12.6
+
+== Query: stretches of the path of the vessel over water less than 20 m deep
+ stretches | meters 
+-----------+--------
+        12 | 3286.9
+
+== Listing: a line with measures loses them in the intersection
+                   piece                   | depth 
+-------------------------------------------+-------
+ LINESTRING(600020 6400150,600100 6400150) |     9
+ LINESTRING(600100 6400150,600200 6400150) |    10
+ LINESTRING(600200 6400150,600300 6400150) |    12
+ LINESTRING(600300 6400150,600380 6400150) |    14
+
