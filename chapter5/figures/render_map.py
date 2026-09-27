@@ -19,7 +19,7 @@ from qgis.core import (
     QgsTextFormat, QgsVectorLayerSimpleLabeling, QgsTextBufferSettings,
     QgsCoordinateTransform, QgsProject, Qgis)
 from qgis.PyQt.QtCore import QSize, Qt, QRectF, QPointF
-from qgis.PyQt.QtGui import QColor, QImage, QPainter, QFont, QLinearGradient, QPen
+from qgis.PyQt.QtGui import QColor, QImage, QPainter, QFont, QLinearGradient, QPen, QFontDatabase
 
 SHORTBREAD = ("type=xyz&url=https://vector.openstreetmap.org/shortbread_v1/"
               "{z}/{x}/{y}.mvt&zmin=0&zmax=14")
@@ -92,7 +92,7 @@ def vector_layer(spec):
         fmt.setSize(spec["label"].get("size", 8))
         fmt.setColor(QColor(spec["label"].get("color", "#000000")))
         buf = QgsTextBufferSettings()
-        buf.setEnabled(True)
+        buf.setEnabled(spec["label"].get("buffer", True))
         buf.setSize(0.8)
         buf.setColor(QColor("#ffffff"))
         fmt.setBuffer(buf)
@@ -113,6 +113,11 @@ def vector_layer(spec):
 def draw_colorbar(painter, spec, width, height):
     x, y, w, h = spec["rect"]
     x *= width; y *= height; w *= width; h *= height
+    if spec.get("background"):
+        # A white box behind the title, the bar, and the ticks, for a bar drawn over the map
+        fpx = int(spec.get("font_px", 26))
+        painter.fillRect(QRectF(x - fpx * 0.8, y - fpx * 1.6, w + fpx * 1.6, h + fpx * 3.1),
+                         QColor(255, 255, 255, 220))
     grad = QLinearGradient(QPointF(x, y), QPointF(x + w, y))
     vmin = spec["ramp"][0][0]; vmax = spec["ramp"][-1][0]
     for v, c in spec["ramp"]:
@@ -120,7 +125,7 @@ def draw_colorbar(painter, spec, width, height):
     painter.fillRect(QRectF(x, y, w, h), grad)
     painter.setPen(QPen(QColor("#333333"), 1))
     painter.drawRect(QRectF(x, y, w, h))
-    font = QFont("Arial")
+    font = QFont(spec.get("font", "Arial"))
     font.setPixelSize(int(spec.get("font_px", 26)))
     painter.setFont(font)
     for v in spec["ticks"]:
@@ -137,7 +142,7 @@ def draw_colorbar(painter, spec, width, height):
 def draw_legend(painter, spec, width, height):
     x, y = spec["origin"]
     x *= width; y *= height
-    font = QFont("Arial")
+    font = QFont(spec.get("font", "Arial"))
     font.setPixelSize(int(spec.get("font_px", 26)))
     painter.setFont(font)
     box = font.pixelSize()
@@ -165,6 +170,12 @@ def main(job_path):
     job = json.load(open(job_path, encoding="utf-8"))
     qgs = QgsApplication([], False)
     qgs.initQgis()
+    for path in job.get("fonts", []):
+        # A font file of the job, such as the font of the book the figure is printed in
+        fid = QFontDatabase.addApplicationFont(path)
+        if fid < 0:
+            raise RuntimeError("invalid font " + path)
+        print("font", path, QFontDatabase.applicationFontFamilies(fid))
     crs = QgsCoordinateReferenceSystem(job["crs"])
     layers = []
     for spec in job["layers"]:

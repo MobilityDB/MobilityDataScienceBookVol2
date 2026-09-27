@@ -2,40 +2,58 @@
  "output": "depth_under_vessel.png",
  "crs": "EPSG:25832",
  "extent": [
-  631793,
-  6117325,
-  632399,
-  6117799
+  631700,
+  6117250,
+  632500,
+  6117850
  ],
  "size": [
-  2400,
-  1877
+  1174,
+  880
  ],
  "dpi": 300,
  "land": "#efeae2",
  "layers": [
   {
-   "type": "vector",
-   "path": "vessel_pixels.gpkg",
-   "layer": "pixels",
-   "filter": "\"depth\" >= 20",
-   "kind": "fill",
-   "style": {
-    "color": "#9ecae1",
-    "outline_color": "#ffffff",
-    "outline_width": "0.3"
-   }
+   "type": "raster",
+   "path": "vessel_depth.tif",
+   "name": "depth",
+   "ramp": [
+    [
+     17.5,
+     "#f16913"
+    ],
+    [
+     19.99,
+     "#fdd0a2"
+    ],
+    [
+     20,
+     "#deebf7"
+    ],
+    [
+     24,
+     "#9ecae1"
+    ],
+    [
+     28,
+     "#4292c6"
+    ],
+    [
+     34,
+     "#08306b"
+    ]
+   ]
   },
   {
    "type": "vector",
    "path": "vessel_pixels.gpkg",
    "layer": "pixels",
-   "filter": "\"depth\" < 20",
    "kind": "fill",
    "style": {
-    "color": "#fdd49e",
+    "color": "0,0,0,0",
     "outline_color": "#ffffff",
-    "outline_width": "0.3"
+    "outline_width": "0.2"
    }
   },
   {
@@ -45,7 +63,7 @@
    "kind": "line",
    "style": {
     "line_color": "#252525",
-    "line_width": "0.8"
+    "line_width": "0.4"
    }
   },
   {
@@ -55,7 +73,7 @@
    "kind": "line",
    "style": {
     "line_color": "#d7301f",
-    "line_width": "2.4",
+    "line_width": "0.6",
     "capstyle": "flat"
    }
   },
@@ -67,19 +85,41 @@
    "style": {
     "name": "circle",
     "color": "#252525",
-    "outline_color": "#ffffff",
-    "size": "3.2"
-   },
-   "label": {
-    "expression": true,
-    "field": "substr(\"label\", 4)",
-    "size": 12,
-    "color": "#1a1a1a",
-    "placement": "OverPoint",
-    "quadrant": "BelowRight",
-    "distance": 1.2,
-    "display_all": true
+    "size": "1.4"
    }
   }
+ ],
+ "legend_ramp": [
+  [
+   17.5,
+   "#f16913"
+  ],
+  [
+   19.99,
+   "#fdd0a2"
+  ],
+  [
+   20,
+   "#deebf7"
+  ],
+  [
+   24,
+   "#9ecae1"
+  ],
+  [
+   28,
+   "#4292c6"
+  ],
+  [
+   34,
+   "#08306b"
+  ]
+ ],
+ "legend_ticks": [
+  18,
+  20,
+  24,
+  28,
+  34
  ]
 }

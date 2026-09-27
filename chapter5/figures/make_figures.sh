@@ -19,3 +19,8 @@ done
 curl -fsSL -o "$OUT/cellindex.png" \
   https://raw.githubusercontent.com/MobilityDB/MobilityDB/688ef3e12bcff88de44c42ca6e71a554c1800c60/doc/images/cellindex.png
 python3 "$HERE/cellgrids.py" "$OUT/cellindex.png" "$OUT/cellgrids.png"
+# The labels and the legend of the depth under the vessel are LaTeX, in the style
+# of the captions, drawn over the image by depth_under_vessel_overlay.tex.
+python3 "$HERE/overlay_depth_under_vessel.py" "$HERE/job_depth_under_vessel.json" \
+  "$OUT/vessel_reports.gpkg" figs/tessellations/depth_under_vessel '0.85\textwidth' \
+  "$OUT/depth_under_vessel_overlay.tex"
