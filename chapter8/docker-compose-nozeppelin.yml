@@ -112,8 +112,8 @@ services:
     hostname: history-server
     command: >
       /bin/bash -c "
-        until hdfs dfs -ls / 2>/dev/null; do
-          echo 'Waiting for HDFS...'
+        until hdfs dfs -test -d /spark-history 2>/dev/null; do
+          echo 'Waiting for /spark-history in HDFS...'
           sleep 10
         done &&
         /opt/spark/bin/spark-class org.apache.spark.deploy.history.HistoryServer
