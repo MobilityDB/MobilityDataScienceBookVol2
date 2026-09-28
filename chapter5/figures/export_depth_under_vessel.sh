@@ -1,9 +1,9 @@
 #!/bin/bash
 # Export the layers of the figure of the depth under the vessel 273277840
-# between 01:27:30 and 01:29:10 UTC: the pixels of the bathymetry around that
-# stretch with their depth, the trip, its reports, and the stretches over water
-# less than 20 m deep. Writes to $OUT (default: the working directory); reads
-# the database named by the PostgreSQL environment variables.
+# between 01:27:30 and 01:29:10 UTC: the depth model and its pixels around that
+# stretch, the trip, its reports, and the stretches over water less than 20 m
+# deep. Writes to $OUT (default: the working directory); reads the database
+# named by the PostgreSQL environment variables and the depth model of $DATA.
 set -e
 cd "${OUT:-$PWD}"
 PG="PG:dbname=${PGDATABASE:-$USER}${PGHOST:+ host=$PGHOST}${PGPORT:+ port=$PGPORT}${PGUSER:+ user=$PGUSER}"
@@ -30,5 +30,12 @@ ogr2ogr -f GPKG -a_srs EPSG:25832 vessel_pixels.gpkg "$PG" -nln pixels -overwrit
      FROM Bathymetry b, E e
      WHERE ST_Intersects(b.Rast, e.g)
      GROUP BY e.g ) t"
+read XMIN YMIN XMAX YMAX < <(psql -X -At -F ' ' -c \
+  "SELECT ST_XMin(b) - 250, ST_YMin(b) - 250, ST_XMax(b) + 250, ST_YMax(b) + 250
+   FROM (SELECT ST_Envelope(trajectory(atTime(Trip, $W))) AS b
+     FROM Ships WHERE MMSI = 273277840) t")
+gdal_translate -q -projwin $XMIN $YMAX $XMAX $YMIN \
+  "${DATA:-$PWD/data}/ddm/ddm_50m_25832.tif" vessel_depth.tif
 for f in vessel_trip vessel_reports vessel_shallow vessel_pixels; do
   ogrinfo -so -al $f.gpkg | grep 'Feature Count'; done
+gdalinfo vessel_depth.tif | grep 'Size is'

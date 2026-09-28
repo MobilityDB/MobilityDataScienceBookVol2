@@ -150,6 +150,6 @@ MobilityDB manual as the figure of the chapter.
 |---|---|
 | Bathymetry around the island of Læsø | `export_bathymetry_laeso.sh`, `job_bathymetry_laeso.json` |
 | The seabed of a reef area north-east of Læsø | `export_seabed.sh`, `job_seabed_slope.json`, `job_seabed_tpi.json` |
-| The depth under a vessel between two reports | `export_depth_under_vessel.sh`, `job_depth_under_vessel.json` |
+| The depth under a vessel between two reports | `export_depth_under_vessel.sh`, `job_depth_under_vessel.json`, and `overlay_depth_under_vessel.py`, which writes `depth_under_vessel_overlay.tex`, the image with its labels and legend in the style of the captions, which the book inputs |
 | An AIS track on the H3, QUADBIN, and S2 grids | `cellgrids.py` |
 | Vessel-hours per H3 cell | `export_traffic_h3.sh`, `job_traffic_h3.json` |
