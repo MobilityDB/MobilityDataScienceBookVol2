@@ -1,0 +1,173 @@
+services:
+  namenode:
+    #image: mi-sedona-yarnclient-nozeppelin
+    image: mi-sedona-mobilityspark
+    container_name: namenode_20
+    hostname: namenode
+    command: >
+      /bin/bash -c "
+        if [ ! -d /hdfs/namenode/current ]; then
+          hdfs namenode -format -force
+        fi &&
+        hdfs namenode &
+        until hdfs dfsadmin -safemode get 2>/dev/null | grep -q 'Safe mode is OFF' && hdfs dfsadmin -report 2>/dev/null | grep -q 'Live datanodes (1)'; do
+          echo 'Waiting for namenode and datanode...'
+          sleep 10
+        done &&
+        sleep 15 &&
+        hdfs dfs -mkdir -p /spark-warehouse &&
+        hdfs dfs -chmod 777 /spark-warehouse &&
+        hdfs dfs -mkdir -p /user/root &&
+        hdfs dfs -chmod 777 /user/root &&
+        hdfs dfs -mkdir -p /spark-history &&
+        hdfs dfs -chmod 777 /spark-history &&
+        hdfs dfs -mkdir -p /spark-driver-logs &&
+        hdfs dfs -chmod 777 /spark-driver-logs &&
+        wait
+      "
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - hdfs-namenode:/hdfs/namenode
+
+  datanode:
+    #image: mi-sedona-yarnclient-nozeppelin
+    image: mi-sedona-mobilityspark
+    container_name: datanode_20
+    hostname: datanode
+    command: hdfs datanode
+    depends_on:
+      - namenode
+    volumes:
+      - hdfs-datanode:/hdfs/datanode
+
+  resourcemanager:
+    #image: mi-sedona-yarnclient-nozeppelin
+    image: mi-sedona-mobilityspark
+    container_name: resourcemanager_20
+    hostname: resourcemanager
+    environment:
+      JAVA_TOOL_OPTIONS: "--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
+    command: yarn resourcemanager
+    depends_on:
+      - namenode
+    ports:
+      - "8088:8088"  # Mapeado a 8089 para evitar el conflicto de Windows con el puerto 8088
+
+  nodemanager1:
+    #image: mi-sedona-yarnclient-nozeppelin
+    image: mi-sedona-mobilityspark
+    container_name: nodemanager1_20
+    hostname: nodemanager1
+    ports:
+      - "8042:8042"
+    environment:
+      JAVA_TOOL_OPTIONS: "--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
+      YARN_NODEMANAGER_MEMORY: 8192
+      YARN_NODEMANAGER_CORES: 4
+    command: >
+      /bin/bash -c "
+        yarn nodemanager &
+        while true; do
+          chmod -R 755 /tmp/yarn-logs/ 2>/dev/null
+          sleep 10
+        done
+      "
+    depends_on:
+      - resourcemanager
+    volumes:
+      - nodemanager1_logs:/tmp/yarn-logs
+      - C:/Users/lgomez/sedonabook2/opt/data:/opt/data
+
+  nodemanager2:
+    #image: mi-sedona-yarnclient-nozeppelin
+    image: mi-sedona-mobilityspark
+    container_name: nodemanager2_20
+    hostname: nodemanager2
+    ports:
+      - "8043:8042"
+    environment:
+      JAVA_TOOL_OPTIONS: "--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
+      YARN_NODEMANAGER_MEMORY: 8192
+      YARN_NODEMANAGER_CORES: 4
+    command: >
+      /bin/bash -c "
+        yarn nodemanager &
+        while true; do
+          chmod -R 755 /tmp/yarn-logs/ 2>/dev/null
+          sleep 10
+        done
+      "
+    depends_on:
+      - resourcemanager
+    volumes:
+      - nodemanager2_logs:/tmp/yarn-logs
+      - C:/Users/lgomez/sedonabook2/opt/data:/opt/data
+
+  history-server:
+    #image: mi-sedona-yarnclient-nozeppelin
+    image: mi-sedona-mobilityspark
+    container_name: history-server_20
+    hostname: history-server
+    command: >
+      /bin/bash -c "
+        until hdfs dfs -ls / 2>/dev/null; do
+          echo 'Waiting for HDFS...'
+          sleep 10
+        done &&
+        /opt/spark/bin/spark-class org.apache.spark.deploy.history.HistoryServer
+      "
+    depends_on:
+      - namenode
+      - datanode
+    ports:
+      - "18080:18080"
+    environment:
+      SPARK_HISTORY_OPTS: "-Dspark.history.fs.logDirectory=hdfs://namenode:9000/spark-history -Dspark.history.custom.executor.log.url=http://localhost:9090/node/containerlogs/{{CONTAINER_ID}}/root/{{FILE_NAME}}?start=-4096"
+
+  logserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.logserver
+    container_name: logserver_20
+    ports:
+      - "9090:9090"
+    volumes:
+      - nodemanager1_logs:/tmp/yarn-logs/nodemanager1
+      - nodemanager2_logs:/tmp/yarn-logs/nodemanager2
+    depends_on:
+      - nodemanager1
+      - nodemanager2
+
+  sedona:
+    #image: mi-sedona-yarnclient-nozeppelin
+    image: mi-sedona-mobilityspark
+    container_name: sedona_20
+    hostname: sedona
+    user: root
+    stdin_open: true
+    tty: true
+    depends_on:
+      - namenode
+      - resourcemanager
+      - nodemanager1
+      - nodemanager2
+    environment:
+      SPARK_DRIVER_MEMORY: 4g
+      SPARK_EXECUTOR_MEMORY: 4g
+    # MODIFICADO: Ahora ejecuta JupyterLab en lugar de Zeppelin
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''
+    ports:
+      - "8888:8888"   # Interfaz web de JupyterLab
+      - "4040:4040"   # Monitoreo de Spark UI cuando ejecutas tareas
+    volumes:
+      - jupyter-notebooks:/opt/notebooks # Volumen limpio para guardar tus archivos .ipynb
+      - C:/Users/lgomez/sedonabook2/opt/data:/opt/data
+
+volumes:
+  hdfs-namenode:
+  hdfs-datanode:
+  jupyter-notebooks:  # Cambiado el volumen persistente de Zeppelin a Jupyter
+  nodemanager1_logs:
+  nodemanager2_logs:

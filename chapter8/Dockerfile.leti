@@ -1,0 +1,280 @@
+FROM eclipse-temurin:21-jdk
+
+ARG SPARK_VERSION=4.0.0
+ARG HADOOP_VERSION=3.3.6
+ARG HADOOP_SHORT=3
+ARG DELTA_VERSION=4.0.0
+ARG SCALA_VERSION=2.13
+ARG SEDONA_VERSION=1.8.0
+
+# =========================================================
+# SYSTEM + PYTHON 3.11
+# =========================================================
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 python3.11-venv python3.11-dev \
+    curl wget git cmake  libgeos-dev libproj-dev libjson-c-dev libgsl-dev libh3-dev libgdal-dev  unzip bash ca-certificates build-essential \
+    openssh-client openssh-server && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# SSH sin password (requerido por Hadoop)
+RUN ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa && \
+    cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && \
+    chmod 0600 ~/.ssh/authorized_keys
+
+# =========================================================
+# PYTHON 3.11 VENV
+# =========================================================
+RUN python3.11 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --upgrade pip setuptools wheel
+# FIXED: Explicitly added apache-sedona so Jupyter can process Sedona objects natively
+RUN pip install \
+    pyspark==${SPARK_VERSION} \
+    apache-sedona==${SEDONA_VERSION} \
+    pandas pydeck ipython jupyterlab 
+
+
+# =========================================================
+# HADOOP
+# =========================================================
+RUN curl -L -o /tmp/hadoop.tgz \
+    https://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz \
+    && mkdir -p /opt/hadoop \
+    && tar -xzf /tmp/hadoop.tgz -C /opt/hadoop --strip-components=1 \
+    && rm /tmp/hadoop.tgz
+
+ENV HADOOP_HOME=/opt/hadoop
+ENV HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+ENV PATH="$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH"
+ENV JAVA_HOME=/opt/java/openjdk
+
+# =========================================================
+# SPARK
+# =========================================================
+RUN curl -L -o /tmp/spark.tgz \
+  https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_SHORT}.tgz \
+  && mkdir -p /opt/spark \
+  && tar -xzf /tmp/spark.tgz -C /opt/spark --strip-components=1 \
+  && rm /tmp/spark.tgz
+
+ENV SPARK_HOME=/opt/spark
+ENV PATH="$SPARK_HOME/bin:$PATH"
+ENV PYSPARK_PYTHON=/opt/venv/bin/python
+ENV PYSPARK_DRIVER_PYTHON=/opt/venv/bin/python
+
+# =========================================================
+# DELTA + SEDONA JARs
+# =========================================================
+RUN curl -fL -o $SPARK_HOME/jars/delta-spark_${SCALA_VERSION}-${DELTA_VERSION}.jar \
+      https://repo1.maven.org/maven2/io/delta/delta-spark_${SCALA_VERSION}/${DELTA_VERSION}/delta-spark_${SCALA_VERSION}-${DELTA_VERSION}.jar && \
+    curl -fL -o $SPARK_HOME/jars/delta-storage-${DELTA_VERSION}.jar \
+      https://repo1.maven.org/maven2/io/delta/delta-storage/${DELTA_VERSION}/delta-storage-${DELTA_VERSION}.jar && \
+    curl -fL -o $SPARK_HOME/jars/sedona-spark-shaded-4.0_${SCALA_VERSION}-${SEDONA_VERSION}.jar \
+      https://repo1.maven.org/maven2/org/apache/sedona/sedona-spark-shaded-4.0_${SCALA_VERSION}/${SEDONA_VERSION}/sedona-spark-shaded-4.0_${SCALA_VERSION}-${SEDONA_VERSION}.jar && \
+    curl -fL -o $SPARK_HOME/jars/geotools-wrapper-1.8.0-33.1.jar \
+      https://repo1.maven.org/maven2/org/datasyslab/geotools-wrapper/1.8.0-33.1/geotools-wrapper-1.8.0-33.1.jar
+
+
+# =========================================================
+# MEOS
+# =========================================================
+# Build MobilityDB with MEOS enabled
+RUN git clone --depth 1 https://github.com/MobilityDB/MobilityDB.git -b master /usr/local/src/MobilityDB
+RUN mkdir -p /usr/local/src/MobilityDB/build
+RUN cd /usr/local/src/MobilityDB/build && \
+    cmake -DMEOS=ON .. && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig
+
+# Install Maven 3.9.6
+ENV MAVEN_HOME=/usr/share/maven
+ENV MAVEN_CONFIG="/root/.m2"
+COPY --from=maven:3.9.6-eclipse-temurin-11 ${MAVEN_HOME} ${MAVEN_HOME}
+COPY --from=maven:3.9.6-eclipse-temurin-11 /usr/local/bin/mvn-entrypoint.sh /usr/local/bin/mvn-entrypoint.sh
+COPY --from=maven:3.9.6-eclipse-temurin-11 /usr/share/maven/ref/settings-docker.xml /usr/share/maven/ref/settings-docker.xml
+RUN ln -s ${MAVEN_HOME}/bin/mvn /usr/bin/mvn
+
+# =========================================================
+# JMEOS
+# =========================================================
+RUN git clone --depth 1 \
+      https://github.com/MobilityDB/JMEOS.git \
+      /opt/JMEOS
+
+RUN git clone --depth 1 \
+      https://github.com/MobilityDB/MEOS-API.git \
+      /opt/MEOS-API
+
+
+
+
+
+
+# =========================================================
+# MOBILITYSPARK
+#
+# We compile the official MobilitySpark source against
+# Spark 4.0.0 instead of its default Spark 3.5.1.
+# =========================================================
+RUN git clone --depth 1 \
+      https://github.com/MobilityDB/MobilitySpark.git \
+      /opt/MobilitySpark
+
+WORKDIR /opt/MobilitySpark
+
+# Change Spark dependency from 3.5.1 to 4.0.0
+RUN sed -i 's/<version>3\.5\.1<\/version>/<version>4.0.0<\/version>/g' pom.xml
+
+
+RUN /opt/MEOS-API/tools/refresh-binding.sh \
+      --binding /opt/MobilitySpark \
+      --mdb /usr/local/src/MobilityDB \
+      --jmeos /opt/JMEOS \
+      --meos-api /opt/MEOS-API
+
+
+# Build MobilitySpark
+RUN mvn -B -DskipTests package
+
+RUN mvn dependency:copy-dependencies \
+    -DincludeScope=runtime \
+    -DoutputDirectory=/opt/spark/jars
+
+# Copy MobilitySpark and JMEOS to Spark
+RUN cp target/*.jar /opt/spark/jars/ && \
+    cp ~/.m2/repository/org/jmeos/meos/1.0/meos-1.0.jar /opt/spark/jars/
+
+
+# =========================================================
+# HADOOP CONFIG
+# =========================================================
+RUN mkdir -p /opt/hadoop/etc/hadoop /hdfs/namenode /hdfs/datanode
+
+RUN cat > /opt/hadoop/etc/hadoop/core-site.xml << 'EOF'
+<?xml version="1.0"?>
+<configuration>
+  <property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://namenode:9000</value>
+  </property>
+</configuration>
+EOF
+
+RUN cat > /opt/hadoop/etc/hadoop/hdfs-site.xml << 'EOF'
+<?xml version="1.0"?>
+<configuration>
+  <property>
+    <name>dfs.replication</name>
+    <value>1</value>
+  </property>
+  <property>
+    <name>dfs.namenode.name.dir</name>
+    <value>/hdfs/namenode</value>
+  </property>
+  <property>
+    <name>dfs.datanode.data.dir</name>
+    <value>/hdfs/datanode</value>
+  </property>
+</configuration>
+EOF
+
+RUN cat > /opt/hadoop/etc/hadoop/yarn-site.xml << 'EOF'
+<?xml version="1.0"?>
+<configuration>
+  <!-- FIXED: Changed localhost to 0.0.0.0 to allow cross-container resource allocation -->
+  <property>
+    <name>yarn.resourcemanager.webapp.address</name>
+    <value>0.0.0.0:8088</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.webapp.proxy.address</name>
+    <value>0.0.0.0:8088</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.webapp.address</name>
+    <value>0.0.0.0:8042</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.remote-app-log-dir</name>
+    <value>hdfs://namenode:9000/var/log/hadoop-yarn/apps</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.hostname</name>
+    <value>resourcemanager</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.aux-services</name>
+    <value>mapreduce_shuffle</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.resource.memory-mb</name>
+    <value>12288</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.resource.cpu-vcores</name>
+    <value>4</value>
+  </property>
+  <property>
+    <name>yarn.scheduler.maximum-allocation-mb</name>
+    <value>12288</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.vmem-check-enabled</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>yarn.log-aggregation-enable</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.log-dirs</name>
+    <value>/tmp/yarn-logs</value>
+  </property>
+  <property>
+    <name>yarn.log-aggregation.retain-seconds</name>
+    <value>604800</value>
+  </property>
+</configuration>
+EOF
+
+RUN cat > /opt/hadoop/etc/hadoop/mapred-site.xml << 'EOF'
+<?xml version="1.0"?>
+<configuration>
+  <property>
+    <name>mapreduce.framework.name</name>
+    <value>yarn</value>
+  </property>
+  <property>
+    <name>mapreduce.application.classpath</name>
+    <value>$HADOOP_HOME/share/hadoop/mapreduce/*:$HADOOP_HOME/share/hadoop/mapreduce/lib/*</value>
+  </property>
+</configuration>
+EOF
+
+RUN echo "export JAVA_HOME=/opt/java/openjdk" >> /opt/hadoop/etc/hadoop/hadoop-env.sh
+
+# =========================================================
+# SPARK DEFAULTS (modo YARN)
+# =========================================================
+RUN mkdir -p /opt/spark/conf && \
+    echo "spark.master=yarn" >> /opt/spark/conf/spark-defaults.conf && \
+    echo "spark.submit.deployMode=client" >> /opt/spark/conf/spark-defaults.conf && \
+    echo "spark.driver.memory=4g" >> /opt/spark/conf/spark-defaults.conf && \
+    echo "spark.executor.memory=4g" >> /opt/spark/conf/spark-defaults.conf && \
+    echo "spark.executor.cores=1" >> /opt/spark/conf/spark-defaults.conf && \
+    echo "spark.executor.instances=4" >> /opt/spark/conf/spark-defaults.conf && \
+    echo "spark.ui.proxyBase=" >> /opt/spark/conf/spark-defaults.conf && \
+    echo "spark.ui.proxyRedirectUri=" >> /opt/spark/conf/spark-defaults.conf && \
+    echo "spark.driver.maxResultSize=2g" >> /opt/spark/conf/spark-defaults.conf && \
+    echo "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension,org.apache.sedona.sql.SedonaSqlExtensions,org.mobilitydb.spark.catalyst.MobilitySparkExtensions" >> /opt/spark/conf/spark-defaults.conf && \
+    echo "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog" >> /opt/spark/conf/spark-defaults.conf && \
+    echo "spark.sql.warehouse.dir=hdfs://namenode:9000/spark-warehouse" >> /opt/spark/conf/spark-defaults.conf && \
+    echo "spark.hadoop.fs.defaultFS=hdfs://namenode:9000" >> /opt/spark/conf/spark-defaults.conf && \
+    # FIXED: Repaired the truncated block down here
+    echo "spark.eventLog.enabled=true" >> /opt/spark/conf/spark-defaults.conf && \
+    echo "spark.eventLog.dir=hdfs://namenode:9000/spark-history" >> /opt/spark/conf/spark-defaults.conf
