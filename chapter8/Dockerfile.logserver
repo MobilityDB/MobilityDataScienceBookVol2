@@ -1,0 +1,59 @@
+FROM python:3.11-slim
+
+# =========================================================
+# LOG SERVER
+#
+# Serves the logs of the YARN containers of both NodeManagers,
+# mounted under /tmp/yarn-logs/nodemanager1 and
+# /tmp/yarn-logs/nodemanager2, at the URL that the Spark History
+# Server gives to the executor logs:
+#   /node/containerlogs/<container>/<user>/<file>?start=<offset>
+# A negative offset returns the last bytes of the file, as YARN does.
+# The server is written inline, as Dockerfile.leti writes the
+# Hadoop configuration files. The companion repository has no other
+# web server; the nearest routine it has is #main of
+# chapter5/figures/render_map.py, a standalone script like this one.
+# =========================================================
+RUN mkdir -p /opt/logserver && cat > /opt/logserver/logserver.py << 'EOF'
+import glob
+import html
+import os
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import parse_qs, urlparse
+
+ROOT = "/tmp/yarn-logs"
+
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        url = urlparse(self.path)
+        parts = [p for p in url.path.split("/") if p]
+        if len(parts) != 5 or parts[:2] != ["node", "containerlogs"]:
+            return self.reply(404, "Expected /node/containerlogs/<container>/<user>/<file>")
+        container, name = parts[2], parts[4]
+        if "/" in name or name.startswith("."):
+            return self.reply(400, "Invalid file name")
+        paths = glob.glob(os.path.join(ROOT, "*", "*", container, name))
+        if not paths:
+            return self.reply(404, f"No log {name} for container {container}")
+        with open(paths[0], "rb") as f:
+            data = f.read()
+        start = int(parse_qs(url.query).get("start", ["0"])[0])
+        data = data[start:] if start >= 0 else data[max(0, len(data) + start):]
+        text = html.escape(data.decode("utf-8", "replace"))
+        self.reply(200, f"<html><body><h3>{container} / {name}</h3><pre>{text}</pre></body></html>")
+
+    def reply(self, code, body):
+        payload = body.encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+
+ThreadingHTTPServer(("0.0.0.0", 9090), Handler).serve_forever()
+EOF
+
+EXPOSE 9090
+CMD ["python", "/opt/logserver/logserver.py"]
