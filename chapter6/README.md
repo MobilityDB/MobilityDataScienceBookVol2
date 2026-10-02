@@ -8,3 +8,81 @@ It contains the datasets used in the book alongside with the scripts
 allowing you to input these datasets in the various tools and reproduce the
 examples and exercises in the book.
 
+The chapter queries semantic trajectories in two concrete models: the discrete
+model, which stores one row per observation or per visit of a cell or a
+district, and the continuous model, which stores the trips and their
+annotations as temporal values. The scripts below download the data, build the
+database, and run every query of the chapter in the order of its sections, in
+both models.
+
+### Software
+
+- PostgreSQL 18 with PostGIS 3.6 and the extension `hstore`.
+- MobilityDB 1.4, which provides the type `tjsonb` used by the chapter.
+- `osm2pgsql` 1.11 or later, which imports the OpenStreetMap data.
+
+The scripts connect to PostgreSQL through the usual environment variables
+(`PGDATABASE`, by default `semantic`, `PGHOST`, `PGPORT`, ...), and read the
+datasets from the directory named by the environment variable `DATA`, by
+default `data/` below the working directory. The server reads the files of the
+Delhi observations itself, so it must run on the same machine as the scripts,
+and the user must be a superuser or a member of the role
+`pg_read_server_files`.
+
+### Datasets
+
+| Data | Source | Terms |
+|---|---|---|
+| Air-quality observations of buses in Delhi, November and December 2020 | [MobilityDB](https://docs.mobilitydb.com/pub/Delhi_Pollution_2020-Nov-Dec.zip) | as stated by the publisher |
+| OpenStreetMap extract of India of January 1, 2021 | [Geofabrik](https://download.geofabrik.de/asia/india-210101.osm.pbf) | [ODbL](https://www.openstreetmap.org/copyright) |
+| Hourly weather in Delhi, November and December 2020 (`delhi_weather.csv`) | [Open-Meteo](https://open-meteo.com/en/docs/historical-weather-api) | [CC BY 4.0](https://open-meteo.com/en/license) |
+
+The districts are those of the OpenStreetMap extract of January 1, 2021, the
+end of the observation period: the eleven districts of Delhi used in the
+chapter. Delhi has since been divided into thirteen districts, so a current
+extract gives other districts and other answers to the district queries.
+
+### Scripts
+
+| Script | Content |
+|---|---|
+| `fetch_data.sh` | Downloads the observations and the OpenStreetMap extract into `$DATA` |
+| `build.sh` | Imports the OpenStreetMap data restricted to the bounding box of Delhi, and runs `delhi_load.sql` and `paris_tours.sql` |
+| `delhi_load.sql` | Function `delhi_load()`, which builds the tables of the Delhi use case: `DelhiInput`, `WeatherInput`, `WeatherHourly`, `TripPoints`, `Trips`, `Grid`, `TripCells`, `TripVisits`, `TripTiles`, `TripCellsSeq`, `TripTilesSeq`, `Districts`, `PointDistricts`, `PointDistrictSeq`, `TripDistricts`, and `TripDistrictsSeq` |
+| `paris_tours.sql` | The tables of the Paris tours: `PoI`, `Tour`, the view `TourPoI`, and `TempTour` |
+| `paris_queries.sql` | The queries over the Paris tours, each preceded by its pattern |
+| `delhi_queries.sql` | The queries over the Delhi trips, each preceded by its statement and its pattern |
+| `delhi_districts.sql` | The pattern of Query `que:point-district` over the districts, in its overlapping, disjoint, and any-length versions |
+| `delhi_model_comparison.sql` | The per-cell averages stored in `TripCells` against those computed at query time from `TripTiles` |
+| `run_all.sh` | Runs the four query scripts and compares the number of rows of every answer with `expected/` |
+
+### Running
+
+    bash fetch_data.sh
+    bash build.sh
+    bash run_all.sh
+
+`build.sh` takes about 45 minutes, most of it spent reading the OpenStreetMap
+extract of India. `run_all.sh` writes the output of each script to
+`out/<script>.out`, and the number of rows of each answer to
+`out/<script>.rows`, which it compares with `expected/<script>.rows`.
+
+### Answers
+
+The number of answers of the Delhi queries, as given in the chapter.
+
+| Query | Discrete | Continuous |
+|---|---|---|
+| `que:grid-allincrease` | 1102 | 708 |
+| `que:grid-incr-decr` | 348 | 40 |
+| `que:grid-span` | 2 | 22 |
+| `que:grid-higher` | 4 | 8 |
+| `que:grid-raintemphm` | 92 | 71 |
+| `que:grid_cell_patt1` (overlapping) | 10478 | 10631 |
+| `que:point-district` (overlapping) | 8542 | 8849 |
+| `que:point-development` | — | 12792 |
+| `que:point-incr` | 708 | 708 |
+| `que:point-incr-decr-global` | 38 | 40 |
+| `que:point-span` | 94 | 94 |
+| `que:point-higher-global` | 8 | 8 |
+| `que:point-weather` | 71 | 71 |
