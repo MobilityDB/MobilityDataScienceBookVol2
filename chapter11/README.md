@@ -117,3 +117,69 @@ checkpoint with the smallest spatial validation error to
 a run can be resumed. Two runs with the same seed on different GPUs or CUDA
 versions may differ slightly, since parallel floating-point reductions are not
 associative.
+
+### The use case of the chapter
+
+The directory `usecase/` runs the use case of the chapter, "Filling the Gaps of
+Vessels in Danish Waters", from the AIS data to the measured errors. Every table
+it reads and writes lives in the AIS database of the book, built by `../ais/`.
+
+| Table | Content | Built by |
+|---|---|---|
+| `AISInput`, `AISClean`, `Vessels`, `Ships`, `Segments` | The AIS day of January 20, 2026, cleaned, with the trips and the reported speed, course, heading, and rate of turn of each vessel | `../ais/build.sh` |
+| `Bathymetry`, `WaveHeight`, `NaturalAreas` | The depth, the hourly wave height, and the protected areas of chapter 5 | `../chapter5/load_all.sh aux ddm fields` |
+| `WPIPort`, `SeaAreas`, `EEZ`, `TerritorialSea`, `TSS` | The ports of the World Port Index, the IHO sea areas, the exclusive economic zones and territorial seas of the VLIZ Marine Regions, and the traffic separation schemes of OpenStreetMap | `fetch_context.sh`, `load_context.sh` |
+| `Gaps`, `TripPoints` | The gaps of at most 30 minutes and their windows, sampled every minute | `01_sequences.sql` |
+| `PointContext`, `PointDescriptor` | The context of every observed position and its description in the template of the corpus | `02_context.sql`, `03_descriptions.sql` |
+| `PointEmbedding` | The 256-dimensional embedding of every description | `embed.py` |
+| `EvalMasks`, view `ModelInput` | The positions every model is asked to reconstruct, and the sequences given to the model | `04_masks.sql` |
+| `ReconstructedLonLat`, `Reconstructed`, view `Errors` | The reconstructions of the models `crossdomain` and `coordinates` and of the baseline `linear`, and their errors | `run_model.py`, `05_evaluate.sql` |
+| `GapPaths`, `GapAreas` | The reconstructed path of every gap, and the protected areas the vessel could have entered | `06_exact.sql` |
+
+#### Software
+
+- The AIS database of `../ais/`, with the tables of chapter 5 loaded into it.
+- GDAL with `ogr2ogr`, to load the reference layers.
+- Python 3.10 or later with the packages of `usecase/requirements.txt`.
+- The code of the thesis at commit `8fc3ca2`, which `run_usecase.sh` clones. It
+  is the commit that publishes the checkpoint `models/checkpoints/best.pt`, a
+  model with a mixture of experts and 3,708,394 parameters whose semantic
+  channel is fused by cross-attention after the encoder; the model code of later
+  commits fuses the semantics at the input, with weights the checkpoint does not
+  hold, so `run_model.py` loads it strictly with the code of `8fc3ca2`.
+- For the embeddings, a Hugging Face account that has accepted the license of
+  [EmbeddingGemma](https://huggingface.co/google/embeddinggemma-300m), and its
+  token stored with `hf auth login`.
+
+#### Running the use case
+
+    cd usecase
+    python3 -m venv venv && . venv/bin/activate
+    pip install -r requirements.txt
+    hf auth login
+    PGDATABASE=ais bash fetch_context.sh && PGDATABASE=ais bash load_context.sh
+    PGDATABASE=ais bash run_usecase.sh
+
+On a laptop with an NVIDIA RTX 3060 GPU with 6 GB of memory, the whole run takes
+about 30 minutes, of which 19 for the embedding of the 160,439 descriptions. The
+use case can be reproduced without a GPU in two ways:
+
+| Command | What runs | Time on the processor of a laptop |
+|---|---|---|
+| `EMBED=0 SAMPLE=5 bash run_usecase.sh` | 5% of the gaps (439), without embeddings: the model `coordinates` and the baseline `linear` | 1 minute |
+| `SAMPLE=5 bash run_usecase.sh` | 5% of the gaps, with the embeddings of their 8,907 descriptions: every model | 43 minutes |
+
+The share of gaps is chosen by a hash of the key of each gap, so every run with
+the same `SAMPLE` studies the same gaps. Without a GPU, the encoder runs in
+single precision instead of bfloat16, so the embeddings, and the errors of the
+model `crossdomain`, may differ slightly from those of the book.
+
+For the whole day, `05_evaluate.sql` prints the errors of the book:
+
+    model       | task       | positions | meanerr | medianerr | p90err
+    coordinates | prediction |     15427 |     144 |         2 |    498
+    crossdomain | prediction |     15427 |     151 |         2 |    521
+    linear      | prediction |     15427 |      21 |         0 |     26
+    coordinates | recovery   |     79636 |      97 |         1 |    176
+    crossdomain | recovery   |     79636 |      95 |         1 |    178
+    linear      | recovery   |     79636 |      53 |         1 |     37
