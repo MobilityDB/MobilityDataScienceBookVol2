@@ -155,22 +155,22 @@ ORDER BY h.TourId, h.StepNo;
 
 WITH Hilton(TourId, Tour) AS (
   SELECT TourId, atTime(Tour, unnest(spans(
-    getTime(atValues(Tour->>'Category', text 'Hotel')) *
-    getTime(atValues(Tour->>'Name', text 'Hilton Paris Opera')))))
+    getTime(atValue(Tour->>'Category', text 'Hotel')) *
+    getTime(atValue(Tour->>'Name', text 'Hilton Paris Opera')))))
   FROM TempTour
-  WHERE getTime(atValues(Tour->>'Name', text 'Hilton Paris Opera')) IS NOT NULL ),
+  WHERE getTime(atValue(Tour->>'Name', text 'Hilton Paris Opera')) IS NOT NULL ),
 Restaurant(TourId, Tour) AS (
   SELECT TourId, atTime(Tour, unnest(spans(
-    getTime(atValues(Tour->>'Category', text 'Restaurant')))))
+    getTime(atValue(Tour->>'Category', text 'Restaurant')))))
   FROM TempTour
-  WHERE getTime(atValues(Tour->>'Category', text 'Restaurant')) IS NOT NULL ),
+  WHERE getTime(atValue(Tour->>'Category', text 'Restaurant')) IS NOT NULL ),
 Movie(TourId, Tour) AS (
   SELECT TourId, atTime(Tour, unnest(spans(
-    getTime(atValues(Tour->>'Category', text 'Entertainment')) *
-    getTime(atValues(Tour->>'Type', text 'Movie')))
+    getTime(atValue(Tour->>'Category', text 'Entertainment')) *
+    getTime(atValue(Tour->>'Type', text 'Movie')))))
   FROM TempTour
-  WHERE getTime(atValues(Tour->>'Category', text 'Entertainment')) IS NOT NULL AND
-    getTime(atValues(Tour->>'Type', text 'Movie')) IS NOT NULL )
+  WHERE getTime(atValue(Tour->>'Category', text 'Entertainment')) IS NOT NULL AND
+    getTime(atValue(Tour->>'Type', text 'Movie')) IS NOT NULL )
 SELECT DISTINCT h.TourId, startValue(h.Tour->>'StepNo')::integer AS HiltonStep,
   startValue(h.Tour->>'Name') AS HiltonName,
   startValue(r.Tour->>'StepNo')::integer AS RestStep, 
@@ -218,14 +218,14 @@ ORDER BY TourId, MuseumStep;
 
 WITH Museum(TourId, Tour) AS (
   SELECT TourId, atTime(Tour, unnest(spans(
-    getTime(atValues(Tour->>'Category', text 'Museum'))))))
+    getTime(atValue(Tour->>'Category', text 'Museum')))))
   FROM TempTour
-  WHERE getTime(atValues(Tour->>'Category', text 'Museum')) IS NOT NULL ),
+  WHERE getTime(atValue(Tour->>'Category', text 'Museum')) IS NOT NULL ),
 Restaurant(TourId, Tour) AS (
   SELECT TourId, atTime(Tour, unnest(spans(
-    getTime(atValues(Tour->>'Category', text 'Restaurant')))))
+    getTime(atValue(Tour->>'Category', text 'Restaurant')))))
   FROM TempTour
-  WHERE getTime(atValues(Tour->>'Category', text 'Restaurant')) IS NOT NULL ),
+  WHERE getTime(atValue(Tour->>'Category', text 'Restaurant')) IS NOT NULL )
 SELECT DISTINCT m.TourId, startValue(m.Tour->>'StepNo')::integer AS MuseumStep,
   startValue(m.Tour->>'Name') AS MuseumName,
   startValue(r.Tour->>'StepNo')::integer AS RestStep, 
@@ -405,6 +405,7 @@ ORDER BY TourId, FrenchRestStep;
       1 |              1 | Le Meurice |         5 | Hilton Paris Opera
       6 |              3 | Le Meurice |         5 | Hilton Paris Opera
 */
+*/
 
 /*****************************************************************************/
 
@@ -564,20 +565,31 @@ WITH Step(TourId, Tour) AS (
   SELECT TourId, unnest(segments(Tour))
   FROM TempTour ),
 DayPart AS (
- SELECT *,
+  SELECT *,
     CASE
-      WHEN EXTRACT(HOUR FROM lower(AtTime)) BETWEEN 8 AND 11
+      WHEN EXTRACT(HOUR FROM startTimestamp(Tour)) BETWEEN 8 AND 11
         THEN 'Morning'
-      WHEN EXTRACT(HOUR FROM lower(AtTime)) BETWEEN 12 AND 17
+      WHEN EXTRACT(HOUR FROM startTimestamp(Tour)) BETWEEN 12 AND 17
         THEN 'Afternoon'
-      WHEN EXTRACT(HOUR FROM lower(AtTime)) BETWEEN 18 AND 23
+      WHEN EXTRACT(HOUR FROM startTimestamp(Tour)) BETWEEN 18 AND 23
         THEN 'Evening'
       ELSE 'Night'
-    END AS partOfDay
+    END AS PartOfDay
   FROM Step )
-... 
--- Continue as the non-temporal above
--- I haven't found another way to write a temporal version of the above query
+SELECT DISTINCT f.TourId, startValue(f.Tour->>'StepNo')::integer AS FirstStep,
+  startValue(f.Tour->>'Name') AS FirstName,
+  startValue(s.Tour->>'StepNo')::integer AS SecondStep,
+  startValue(s.Tour->>'Name') AS SecondName, f.PartOfDay
+FROM DayPart f, DayPart s
+WHERE f.TourId = s.TourId AND startTimestamp(f.Tour) < startTimestamp(s.Tour) AND
+  startValue(s.Tour->>'Price') = 'Moderate' AND f.PartOfDay = s.PartOfDay
+ORDER BY f.TourId;
+
+/*
+ tourid | firststep |   firstname   | secondstep |    secondname    | partofday
+--------+-----------+---------------+------------+------------------+-----------
+      9 |         1 | Musee d'Orsay |          2 | Le Petit Italien | Morning
+*/
 
 /*****************************************************************************/
 
@@ -604,13 +616,14 @@ ORDER BY t.TourId;
 -- TEMPORAL VERSION
 
 WITH ModeratePrices(TourId, Tour, Location) AS (
-  SELECT TourId, atTime(Tour, unnest(spans(atValues(Tour->>'Price',
+  SELECT TourId, atTime(Tour, unnest(spans(atValue(Tour->>'Price',
     text 'Moderate')))), Location
   FROM TempTour 
-  WHERE atValues(Tour->>'Price', text 'Moderate') IS NOT NULL )
+  WHERE atValue(Tour->>'Price', text 'Moderate') IS NOT NULL )
 SELECT TourId, startValue(Tour->>'StepNo')::integer AS StepNo,
   startValue(Tour->>'Name') AS StepName, 
-  ST_Distance(startValue(t.Location), ST_Centroid(p.BufferGeom)) AS Distance
+  ST_Distance(valueAtTimestamp(m.Location, startTimestamp(Tour)), p.Geom)
+  AS Distance
 FROM ModeratePrices m, PoI p
 WHERE p.Name = 'Centre Pompidou' AND
   ST_DWithin(valueAtTimestamp(m.Location, startTimestamp(Tour)), p.Geom, 1000)
