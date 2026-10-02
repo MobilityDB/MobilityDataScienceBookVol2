@@ -18,14 +18,21 @@
 set -e
 DATA=${DATA:-$PWD/data}
 HERE=$(cd "$(dirname "$0")" && pwd)
-R=${WDPA_RELEASE:-$(LC_ALL=C date +%b%Y)}
+# The WDPA release is the one fetch_data.sh downloaded (the most recent one in data/aux when
+# several are), or the one WDPA_RELEASE names (e.g. Sep2026).
+if [ -n "$WDPA_RELEASE" ]; then
+  WDPA_ZIP=$DATA/aux/WDPA_${WDPA_RELEASE}_DNK_shp.zip
+else
+  WDPA_ZIP=$(ls -t "$DATA"/aux/WDPA_*_DNK_shp.zip 2> /dev/null | head -1)
+fi
+[ -s "$WDPA_ZIP" ] || { echo "no WDPA archive in $DATA/aux: run fetch_data.sh aux" >&2; exit 1; }
 PSQL="psql -X -q -v ON_ERROR_STOP=1"
 PG="PG:dbname=${PGDATABASE:-$USER}${PGHOST:+ host=$PGHOST}${PGPORT:+ port=$PGPORT}${PGUSER:+ user=$PGUSER}"
 W=$DATA/aux/work
 rm -rf "$W"; mkdir -p "$W"
 
 unzip -q -o "$DATA/aux/PORT_2013_SH.zip" -d "$W"
-unzip -q -o "$DATA/aux/WDPA_${R}_DNK_shp.zip" -d "$W/wdpa"
+unzip -q -o "$WDPA_ZIP" -d "$W/wdpa"
 for z in "$W"/wdpa/*_shp_[0-9].zip; do unzip -q -o "$z" -d "${z%.zip}"; done
 
 $PSQL -c "DROP SCHEMA IF EXISTS aux_stage CASCADE; CREATE SCHEMA aux_stage;"
