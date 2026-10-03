@@ -11,7 +11,7 @@ Setup (in your WSL environment, same place the producer/Flink job run):
 
 Run:
 
-    python server.py
+    python mapservertopn.py
 
 Then open http://localhost:5000 in a browser (Kafka, the producer, and the
 Flink job should already be running and writing to 'top-stations-event').
@@ -36,14 +36,20 @@ app = Flask(__name__)
 state_lock = threading.Lock()
 current_window = None   # (window_start, window_end) as strings, or None
 current_top = {}        # rank_num -> station dict
+# The window being filled receives its ranks one by one, and upsert-kafka
+# retracts a rank before rewriting it, so the page shows the last window whose
+# ranking is complete, the one before the window being filled.
+shown_window = None
+shown_top = {}
 subscribers = []        # one queue.Queue per connected browser tab
 
 
 def _snapshot():
     """Return a JSON-serializable snapshot of the current top-N state."""
     with state_lock:
-        stations = sorted(current_top.values(), key=lambda s: s["rank_num"])
-        window_start, window_end = current_window if current_window else (None, None)
+        top, window = (shown_top, shown_window) if shown_window else (current_top, current_window)
+        stations = sorted(top.values(), key=lambda s: s["rank_num"])
+        window_start, window_end = window if window else (None, None)
     return {
         "window_start": window_start,
         "window_end": window_end,
@@ -59,7 +65,7 @@ def _broadcast():
 
 def _kafka_consumer_loop():
     """Background thread: tail the top-stations-event topic forever."""
-    global current_window, current_top
+    global current_window, current_top, shown_window, shown_top
 
     while True:
         try:
@@ -93,7 +99,9 @@ def _kafka_consumer_loop():
                 win = (value["window_start"], value["window_end"])
                 with state_lock:
                     if win != current_window:
-                        # New sliding window started - drop the old top-10.
+                        # A new sliding window started: the previous one is complete.
+                        if current_window is not None:
+                            shown_window, shown_top = current_window, dict(current_top)
                         current_window = win
                         current_top = {}
                     current_top[value["rank_num"]] = value

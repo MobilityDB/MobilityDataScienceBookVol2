@@ -1,6 +1,6 @@
 """
 mapserver.py  –  Live NYC Borough Bike-Trip Map
-Consumes: Kafka topic 'borough-occupation-event' (live, no history replay)
+Consumes: Kafka topic 'boroughtumble' (live, no history replay)
 Serves:   http://localhost:5001
 
 Install:  pip install flask kafka-python
@@ -35,9 +35,22 @@ def kafka_thread():
             consumer_timeout_ms=1000,   # unblocks every 1 s so we can check stop_event
             request_timeout_ms=30000,
         )
+        # The topic exists once the Flink job writes its first window
         partitions = consumer.partitions_for_topic(KAFKA_TOPIC)
+        while not partitions and not stop_event.is_set():
+            print(f"[kafka] waiting for topic '{KAFKA_TOPIC}' …")
+            stop_event.wait(2)
+            consumer.close()
+            consumer = KafkaConsumer(
+                bootstrap_servers=KAFKA_BOOTSTRAP,
+                enable_auto_commit=False,
+                value_deserializer=lambda b: json.loads(b.decode()) if b else None,
+                key_deserializer=lambda b: json.loads(b.decode()) if b else None,
+                consumer_timeout_ms=1000,
+                request_timeout_ms=30000,
+            )
+            partitions = consumer.partitions_for_topic(KAFKA_TOPIC)
         if not partitions:
-            print(f"[kafka] ERROR: topic '{KAFKA_TOPIC}' not found")
             return
         tps = [TopicPartition(KAFKA_TOPIC, p) for p in partitions]
         consumer.assign(tps)
@@ -122,16 +135,17 @@ HTML = """<!DOCTYPE html>
 </head>
 <body>
 <div id="header">
-  <h1>🚲 NYC Citi Bike – Borough Occupation (live)</h1>
+  <h1>NYC Citi Bike – Borough Occupation (live)</h1>
   <span id="status">Waiting for first window …</span>
 </div>
 <div id="map"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const map = L.map("map").setView([40.73, -73.95], 11);
-L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-  attribution: '&copy; CARTO', maxZoom: 19
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+  attribution: "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors", maxZoom: 16
 }).addTo(map);
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { maxZoom: 16 }).addTo(map);
 
 const legend = L.control({ position: "bottomright" });
 legend.onAdd = () => {
@@ -180,7 +194,7 @@ async function poll() {
     statusEl.textContent = n
       ? `${new Date().toLocaleTimeString()} · ` +
         Object.entries(data).map(([b,v]) => `${b}: ${v.total_trips}`).join(" | ")
-      : "Waiting for next 1-min window from Flink …";
+      : "Waiting for the next 30-second window from Flink …";
     updateMap(data);
   } catch(e) { statusEl.textContent = "Poll error"; }
 }

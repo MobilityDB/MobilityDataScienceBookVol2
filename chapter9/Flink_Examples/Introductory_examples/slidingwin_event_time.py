@@ -29,7 +29,7 @@ CREATE TABLE raw_trips (
 
 ) WITH (
     'connector' = 'kafka',
-    'topic' = 'raw_trips',
+    'topic' = 'raw-trips',
     'properties.bootstrap.servers' = 'localhost:9092',
     'properties.group.id' = 'flink-hop-groupv22',
     'scan.startup.mode' = 'earliest-offset',

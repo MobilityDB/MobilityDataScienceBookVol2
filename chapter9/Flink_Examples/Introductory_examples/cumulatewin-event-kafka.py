@@ -24,7 +24,7 @@ CREATE TABLE raw_trips (
     WATERMARK FOR event_time AS event_time - INTERVAL '1' SECOND
 ) WITH (
     'connector' = 'kafka',
-    'topic' = 'raw_trips',
+    'topic' = 'raw-trips',
     'properties.bootstrap.servers' = 'localhost:9092',
     'properties.group.id' = 'cumulate-demo',
     'scan.startup.mode' = 'earliest-offset',

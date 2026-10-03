@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NYC Bikes · Manhattan geofence</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; background: #0d1117; color: #e6edf3;
+               font-family: system-ui, sans-serif; }
+  header { height: 58px; display: flex; align-items: center; justify-content: space-between;
+           padding: 0 22px; border-bottom: 1px solid #21262d; box-sizing: border-box; }
+  header .title { font-size: 18px; font-weight: 700; }
+  header .badge { margin-left: 12px; font-size: 12px; color: #3fb950; border: 1px solid #238636;
+                  border-radius: 10px; padding: 2px 9px; }
+  header .clock { font: 13px monospace; color: #8b949e; }
+  #main { position: absolute; top: 58px; bottom: 0; left: 0; right: 0; display: flex; }
+  #side { width: 340px; padding: 16px 18px; box-sizing: border-box; overflow: hidden;
+          border-right: 1px solid #21262d; }
+  .label { font-size: 11px; letter-spacing: 1px; color: #8b949e; text-transform: uppercase;
+           margin: 4px 0 10px; }
+  .cards { display: flex; gap: 12px; margin-bottom: 14px; }
+  .card { flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+          padding: 12px 14px; }
+  .card .k { font-size: 13px; color: #c9d1d9; }
+  .card .v { font: bold 30px monospace; margin-top: 4px; }
+  .card .d { font: 12px monospace; color: #8b949e; }
+  .in .v { color: #3fb950; } .out .v { color: #d29922; }
+  .info { background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+          padding: 8px 14px; margin-bottom: 16px; }
+  .info div { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; }
+  .info div span:last-child { font-family: monospace; }
+  .hist { display: grid; grid-template-columns: 44px 1fr 34px; align-items: center; gap: 8px;
+          font: 12px monospace; color: #8b949e; margin: 3px 0; }
+  .hist .track { background: #21262d; height: 11px; border-radius: 2px; }
+  .hist .fill { background: #2ea043; height: 11px; border-radius: 2px; }
+  #map { flex: 1; }
+  .count { background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 6px;
+           padding: 6px 10px; font-size: 12px; white-space: nowrap; }
+  .count b { color: #3fb950; font-size: 20px; margin-right: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <div><span class="title">NYC Bikes — Manhattan Live</span><span class="badge">● Live</span></div>
+  <div class="clock" id="clock">event time: waiting for the first window…</div>
+</header>
+<div id="main">
+  <div id="side">
+    <div class="label">Current window</div>
+    <div class="cards">
+      <div class="card in"><div class="k">Inside Manhattan</div><div class="v" id="in">–</div>
+        <div class="d" id="din"></div></div>
+      <div class="card out"><div class="k">Outside zone</div><div class="v" id="out">–</div>
+        <div class="d" id="dout"></div></div>
+    </div>
+    <div class="info">
+      <div><span>Window start</span><span id="ws">–</span></div>
+      <div><span>Window end</span><span id="we">–</span></div>
+      <div><span>Updates received</span><span id="n">0</span></div>
+    </div>
+    <div class="label">Window history (inside zone)</div>
+    <div id="hist"></div>
+  </div>
+  <div id="map"></div>
+</div>
+<script>
+// The geofence of the Flink job: longitude -74.02 .. -73.93, latitude 40.70 .. 40.88
+const BOX = [[40.70, -74.02], [40.88, -73.93]];
+const map = L.map("map").setView([40.79, -73.975], 12);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: "&copy; OpenStreetMap contributors", maxZoom: 19
+}).addTo(map);
+L.rectangle(BOX, { color: "#2ea043", weight: 2, dashArray: "6 4", fillOpacity: 0.08 }).addTo(map);
+const label = L.marker([40.79, -73.975], { icon: L.divIcon({ className: "",
+  html: '<div class="count"><b id="mapcount">–</b>trips in window</div>', iconSize: null }) })
+  .addTo(map);
+
+let updates = 0, prev = null;
+function render(s) {
+  if (!s || s.start === undefined) return;
+  updates += 1;
+  const delta = (v, p) => p === null ? "" : (v - p >= 0 ? "+ " : "− ") + Math.abs(v - p);
+  document.getElementById("in").textContent = s.inside;
+  document.getElementById("out").textContent = s.outside;
+  document.getElementById("din").textContent = prev ? delta(s.inside, prev.inside) : "";
+  document.getElementById("dout").textContent = prev ? delta(s.outside, prev.outside) : "";
+  document.getElementById("ws").textContent = s.start;
+  document.getElementById("we").textContent = s.end;
+  document.getElementById("n").textContent = updates.toLocaleString("en-US");
+  document.getElementById("clock").textContent = "event time: " + s.start;
+  document.getElementById("mapcount").textContent = s.inside;
+  const max = Math.max(1, ...s.history.map(h => h.inside));
+  document.getElementById("hist").innerHTML = s.history.map(h =>
+    `<div class="hist"><span>${String(h.start).slice(11, 16)}</span>
+     <div class="track"><div class="fill" style="width:${100 * h.inside / max}%"></div></div>
+     <span>${h.inside}</span></div>`).join("");
+  if (!prev || prev.start !== s.start) prev = s;
+}
+const es = new EventSource("/stream");
+es.onmessage = e => render(JSON.parse(e.data));
+</script>
+</body>
+</html>

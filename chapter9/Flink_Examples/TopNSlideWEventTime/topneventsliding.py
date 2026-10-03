@@ -34,18 +34,19 @@ CREATE TABLE raw_trips (
 # ----------------------------------------------------
 t_env.execute_sql("""
 CREATE TABLE stations (
-    normalized_id STRING,
+    id STRING,
     name STRING,
     longitude DOUBLE,
     latitude DOUBLE,
     boroname STRING,
-    taxi_zone_name STRING,
-    geom STRING
+    ntacode STRING,
+    ntaname STRING,
+    geometry STRING
 ) WITH (
     'connector' = 'filesystem',
-    'path' = '/mnt/e/Data/NYCBikes/PythonFlink/stations_clean_noheader.tsv',
+    'path' = 'data/citibike/flink/stations',
     'format' = 'csv',
-    'csv.field-delimiter' = '\t'
+    'csv.field-delimiter' = '	'
 )
 """)
 
@@ -101,7 +102,7 @@ SELECT
     sc.total_trips
 FROM station_counts sc
 JOIN stations s
-ON sc.start_station_id = s.normalized_id
+ON sc.start_station_id = s.id
 """)
 
 # ----------------------------------------------------

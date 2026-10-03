@@ -13,22 +13,16 @@ t_env.get_config().set("parallelism.default", "1")
 t_env.get_config().set("table.exec.source.idle-timeout", "10000")
 
 # ----------------------------------------------------
-# KAFKA SOURCE  –  event-time edition
-#
-# Changes vs. original proc-time version:
-#   1. Added "event_time STRING" field — matches the key the producer emits.
-#   2. Derived "rowtime" column with CAST + WATERMARK.
-#      WATERMARK allows 5-second out-of-orderness; tune to your data skew.
-#   3. Removed proc_time (we no longer need it).
-#   4. Topic kept as "raw-trips" (hyphen) — was "raw_trips" in the original.
+# KAFKA SOURCE: the trips replayed by replay_trips.py, with the event time
+# derived from start_time and a watermark allowing 5 seconds of disorder
 # ----------------------------------------------------
 t_env.execute_sql("""
 CREATE TABLE raw_trips (
     start_station_id   STRING,
     start_station_name STRING,
     end_station_name   STRING,
-    event_time         STRING,
-    rowtime            AS TO_TIMESTAMP(event_time, 'yyyy-MM-dd''T''HH:mm:ss.SSS'),
+    start_time         STRING,
+    rowtime            AS TO_TIMESTAMP(start_time, 'yyyy-MM-dd''T''HH:mm:ss.SSS'),
     WATERMARK FOR rowtime AS rowtime - INTERVAL '5' SECOND
 ) WITH (
     'connector'                     = 'kafka',
@@ -41,23 +35,23 @@ CREATE TABLE raw_trips (
 """)
 
 # ----------------------------------------------------
-# STATION LOOKUP TABLE  (unchanged)
+# STATION LOOKUP TABLE: the stations exported by citibike/build.sh
 # ----------------------------------------------------
 t_env.execute_sql("""
 CREATE TABLE stations (
-    normalized_id   STRING,
-    name            STRING,
-    longitude       STRING,
-    latitude        STRING,
-    boroname        STRING,
-    taxi_zone_name  STRING,
-    geom            STRING
+    id STRING,
+    name STRING,
+    longitude DOUBLE,
+    latitude DOUBLE,
+    boroname STRING,
+    ntacode STRING,
+    ntaname STRING,
+    geometry STRING
 ) WITH (
-    'connector'              = 'filesystem',
-    'path'                   = '/mnt/e/Data/NYCBikes/PythonFlink/stations_clean.tsv',
-    'format'                 = 'csv',
-    'csv.field-delimiter'    = '\t',
-    'csv.ignore-parse-errors' = 'true'
+    'connector' = 'filesystem',
+    'path' = 'data/citibike/flink/stations',
+    'format' = 'csv',
+    'csv.field-delimiter' = '	'
 )
 """)
 
@@ -98,10 +92,10 @@ SELECT
     window_start,
     window_end,
     CASE
-        WHEN CAST(s.longitude AS DOUBLE) BETWEEN -74.02 AND -73.93
-         AND CAST(s.latitude  AS DOUBLE) BETWEEN 40.70  AND 40.88
+        WHEN s.longitude BETWEEN -74.02 AND -73.93
+         AND s.latitude BETWEEN 40.70  AND 40.88
         THEN 'INSIDE_MANHATTAN_ZONE'
-        ELSE 'OUTSIDE_ZONE'
+        ELSE 'OUTSIDE_MANHATTAN_ZONE'
     END AS zone,
     COUNT(*) AS total_trips
 FROM TABLE(
@@ -113,15 +107,15 @@ FROM TABLE(
     )
 ) t
 JOIN stations s
-  ON t.start_station_id = s.normalized_id
+  ON t.start_station_id = s.id
 GROUP BY
     window_start,
     window_end,
     CASE
-        WHEN CAST(s.longitude AS DOUBLE) BETWEEN -74.02 AND -73.93
-         AND CAST(s.latitude  AS DOUBLE) BETWEEN 40.70  AND 40.88
+        WHEN s.longitude BETWEEN -74.02 AND -73.93
+         AND s.latitude BETWEEN 40.70  AND 40.88
         THEN 'INSIDE_MANHATTAN_ZONE'
-        ELSE 'OUTSIDE_ZONE'
+        ELSE 'OUTSIDE_MANHATTAN_ZONE'
     END
 """)
 

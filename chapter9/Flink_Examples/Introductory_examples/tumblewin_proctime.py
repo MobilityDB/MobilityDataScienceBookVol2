@@ -6,36 +6,30 @@ t_env = TableEnvironment.create(env_settings)
 t_env.get_config().set("parallelism.default", "1")
 
 # ----------------------------------------------------
-# RAW EVENTS FROM KAFKA
+# RAW EVENTS FROM FILE
 # ----------------------------------------------------
 
 t_env.execute_sql("""
 CREATE TABLE raw_trips (
-    id STRING,
-    trip_duration BIGINT,
-    start_time STRING,
-    stop_time STRING,
-    start_station_id STRING,
-    end_station_id STRING,
-    bike_id STRING,
-    user_type STRING,
-    birth_year STRING,
-    gender STRING,
     ride_id STRING,
     rideable_type STRING,
-    start_latitude DOUBLE,
-    start_longitude DOUBLE,
-    end_latitude DOUBLE,
-    end_longitude DOUBLE,
+    started_at STRING,
+    ended_at STRING,
+    start_station_id STRING,
     start_station_name STRING,
+    end_station_id STRING,
     end_station_name STRING,
+    start_lat DOUBLE,
+    start_lng DOUBLE,
+    end_lat DOUBLE,
+    end_lng DOUBLE,
+    member_casual STRING,
     proc_time AS PROCTIME()
 ) WITH (
     'connector' = 'filesystem',
-    'path' = '/mnt/e/Data/NYCBikes/tripsny.tsv',
+    'path' = 'data/citibike/flink/trips',
     'format' = 'csv',
-    'csv.field-delimiter' = '\t',
-    'csv.ignore-parse-errors' = 'true'
+    'csv.field-delimiter' = '\t'
 )
 """)
 

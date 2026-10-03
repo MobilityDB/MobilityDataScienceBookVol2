@@ -13,7 +13,9 @@ t_env.get_config().set("parallelism.default", "1")
 t_env.execute_sql("""
 CREATE TABLE trip_starts (
 
-    station STRING,
+    station    STRING,
+    lat        DOUBLE,
+    lon        DOUBLE,
     event_time STRING,
 
     rowtime AS TO_TIMESTAMP(
@@ -41,7 +43,9 @@ CREATE TABLE trip_starts (
 t_env.execute_sql("""
 CREATE TABLE trip_ends (
 
-    station STRING,
+    station    STRING,
+    lat        DOUBLE,
+    lon        DOUBLE,
     event_time STRING,
 
     rowtime AS TO_TIMESTAMP(
@@ -51,6 +55,7 @@ CREATE TABLE trip_ends (
 
     WATERMARK FOR rowtime AS
         rowtime - INTERVAL '1' SECOND
+
 ) WITH (
     'connector'='kafka',
     'topic'='trip-ends',
@@ -71,6 +76,8 @@ SELECT
     window_start,
     window_end,
     station,
+    MAX(lat) AS lat,
+    MAX(lon) AS lon,
     COUNT(*) AS departures
 FROM TABLE(
     HOP(
@@ -96,6 +103,8 @@ SELECT
     window_start,
     window_end,
     station,
+    MAX(lat) AS lat,
+    MAX(lon) AS lon,
     COUNT(*) AS arrivals
 FROM TABLE(
     HOP(
@@ -119,12 +128,14 @@ t_env.execute_sql("""
 CREATE TABLE station_balance (
 
     window_start TIMESTAMP(3),
-    window_end TIMESTAMP(3),
+    window_end   TIMESTAMP(3),
 
-    station STRING,
+    station      STRING,
+    lat          DOUBLE,
+    lon          DOUBLE,
 
-    departures BIGINT,
-    arrivals BIGINT,
+    departures   BIGINT,
+    arrivals     BIGINT,
 
     PRIMARY KEY (
         window_start,
@@ -152,6 +163,8 @@ SELECT
     s.window_start,
     s.window_end,
     s.station,
+    s.lat,
+    s.lon,
     s.departures,
     e.arrivals
 
@@ -159,9 +172,9 @@ FROM starts_hop s
 
 JOIN ends_hop e
 
-ON s.station = e.station
+ON  s.station      = e.station
 AND s.window_start = e.window_start
-AND s.window_end = e.window_end
+AND s.window_end   = e.window_end
 """)
 
 print("Sliding Window Join Running")

@@ -20,7 +20,7 @@ CREATE TABLE raw_trips (
     WATERMARK FOR event_time AS event_time - INTERVAL '1' SECOND
 ) WITH (
     'connector' = 'kafka',
-    'topic' = 'raw_trips',
+    'topic' = 'raw-trips',
     'properties.bootstrap.servers' = 'localhost:9092',
     'properties.group.id' = 'borough-group',
     'scan.startup.mode' = 'earliest-offset',
@@ -34,18 +34,19 @@ CREATE TABLE raw_trips (
 # ----------------------------------------------------
 t_env.execute_sql("""
 CREATE TABLE stations (
-    normalized_id STRING,
+    id STRING,
     name STRING,
     longitude DOUBLE,
     latitude DOUBLE,
     boroname STRING,
-    taxi_zone_name STRING,
-    geom STRING
+    ntacode STRING,
+    ntaname STRING,
+    geometry STRING
 ) WITH (
     'connector' = 'filesystem',
-    'path' = '/mnt/e/Data/NYCBikes/PythonFlink/stations_clean_noheader.tsv',
+    'path' = 'data/citibike/flink/stations',
     'format' = 'csv',
-    'csv.field-delimiter' = '\t'
+    'csv.field-delimiter' = '	'
 )
 """)
 
@@ -61,7 +62,7 @@ WHERE event_time IS NOT NULL
 """)
 
 # ----------------------------------------------------
-# STEP 1: TUMBLE window per station (non-overlapping, 1 minute)
+# STEP 1: TUMBLE window per station (non-overlapping, 30 seconds)
 # ----------------------------------------------------
 t_env.execute_sql("""
 CREATE TEMPORARY VIEW station_counts AS
@@ -96,7 +97,7 @@ SELECT
     sc.total_trips
 FROM station_counts sc
 JOIN stations s
-ON sc.start_station_id = s.normalized_id
+ON sc.start_station_id = s.id
 """)
 
 # ----------------------------------------------------

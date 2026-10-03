@@ -1,17 +1,17 @@
 """
-mapserver.py  –  HTTP server that serves:
+mapserver_geofence.py  –  HTTP server that serves:
   GET /          → dashboard_geofence.html
   GET /data      → latest geofence-counts from Kafka (JSON, polled every N seconds)
   GET /stream    → Server-Sent Events stream of geofence-counts in real time
 
-Run:  python mapserver.py
+Run:  python mapserver_geofence.py
 Then open:  http://localhost:8888
 """
 
 import json
 import threading
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from kafka import KafkaConsumer
 
@@ -135,7 +135,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _serve_file(self):
         if not DASHBOARD_FILE.exists():
-            self.send_error(404, "dashboard_geofence.html not found next to mapserver.py")
+            self.send_error(404, "dashboard_geofence.html not found next to mapserver_geofence.py")
             return
         content = DASHBOARD_FILE.read_bytes()
         self.send_response(200)
@@ -200,7 +200,8 @@ if __name__ == "__main__":
     t = threading.Thread(target=kafka_reader, daemon=True)
     t.start()
 
-    server = HTTPServer((HTTP_HOST, HTTP_PORT), Handler)
+    # one thread per request, so that an open SSE stream blocks no other request
+    server = ThreadingHTTPServer((HTTP_HOST, HTTP_PORT), Handler)
     print(f"[server] http://{HTTP_HOST}:{HTTP_PORT}")
     print(f"[server] serving dashboard from {DASHBOARD_FILE}")
     try:

@@ -1,18 +1,18 @@
 """
-mapserver.py
-------------
-Servidor de mapa en tiempo real para CitiBike NYC.
-Consume el topic 'station-balance' de Kafka y sirve un mapa
-donde cada estación es verde (más llegadas) o roja (más retiros).
+mapserver-stationbalance.py
+---------------------------
+Real-time map server for Citi Bike NYC.
+Consumes the Kafka topic 'station-balance' and serves a map
+where each station is green (more returns) or red (more pick-ups).
 
-Las coordenadas vienen directamente del topic, sin fuentes externas.
+The coordinates come from the topic itself, with no other source.
 
-Dependencias:
+Dependencies:
     pip install flask kafka-python
 
-Uso:
-    python mapserver.py
-    Abrir http://localhost:5050
+Usage:
+    python mapserver-stationbalance.py
+    Open http://localhost:5050
 """
 
 import json
@@ -28,14 +28,14 @@ TOPIC           = "station-balance"
 GROUP_ID        = "map-server"
 FLASK_PORT      = 5050
 
-# ── Estado compartido ─────────────────────────────────────────────────────────
+# ── Shared state ─────────────────────────────────────────────────────────
 
 station_data: dict[str, dict] = {}
 data_lock    = threading.Lock()
 sse_clients: list = []
 clients_lock = threading.Lock()
 
-# ── Kafka consumer (hilo de fondo) ────────────────────────────────────────────
+# ── Kafka consumer (background thread) ────────────────────────────────────────────
 
 def kafka_consumer_thread():
     consumer = KafkaConsumer(
@@ -47,7 +47,7 @@ def kafka_consumer_thread():
         enable_auto_commit=True,
     )
 
-    print(f"[Kafka] Conectado a '{TOPIC}'")
+    print(f"[Kafka] Connected to '{TOPIC}'")
 
     for msg in consumer:
         val = msg.value
@@ -91,7 +91,7 @@ HTML = """<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>CitiBike · Balance de estaciones</title>
+<title>Citi Bike · Station balance</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -225,7 +225,7 @@ HTML = """<!DOCTYPE html>
 
   <header>
     <span class="logo">CitiBike</span>
-    <span class="title">Balance de estaciones · tiempo real</span>
+    <span class="title">Station balance · real time</span>
     <div class="pill">
       <div class="pulse"></div>
       <span id="status-text">conectando…</span>
@@ -233,7 +233,7 @@ HTML = """<!DOCTYPE html>
   </header>
 
   <div id="sidebar">
-    <div class="sidebar-head">Estaciones activas</div>
+    <div class="sidebar-head">Active stations</div>
     <div id="station-list"></div>
   </div>
 
@@ -242,17 +242,18 @@ HTML = """<!DOCTYPE html>
 </div>
 
 <div id="legend">
-  <div class="legend-row"><div class="legend-dot" style="background:#22c97a"></div>Más llegadas que retiros</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#f2415a"></div>Más retiros que llegadas</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#8892b0"></div>Balance neutro</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#22c97a"></div>More returns than pick-ups</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#f2415a"></div>More pick-ups than returns</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#8892b0"></div>Balanced</div>
 </div>
 
 <script>
 const map = L.map('map', { center: [40.730, -73.990], zoom: 13, zoomControl: true });
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '© OpenStreetMap · © CARTO', maxZoom: 19,
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors', maxZoom: 16
 }).addTo(map);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16 }).addTo(map);
 
 const stations   = {};
 let   activeItem = null;
@@ -287,8 +288,8 @@ function popupHTML(name, dep, arr) {
   const sign  = d >= 0 ? '+' : '';
   return `
     <div class="popup-station">${name}</div>
-    <div class="popup-row"><span class="popup-label">Retiros</span><span class="popup-val">${dep}</span></div>
-    <div class="popup-row"><span class="popup-label">Llegadas</span><span class="popup-val">${arr}</span></div>
+    <div class="popup-row"><span class="popup-label">Pick-ups</span><span class="popup-val">${dep}</span></div>
+    <div class="popup-row"><span class="popup-label">Returns</span><span class="popup-val">${arr}</span></div>
     <div class="popup-delta" style="color:${color}">Balance ${sign}${d}</div>
   `;
 }
@@ -346,7 +347,7 @@ function applyUpdate(d) {
     });
     stations[station] = { marker, departures, arrivals, lat, lon };
     count++;
-    statusEl.textContent = `en vivo · ${count} estaciones`;
+    statusEl.textContent = `live · ${count} stations`;
   }
 
   upsertSidebarItem(station, departures, arrivals);
@@ -354,12 +355,12 @@ function applyUpdate(d) {
 
 function connect() {
   const es = new EventSource('/stream');
-  es.onopen  = () => { statusEl.textContent = 'en vivo'; };
+  es.onopen  = () => { statusEl.textContent = 'live'; };
   es.onerror = () => { statusEl.textContent = 'reconectando…'; es.close(); setTimeout(connect, 3000); };
 
   es.addEventListener('snapshot', e => {
     JSON.parse(e.data).forEach(applyUpdate);
-    statusEl.textContent = `en vivo · ${count} estaciones`;
+    statusEl.textContent = `live · ${count} stations`;
   });
   es.addEventListener('station', e => { applyUpdate(JSON.parse(e.data)); });
 }
@@ -408,5 +409,5 @@ def stream():
 if __name__ == "__main__":
     t = threading.Thread(target=kafka_consumer_thread, daemon=True)
     t.start()
-    print(f"Mapa disponible en http://localhost:{FLASK_PORT}")
+    print(f"Map available at http://localhost:{FLASK_PORT}")
     app.run(host="0.0.0.0", port=FLASK_PORT, threaded=True)

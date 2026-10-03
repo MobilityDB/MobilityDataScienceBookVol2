@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Citi Bike · Top 10 stations</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b1220; font-family: system-ui, sans-serif; }
+  #map { position: absolute; inset: 0; }
+  #panel { position: absolute; top: 16px; left: 16px; width: 420px; z-index: 1000;
+           background: rgba(15, 23, 42, 0.94); border: 1px solid #1e293b; border-radius: 14px;
+           color: #e2e8f0; padding: 18px 22px; }
+  #panel .kicker { font: 12px monospace; letter-spacing: 3px; color: #94a3b8; }
+  #panel h1 { font-size: 22px; margin: 6px 0 14px; }
+  #window { font: 15px monospace; color: #34d399; background: #0f2a2a; border: 1px solid #134e4a;
+            border-radius: 8px; padding: 9px 12px; margin-bottom: 12px; }
+  .row { display: grid; grid-template-columns: 30px 1fr 40px; align-items: center; margin: 9px 0; }
+  .rank { font: bold 14px monospace; }
+  .name { font-size: 15px; font-weight: 600; }
+  .bar { height: 3px; border-radius: 2px; margin-top: 5px; }
+  .count { text-align: right; font: bold 15px monospace; }
+  #status { position: absolute; bottom: 14px; left: 14px; z-index: 1000; color: #e2e8f0;
+            background: #0f172a; border-radius: 12px; padding: 4px 12px; font: 13px monospace; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="panel">
+  <div class="kicker">NYC CITI BIKE · SLIDING WINDOW REPLAY</div>
+  <h1>Top 10 stations right now</h1>
+  <div id="window">waiting for the first window…</div>
+  <div id="list"></div>
+</div>
+<div id="status">● connecting</div>
+<script>
+const COLORS = ["#ef4444", "#f97316", "#f59e0b", "#eab308", "#facc15",
+                "#a3e635", "#84cc16", "#4ade80", "#2dd4bf", "#38bdf8"];
+const map = L.map("map", { zoomControl: false, attributionControl: true })
+  .setView([40.735, -73.975], 13);
+L.control.zoom({ position: "bottomright" }).addTo(map);
+// the area served by Citi Bike, to the right of the panel
+map.setView([40.74, -74.02], 12);
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+  attribution: "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors", maxZoom: 16
+}).addTo(map);
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { maxZoom: 16 }).addTo(map);
+const layer = L.layerGroup().addTo(map);
+const esc = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+
+function render(snap) {
+  const stations = snap.stations || [];
+  if (snap.window_start) {
+    const end = String(snap.window_end).slice(11, 19);
+    document.getElementById("window").textContent = `${snap.window_start} → ${end}`;
+  }
+  const max = Math.max(1, ...stations.map(s => s.total_trips));
+  document.getElementById("list").innerHTML = stations.map(s => {
+    const c = COLORS[(s.rank_num - 1) % COLORS.length];
+    return `<div class="row"><span class="rank" style="color:${c}">${String(s.rank_num).padStart(2, "0")}</span>
+      <div><div class="name">${esc(s.station_name)}</div>
+      <div class="bar" style="background:${c};width:${100 * s.total_trips / max}%"></div></div>
+      <span class="count">${s.total_trips}</span></div>`;
+  }).join("");
+  layer.clearLayers();
+  stations.forEach(s => {
+    const c = COLORS[(s.rank_num - 1) % COLORS.length];
+    L.circleMarker([s.latitude, s.longitude], { radius: 10, color: c, weight: 2,
+      fillColor: c, fillOpacity: 0.45 })
+      .bindTooltip(`${s.rank_num}. ${s.station_name}: ${s.total_trips}`).addTo(layer);
+  });
+
+}
+
+const es = new EventSource("/events");
+es.onopen = () => { document.getElementById("status").textContent = "● live"; };
+es.onmessage = e => render(JSON.parse(e.data));
+es.onerror = () => { document.getElementById("status").textContent = "● reconnecting"; };
+</script>
+</body>
+</html>
