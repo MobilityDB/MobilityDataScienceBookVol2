@@ -119,3 +119,38 @@ the boxes plausible. And `yaw` is measured counter-clockwise from the x axis
 while `azimuth` is measured clockwise from north, so the course in the
 convention of the yaw is `90 - azimuth`; comparing the two raw reports a
 disagreement almost everywhere for no reason but the convention.
+
+### Figures
+
+`figures/make_figures.sh` draws the figures of the chapter drawn from data into
+`$OUT`: `export_ais.py` and `export_nuscenes.py` run the MobilityDB queries of
+each figure and write its layers as GeoJSON, together with a spec of the map
+figures (the layers, their styles, the extent, and the size), and `render.sh`
+draws each spec with `render_figures.py` in the Python of QGIS, over an
+OpenStreetMap basemap. The figures that are not maps are drawn by
+`export_nuscenes.py` with matplotlib. The databases are named by the PostgreSQL
+environment variables, and by `AIS_DB` and `NUSCENES_DB` (default: `ais` and
+`nuscenes`). `QGIS_PY` names the Python of QGIS, for instance `python3` on a
+Linux installation of QGIS; by default it is the QGIS 3.40 installation of
+Windows called from WSL, which needs `$OUT` on a Windows drive.
+
+The wind farm figure also reads the table `WindTurbine`, which
+`load_turbines.sql` loads into the AIS database from `data/anholt_turbines.csv`:
+the positions of the 111 turbines of the Anholt offshore wind farm as mapped in
+OpenStreetMap, © OpenStreetMap contributors, available under the Open Database
+License (https://www.openstreetmap.org/copyright).
+
+| Figure | Script, output |
+|---|---|
+| The vessels as temporal points and as temporal rigid geometries, in the port of Frederikshavn | `export_ais.py`, `ais_layer_points.png`, `ais_layer_hulls.png` |
+| A ferry turning in the port of Gedser | `export_ais.py`, `ais_turn_swept.png`, `ais_turn_paths.png` |
+| A vessel entering its berth backwards, in the port of Køge | `export_ais.py`, `ais_dock.png` |
+| Heading flip of a double-ended ferry | `export_ais.py`, `ais_flip.png` |
+| Two ferries crossing the Øresund | `export_ais.py`, `ais_encounter_context.png`, `ais_encounter_zoom.png` |
+| Heading and course of a trawler | `export_ais.py`, `ais_crab.png` |
+| The Anholt offshore wind farm: its turbines, their centroid, and their convex and concave hulls | `export_ais.py`, `ais_windfarm.png` |
+| A nuScenes scene at one instant | `export_nuscenes.py`, `nus_scene.png` |
+| Ground swept in a nuScenes scene | `export_nuscenes.py`, `nus_swept.png` |
+| The sensor rig of the nuScenes vehicle | `export_nuscenes.py`, `nus_rig.pdf` |
+| Pitch of the recording vehicle | `export_nuscenes.py`, `nus_pitch.pdf` |
+| Objects in the frame of the front camera | `export_nuscenes.py`, `nus_camera.pdf` |
