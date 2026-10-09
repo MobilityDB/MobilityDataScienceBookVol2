@@ -24,7 +24,7 @@ The domain is maritime (1). Two models are run: 'crossdomain' uses every channel
 learned tokens [KIN_UNK] and [NO_SEM], so that it reconstructs from positions and times only.
 When PointEmbedding is empty, since embed.py has not been run, only 'coordinates' is run.
 
-    THESIS=<checkout of nhungoc1508/master-thesis at 8fc3ca2> python run_model.py
+    THESIS=<checkout of MobilityDB/FoundationModel at 8fc3ca2> python run_model.py
 """
 import math
 import os

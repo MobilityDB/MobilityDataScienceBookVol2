@@ -5,7 +5,7 @@ class SemanticEncoder) with the settings with which the corpus was encoded: Embe
 (google/embeddinggemma-300m) with outputs truncated to 256 dimensions and normalized, in bfloat16
 on a GPU. The embeddings are written with the COPY protocol of psycopg.
 
-    THESIS=<clone of nhungoc1508/master-thesis> python embed.py
+    THESIS=<clone of MobilityDB/FoundationModel> python embed.py
 
 The connection is given by the PostgreSQL environment variables (PGDATABASE, PGHOST, ...).
 EmbeddingGemma is a gated model: its license must be accepted on its Hugging Face page and a
