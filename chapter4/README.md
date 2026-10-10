@@ -154,3 +154,32 @@ License (https://www.openstreetmap.org/copyright).
 | The sensor rig of the nuScenes vehicle | `export_nuscenes.py`, `nus_rig.pdf` |
 | Pitch of the recording vehicle | `export_nuscenes.py`, `nus_pitch.pdf` |
 | Objects in the frame of the front camera | `export_nuscenes.py`, `nus_camera.pdf` |
+
+### Checking the Text
+
+`text_numbers.sql` computes the numbers the text of the AIS use case quotes and
+no listing prints: the close encounters, the pairs of vessels within 100 m of
+each other, read as hulls and as antennas, and the approach of the vessels to
+the Anholt wind farm (its centroid and its convex and concave hulls). It reads
+the tables of `ais_poses.sql` and `load_turbines.sql`, so it runs after them:
+
+    psql -d ais -f text_numbers.sql
+
+The two scripts of `check/` run the listings of the chapter against a database
+and need the LaTeX source of the chapter, `chapter4.tex`:
+
+- `check/book_listings.py` reads the listings of the type sections, runs them
+  through `psql` and compares each answer with the result the book prints under
+  it; its `compare` step writes `pose_examples.sql`, the statements in the order
+  of the chapter with their answers:
+
+      python3 check/book_listings.py extract chapter4.tex listings.sql
+      psql -X -d <database> -f listings.sql > listings.out 2>&1
+      python3 check/book_listings.py compare chapter4.tex listings.out pose_examples.sql
+
+- `check/ais_listings_run.py` runs every listing of the AIS use case on the AIS
+  database (named by the PostgreSQL environment variables and `AIS_DB`), and
+  reports, per statement, its row count, its time and its error. It reads every
+  row of a query, so that each column is computed, and needs `psycopg2`:
+
+      python3 check/ais_listings_run.py chapter4.tex
