@@ -51,6 +51,13 @@ and the acoustic encounters, the pairs of vessels whose noise regions overlap
 while their trajectories stay apart (the tables `Encounter` and
 `SeaEncounter`).
 
+text_numbers.sql: the numbers the text of the case study quotes and no listing
+prints, on the tables tcbuffer_case_study.sql builds, so it runs after it: how
+many trips the noise of reaches how many protected areas their trajectories do
+not enter (the table `ExposureAll`), how long the most exposed areas stay quiet
+during the day, and the number, the median length and the greatest separation
+of the encounters at sea.
+
 ### Figures
 
 The directory figures/ holds export_uwn.sh, which writes the layers of the two
