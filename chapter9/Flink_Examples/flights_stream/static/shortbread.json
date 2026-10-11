@@ -1,0 +1,32 @@
+{
+  "version": 8,
+  "sources": {
+    "sb": {
+      "type": "vector",
+      "maxzoom": 14,
+      "tiles": ["https://vector.openstreetmap.org/shortbread_v1/{z}/{x}/{y}.mvt"],
+      "attribution": "Map data &copy; OpenStreetMap contributors"
+    }
+  },
+  "layers": [
+    {"id": "land", "type": "background", "paint": {"background-color": "#f2efe9"}},
+    {"id": "ocean", "type": "fill", "source": "sb", "source-layer": "ocean",
+     "paint": {"fill-color": "#aad3df"}},
+    {"id": "water", "type": "fill", "source": "sb", "source-layer": "water_polygons",
+     "paint": {"fill-color": "#aad3df"}},
+    {"id": "rivers", "type": "line", "source": "sb", "source-layer": "water_lines",
+     "paint": {"line-color": "#aad3df", "line-width": 1}},
+    {"id": "piers", "type": "fill", "source": "sb", "source-layer": "pier_polygons",
+     "paint": {"fill-color": "#f2efe9"}},
+    {"id": "buildings", "type": "fill", "source": "sb", "source-layer": "buildings",
+     "paint": {"fill-color": "#d9d0c9"}},
+    {"id": "streets", "type": "line", "source": "sb", "source-layer": "streets",
+     "layout": {"line-cap": "round", "line-join": "round"},
+     "paint": {"line-color": "#ffffff",
+               "line-width": ["match", ["get", "kind"], ["motorway", "trunk", "primary"], 2.2,
+                              ["secondary", "tertiary"], 1.6, 0.9]}},
+    {"id": "boundaries", "type": "line", "source": "sb", "source-layer": "boundaries",
+     "filter": ["<=", ["get", "admin_level"], 2],
+     "paint": {"line-color": "#9e9cab", "line-width": 0.8}}
+  ]
+}
