@@ -88,6 +88,30 @@ def overlay(stem, left, right, spans, vmin, vmax, ticks):
     open(f"{OUT}/{stem}_overlay.tex", "w", encoding="utf-8").write("\n".join(lines) + "\n")
 
 
+def vertical_scale(stem, vmin, vmax, ticks, height, title):
+    """<stem>_scale.tex: the scale of #overlay set upright between the two panels of the figure,
+    which are \\subfloat panels of chapter8.tex, with the same viridis segments and colour names;
+    height is the height of a panel in points, the scale spanning its middle 0.8 with its ticks to
+    the right and its title above."""
+    n = 8
+    lines = [f"% Written by flights_maps.py: the vertical scale set between the panels of {stem}."]
+    lines += ["\\definecolor{%sv%d}{rgb}{%.4f,%.4f,%.4f}%%" % (stem, k, *VIRIDIS(k / n)[:3])
+              for k in range(n + 1)]
+    lines += ["\\begin{tikzpicture}[x=1pt, y=1pt, font=\\captionstyle]",
+              "\\def\\H{%.2f}%% the height of a panel" % height]
+    for k in range(n):
+        lines.append("\\shade[bottom color=%sv%d, top color=%sv%d] (0, {0.1*\\H + %d*0.1*\\H}) "
+                     "rectangle (5, {0.1*\\H + %d*0.1*\\H});" % (stem, k, stem, k + 1, k, k + 1))
+    lines.append("\\draw[line width=0.2pt] (0, 0.1*\\H) rectangle (5, 0.9*\\H);")
+    for t in ticks:
+        f = 0.1 + 0.8 * (t - vmin) / (vmax - vmin)
+        lines.append("\\draw[line width=0.2pt] (5, {%.4f*\\H}) -- ++(1.5, 0) "
+                     "node[anchor=west, inner sep=1pt] {%s};" % (f, f"{t:,}".replace(",", "\\,")))
+    lines += ["\\node[anchor=south, inner sep=1pt] at (2.5, 0.9*\\H + 2) {%s};" % title,
+              "\\end{tikzpicture}%"]
+    open(f"{OUT}/{stem}_scale.tex", "w", encoding="utf-8").write("\n".join(lines) + "\n")
+
+
 def heat_image(rows, extent, path):
     """The noise heat map as an RGBA PNG of 300 dpi of the panel, with its world file: the
     positions weighted by 2,000 m minus their altitude, smoothed with a Gaussian of 400 m, about
@@ -138,8 +162,9 @@ def dashboard3():
              "style": {"name": "circle", "color": "0,0,0,255", "outline_style": "no", "size": "0.12"}}],
             streets=None, border="#9a9a9a")
         counts.append((name, len(rows), len(shown)))
-    overlay("flightsDashboard3", "flightsDashboard3_left.pdf", "flightsDashboard3_right.pdf",
-            (0.25, 0.75), 0, 12000, [0, 3000, 6000, 9000, 12000])
+    # The panels are 0.41\textwidth (332.897 pt) wide with the 162/163 aspect of their extent
+    vertical_scale("flightsDashboard3", 0, 12000, [0, 3000, 6000, 9000, 12000], 135.65,
+                   "Altitude (m)")
     return counts
 
 
