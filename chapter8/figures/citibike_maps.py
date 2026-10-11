@@ -68,8 +68,8 @@ def choropleth(name, out, title, width, tex_width):
     lines = [f"% Written by citibike_maps.py from the quantile classes of {name}."]
     lines += ["\\definecolor{%sc%d}{RGB}{%d,%d,%d}" % (stem, k, *PALETTE[k][:3]) for k in PALETTE]
     lines += tikz_open(f"figs/chap8/{out}", tex_width)
-    lines += ["\\node[anchor=north west, inner sep=0pt, font=\\captionstyle] "
-              "at ([yshift=-3pt]img.south west) {%",
+    lines += ["\\node[anchor=north, draw=black!60, line width=0.3pt, inner sep=3pt, "
+              "font=\\captionstyle] at ([yshift=-3pt]img.south) {%",
               "\\begin{tabular}{@{}c@{\\hspace{2pt}}r@{\\,--\\,}l@{\\hspace{6pt}}c@{\\hspace{2pt}}r@{\\,--\\,}l@{}}",
               "\\multicolumn{6}{@{}l@{}}{%s} \\\\" % title]
     items = ["\\tikz\\draw[fill=%sc%d, fill opacity=0.8, draw=black!60, line width=0.2pt] "
