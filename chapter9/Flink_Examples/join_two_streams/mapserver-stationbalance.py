@@ -100,6 +100,9 @@ HTML = """<!DOCTYPE html>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.3/leaflet-maplibre-gl.js"></script>
 
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -250,10 +253,29 @@ HTML = """<!DOCTYPE html>
 <script>
 const map = L.map('map', { center: [40.730, -73.990], zoom: 13, zoomControl: true });
 
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-  attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors', maxZoom: 16
-}).addTo(map);
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16 }).addTo(map);
+// The basemap: the OSM Shortbread vector tiles in the colors of the maps of the book (land,
+// water, light buildings, white streets), drawn by MapLibre GL without labels
+const STREETS = ["match", ["get", "kind"], ["motorway", "trunk", "primary"], 2.2,
+  ["secondary", "tertiary"], 1.6, 0.9];
+L.maplibreGL({ attribution: 'Map data &copy; OpenStreetMap contributors', style: {
+  version: 8,
+  sources: { sb: { type: 'vector', maxzoom: 14,
+    tiles: ['https://vector.openstreetmap.org/shortbread_v1/{z}/{x}/{y}.mvt'] } },
+  layers: [
+    { id: 'land', type: 'background', paint: { 'background-color': '#f2efe9' } },
+    { id: 'ocean', type: 'fill', source: 'sb', 'source-layer': 'ocean',
+      paint: { 'fill-color': '#aad3df' } },
+    { id: 'water', type: 'fill', source: 'sb', 'source-layer': 'water_polygons',
+      paint: { 'fill-color': '#aad3df' } },
+    { id: 'rivers', type: 'line', source: 'sb', 'source-layer': 'water_lines',
+      paint: { 'line-color': '#aad3df', 'line-width': 1 } },
+    { id: 'piers', type: 'fill', source: 'sb', 'source-layer': 'pier_polygons',
+      paint: { 'fill-color': '#f2efe9' } },
+    { id: 'buildings', type: 'fill', source: 'sb', 'source-layer': 'buildings',
+      paint: { 'fill-color': '#d9d0c9' } },
+    { id: 'streets', type: 'line', source: 'sb', 'source-layer': 'streets',
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': '#ffffff', 'line-width': STREETS } }] } }).addTo(map);
 
 const stations   = {};
 let   activeItem = null;
