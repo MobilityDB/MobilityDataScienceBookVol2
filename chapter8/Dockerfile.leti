@@ -32,10 +32,12 @@ RUN python3.11 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 RUN pip install --upgrade pip setuptools wheel
 # FIXED: Explicitly added apache-sedona so Jupyter can process Sedona objects natively
+# pyspark[connect] adds the client of Spark Connect, through which the Streamlit dashboards of
+# the directory dashboards query MobilitySpark
 RUN pip install \
-    pyspark==${SPARK_VERSION} \
+    "pyspark[connect]==${SPARK_VERSION}" \
     apache-sedona==${SEDONA_VERSION} \
-    pandas pydeck ipython jupyterlab 
+    pandas pydeck ipython jupyterlab streamlit==1.65.0
 
 
 # =========================================================
