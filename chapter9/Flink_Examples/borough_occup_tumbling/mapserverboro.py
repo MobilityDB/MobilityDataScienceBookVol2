@@ -169,20 +169,23 @@ L.maplibreGL({ attribution: "Map data &copy; OpenStreetMap contributors", style:
       layout: { "line-cap": "round", "line-join": "round" },
       paint: { "line-color": "#ffffff", "line-width": STREETS } }] } }).addTo(map);
 
-const legend = L.control({ position: "bottomright" });
-legend.onAdd = () => {
-  const div = L.DomUtil.create("div", "legend");
-  div.innerHTML = `<b>Trips / window</b><br>
-    <span class="legend-dot" style="width:10px;height:10px"></span> 1–20<br>
-    <span class="legend-dot" style="width:20px;height:20px"></span> 21–100<br>
-    <span class="legend-dot" style="width:34px;height:34px"></span> 100+`;
-  return div;
-};
-legend.addTo(map);
-
 const circles = {};
 const radius = t => Math.max(14, Math.sqrt(t) * 3.5);
 const color  = t => t > 200 ? "#e94560" : t > 80 ? "#f4a261" : "#2ec4b6";
+
+// The legend states the classes of color(); the area of a circle grows with its trips (radius()).
+const legend = L.control({ position: "bottomright" });
+legend.onAdd = () => {
+  const div = L.DomUtil.create("div", "legend");
+  const dot = t => `<span class="legend-dot" style="width:12px;height:12px;` +
+    `background:${color(t)}73;border-color:${color(t)}"></span>`;
+  div.innerHTML = `<b>Trips / window</b><br>
+    ${dot(1)} 1–80<br>
+    ${dot(81)} 81–200<br>
+    ${dot(201)} over 200`;
+  return div;
+};
+legend.addTo(map);
 const fmt    = ts => (ts||"–").replace("T"," ").substring(0,19);
 
 function updateMap(data) {
