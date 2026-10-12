@@ -64,7 +64,7 @@ services:
       - "8042:8042"
     environment:
       JAVA_TOOL_OPTIONS: "--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
-      YARN_NODEMANAGER_MEMORY: 8192
+      YARN_NODEMANAGER_MEMORY: 12288
       YARN_NODEMANAGER_CORES: 4
     command: >
       /bin/bash -c "
@@ -89,7 +89,7 @@ services:
       - "8043:8042"
     environment:
       JAVA_TOOL_OPTIONS: "--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
-      YARN_NODEMANAGER_MEMORY: 8192
+      YARN_NODEMANAGER_MEMORY: 12288
       YARN_NODEMANAGER_CORES: 4
     command: >
       /bin/bash -c "
