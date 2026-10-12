@@ -1,11 +1,11 @@
 #!/bin/bash
 # Build the flights tables of the book in the PostgreSQL database $PGDATABASE (default: flights)
 # from the files that fetch_data.sh downloads into $DATA (default: data/ below the working
-# directory): FlightsInput, FlightsDay and Flights. The usual libpq variables (PGHOST, PGPORT,
-# PGUSER) select the server. DuckDB (the variable DUCKDB, default: duckdb) reads the Parquet
-# files and keeps the state vectors at every tenth second of the day, the time step of the public
-# samples of the OpenSky Network; the notebooks of MobilitySpark and MobilityFlink keep the same
-# state vectors. The structure follows ais/build.sh.
+# directory): FlightsInput, FlightsPositions, FlightsDay and Flights. The usual libpq variables
+# (PGHOST, PGPORT, PGUSER) select the server. DuckDB (the variable DUCKDB, default: duckdb) reads
+# the Parquet files and keeps the state vectors at every tenth second of the day, the time step of
+# the public samples of the OpenSky Network; the notebooks of MobilitySpark and MobilityFlink keep
+# the same state vectors. The structure follows ais/build.sh.
 #
 #   bash build.sh
 set -e

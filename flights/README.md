@@ -16,6 +16,7 @@ Spark. The appendix "The Flights Data of the Book" describes the data and the ru
 | Name | Content |
 |---|---|
 | `flightsinput` | The state vectors that have a squawk, of the aircraft that report a position, with their timestamps and their point |
+| `flightspositions` | The position reports, once each at the time of the report, that the aircraft could reach from the report kept before |
 | `flightsday` | One row per aircraft, its day as a `tgeogpoint` and as temporal velocity, heading, vertical rate, call sign, alert, and altitude |
 | `flights` | One row per aircraft and call sign, the attributes of `flightsday` restricted to the periods of the call sign |
 
@@ -34,27 +35,41 @@ downloads the 24 Parquet files of the day, one per hour (13 GB), into
 `data/flights/parquet/hour=<Unix time of the hour>/`. The files hold one state vector per aircraft
 and per second; the notebook keeps those at every tenth second, the time step of the public samples
 of OpenSky, 69,442,890 of the 695,706,186 state vectors of the day. The notebook reads the files
-from `/opt/data/flights/parquet`. On a laptop it takes about ten minutes, and prints:
+from `/opt/data/flights/parquet`. On the cluster of the chapter it takes about 15 minutes, and
+prints:
 
 | | |
 |---|---|
 | State vectors kept | 34,067,894 |
 | Aircraft | 29,395 |
-| Instants of the trajectories | 29,431,717 |
-| Flights | 68,371 |
-| Call signs | 65,007 |
+| Position reports | 27,812,444 |
+| Position reports kept by the walk | 27,226,708, of 29,182 aircraft |
+| Instants of the trajectories | 27,194,486 |
+| Flights | 68,371, of 29,252 aircraft |
+| Call signs | 65,007, the empty one of 219 flights included |
 
 ### Building the data in MobilityDB
 
     bash fetch_data.sh
     bash build.sh
 
-`build.sh` builds the same three tables in the PostgreSQL database `$PGDATABASE` (default:
+`build.sh` builds the same four tables in the PostgreSQL database `$PGDATABASE` (default:
 `flights`), with PostgreSQL 18, PostGIS 3.6 and MobilityDB 1.4, and the DuckDB shell 1.5 named by
 the variable `DUCKDB`. `flights_load.sql` creates the table `FlightsInputRaw`, DuckDB reads each
 Parquet file and hands over the state vectors at every tenth second, and `flights_build.sql`
 follows the script `opensky_input.sql` of chapter 5 of the first volume, with the column types and
-the trimmed call sign of the notebook. The answers of MobilityDB are those that MobilitySpark and
-MobilityFlink reproduce. On a laptop it takes about 28 minutes and prints the same figures, except
-29,431,844 instants: MobilitySpark stores a temporal value as its WKB, and MEOS normalizes a
-sequence again when it reads the WKB.
+the trimmed call sign of the notebook, and with the two rules of the appendix: the trajectory takes
+one point per position report, at the time of the report, and the walk keeps the reports that the
+aircraft could reach at 400 m/s from the report kept before. The answers of MobilityDB are those that
+MobilitySpark and MobilityFlink reproduce. It takes about 48 minutes, and prints the same figures as
+the notebook.
+
+### The dashboards in MobilityDB
+
+    bash run_all.sh
+
+runs `flights_dashboards.sql`, the tables and the queries of the three dashboards of chapter 8, on
+the database that `build.sh` builds, writes its output to `out/flights_dashboards.out`, and compares
+the number of rows of each answer with `expected/flights_dashboards.rows`, those of the run of
+MobilityDB whose answers the notebooks of MobilitySpark and MobilityFlink reproduce. It takes about
+nine minutes.
