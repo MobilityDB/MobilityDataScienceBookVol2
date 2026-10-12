@@ -165,6 +165,43 @@ services:
       - jupyter-notebooks:/opt/notebooks # Volumen limpio para guardar tus archivos .ipynb
       - C:/Users/lgomez/sedonabook2/opt/data:/opt/data
 
+  # The Spark Connect server that the dashboards query: an application of the YARN cluster
+  # whose sessions hold the SQL surface of MobilitySpark, registered by the extension that
+  # spark-defaults.conf names in spark.sql.extensions
+  spark-connect:
+    image: mi-sedona-mobilityspark
+    container_name: spark_connect
+    hostname: spark-connect
+    user: root
+    depends_on:
+      - namenode
+      - resourcemanager
+      - nodemanager1
+      - nodemanager2
+    environment:
+      SPARK_NO_DAEMONIZE: "1"
+    command: /opt/spark/sbin/start-connect-server.sh --driver-memory 4g
+    ports:
+      - "15002:15002" # Spark Connect
+      - "4041:4040"   # Spark UI of the server
+
+  # The Streamlit dashboards of the air traffic use case, a client of spark-connect
+  dashboards:
+    image: mi-sedona-mobilityspark
+    container_name: dashboards
+    hostname: dashboards
+    depends_on:
+      - spark-connect
+    environment:
+      SPARK_REMOTE: sc://spark-connect:15002
+      WAREHOUSE: hdfs://namenode:9000/spark-warehouse
+    working_dir: /opt/dashboards
+    command: streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"   # Dashboards
+    volumes:
+      - ./dashboards:/opt/dashboards
+
 volumes:
   hdfs-namenode:
   hdfs-datanode:
