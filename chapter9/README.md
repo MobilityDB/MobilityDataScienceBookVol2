@@ -62,3 +62,54 @@ server, and finally the producer:
 The producers replay the day at 2000 times its real speed by default, so that the morning peak
 arrives after about 15 seconds; a different speed-up factor is their first argument. The join
 example reads the topics `trip-starts` and `trip-ends`, written by its two producers.
+
+### Air traffic over Europe as a stream
+
+The use case "Air Traffic over Europe as a Stream" replays the state vectors of March 1, 2026 of
+the OpenSky Network, which `flights/fetch_data.sh` downloads into `data/flights/parquet/`, and
+expresses the three dashboards of the air traffic use case of chapter 8 as continuous queries of
+MobilityFlink. Its code is in `Flink_Examples/flights_stream/`:
+
+| Step | Code |
+|---|---|
+| Replay of the state vectors into the topic `flights-states` | `replay_flights.py` |
+| Position and reachability rules, into the topic `flights-positions` | `walk/` (the Java job `flights.FlightsWalk`) |
+| The three dashboards, into the topics `climbing-brussels`, `close-pairs` and `traffic-per-hour` | `flights_dashboards.py` |
+| The dashboards, a Streamlit application reading these topics | `app.py` (http://localhost:8501) |
+
+It needs, besides the software above, `duckdb`, `confluent-kafka`, `streamlit` 1.65.0 and
+`pydeck`, a JDK 21 with Maven, and MobilityFlink, which brings the functions of MEOS into Flink:
+its script `tools/refresh-from-master.sh` builds `libmeos.so` from MobilityDB and the jar of
+JMEOS, and `mvn install` in its repository installs the jars of JMEOS and MobilityFlink in the
+local Maven repository. The job of the walk is then built by
+
+    pip install duckdb confluent-kafka streamlit==1.65.0 pydeck
+    (cd Flink_Examples/flights_stream/walk && mvn package)
+
+which also copies MobilityFlink, JMEOS and their dependencies into `walk/target/lib/`. The
+dashboards job loads them with `LOAD MODULE mobilitydb`, from the jars that the variable
+`MOBILITYFLINK_JARS` lists, and JMEOS loads `libmeos.so` from the library path of the system,
+which `LD_LIBRARY_PATH` sets to the directory of the `libmeos.so` that MobilityFlink built. Create
+the topics, start the two jobs and the application, and finally the producer, from the directory
+that holds `data/`:
+
+    for t in flights-states flights-positions flights-dropped climbing-brussels close-pairs \
+        traffic-per-hour; do
+      docker exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 \
+        --create --if-not-exists --topic $t
+    done
+    export LD_LIBRARY_PATH=<directory of libmeos.so>
+    W=Flink_Examples/flights_stream
+    export MOBILITYFLINK_JARS=$(ls $W/walk/target/lib/*.jar | paste -sd ';')
+    PYLIB=$(python -c "import pyflink, os; print(os.path.dirname(pyflink.__file__))")/lib
+    java -Xmx1200m -cp "$PYLIB/*:$W/walk/target/flights-walk-1.0.jar:$W/walk/target/lib/*" \
+      flights.FlightsWalk &
+    python $W/flights_dashboards.py &
+    (cd $W && streamlit run app.py --server.enableStaticServing true --theme.base light) &
+    python $W/replay_flights.py
+
+The producer replays the day at 20 times its real speed by default, so that the replay of the day
+takes 76 minutes; a different speed-up factor is its first argument, and a factor of 1e12
+replays it as fast as the producer sends, in less than four minutes. Given the argument `bounded`,
+the two jobs read their input topic up to its current end and stop, so that, run after the
+replay, they answer over the whole day.
