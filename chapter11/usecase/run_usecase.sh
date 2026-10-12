@@ -2,7 +2,7 @@
 # Run the use case of chapter 11 from end to end in the AIS database of the book (the database
 # named by PGDATABASE, PGHOST, ...), which holds the AIS day built by ais/build.sh and the tables
 # of chapter 5 (Bathymetry, WaveHeight, NaturalAreas) and of load_context.sh. The code of the
-# thesis is cloned into $DATA/master-thesis at commit 8fc3ca2, the commit of the published
+# thesis is cloned into $DATA/FoundationModel at commit 8fc3ca2, the commit of the published
 # checkpoint. SAMPLE keeps that share of the gaps, in percent (100 by default), and EMBED=0 skips
 # the embedding of the descriptions, which needs a Hugging Face token with access to EmbeddingGemma
 # and is slow without a GPU; only the model that reconstructs from positions and times then runs.
@@ -13,10 +13,10 @@ set -e
 DATA=${DATA:-$PWD/data}
 HERE=$(cd "$(dirname "$0")" && pwd)
 PSQL="psql -X -v ON_ERROR_STOP=1"
-export THESIS=$DATA/master-thesis
+export THESIS=$DATA/FoundationModel
 
 if [ ! -d "$THESIS" ]; then
-  git clone -q https://github.com/nhungoc1508/master-thesis "$THESIS"
+  git clone -q https://github.com/MobilityDB/FoundationModel "$THESIS"
 fi
 git -C "$THESIS" checkout -q 8fc3ca2
 

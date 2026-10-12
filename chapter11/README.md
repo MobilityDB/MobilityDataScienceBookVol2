@@ -22,7 +22,8 @@ from the published data.
   14 or later (`training/requirements.txt`). The training command runs with
   Python 3.12, PyTorch 2.14.1, pandas 3.0.6, NumPy 2.5.3, and PyArrow 25.0.1.
 - The code of the thesis at commit `72d9fec` of
-  [nhungoc1508/master-thesis](https://github.com/nhungoc1508/master-thesis):
+  [MobilityDB/FoundationModel](https://github.com/MobilityDB/FoundationModel),
+  which also holds the thesis itself:
   the enrichment pipelines (`enrichment-pipeline/`), the model and its training
   (`models/`), and the frozen benchmark (`benchmark/`). `training/train.sh`
   clones it.
