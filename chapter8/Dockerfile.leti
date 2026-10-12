@@ -1,6 +1,6 @@
 FROM eclipse-temurin:21-jdk
 
-ARG SPARK_VERSION=4.0.0
+ARG SPARK_VERSION=4.0.1
 ARG HADOOP_VERSION=3.3.6
 ARG HADOOP_SHORT=3
 ARG DELTA_VERSION=4.0.0
@@ -118,17 +118,16 @@ RUN git clone --depth 1 \
 # =========================================================
 # MOBILITYSPARK
 #
-# We compile the official MobilitySpark source against
-# Spark 4.0.0 instead of its default Spark 3.5.1.
+# The pom of MobilitySpark builds against Spark 4.0.1, the
+# SPARK_VERSION of this image, so that the Spark jars that
+# copy-dependencies adds to /opt/spark/jars below are those
+# of the Spark installed above.
 # =========================================================
 RUN git clone --depth 1 \
       https://github.com/MobilityDB/MobilitySpark.git \
       /opt/MobilitySpark
 
 WORKDIR /opt/MobilitySpark
-
-# Change Spark dependency from 3.5.1 to 4.0.0
-RUN sed -i 's/<version>3\.5\.1<\/version>/<version>4.0.0<\/version>/g' pom.xml
 
 
 RUN /opt/MEOS-API/tools/refresh-binding.sh \
