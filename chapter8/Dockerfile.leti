@@ -1,4 +1,6 @@
-FROM eclipse-temurin:21-jdk
+# Ubuntu 24.04, the runner MobilityDB's CI builds on: its apt PROJ (9.4.0) is the one MobilityDB
+# is tested with, so a projection reads the same in Spark and in MobilityDB to the last bit.
+FROM eclipse-temurin:21-jdk-noble
 
 ARG SPARK_VERSION=4.0.1
 ARG HADOOP_VERSION=3.3.6
