@@ -45,7 +45,18 @@ tcbuffer_case_study.sql: the queries of the case study, in the order of the
 chapter, with the answer of each one as a comment: the area affected by the
 noise of a fishing vessel, the relationships between its moving region and a
 protected area, and the temporal distance between the moving regions of the
-fishing vessel and of a passenger vessel.
+fishing vessel and of a passenger vessel, the exposure of the marine and
+coastal protected areas to the noise of the whole day (the table `Exposure`),
+and the acoustic encounters, the pairs of vessels whose noise regions overlap
+while their trajectories stay apart (the tables `Encounter` and
+`SeaEncounter`).
+
+text_numbers.sql: the numbers the text of the case study quotes and no listing
+prints, on the tables tcbuffer_case_study.sql builds, so it runs after it: how
+many trips the noise of reaches how many protected areas their trajectories do
+not enter (the table `ExposureAll`), how long the most exposed areas stay quiet
+during the day, and the number, the median length and the greatest separation
+of the encounters at sea.
 
 ### Figures
 
@@ -54,3 +65,15 @@ figures of the case study from the database as GeoPackage files, and the job
 files that the renderer of chapter 5 (`chapter5/figures/render_map.py`) draws
 with QGIS. The job files state the output and layer paths of a Windows machine
 and are edited to the directory where export_uwn.sh writes.
+
+`figures/make_figures.sh` draws the other figures of the chapter drawn from data
+into `$OUT`, with the pipeline of chapter 4 (`chapter4/figures/figlib.py` and
+`render.sh`): `export_figures.py` writes the layers and the spec of four maps, the
+noise region of the fishing vessel leaving Østerby, the hull of a ro-ro vessel
+turning in Göteborg (from the AIS database of chapter 4), the protected area W
+in the Øresund at the instant the noise of 85 vessels reaches it, and an
+acoustic encounter at sea, and `fig_dist_tcbuffer_point.py` draws the turning
+point of the temporal distance between a temporal circular buffer and a point,
+at the circle MobilityDB answers. The databases are named by the PostgreSQL
+environment variables, and by `NOISE_DB` and `AIS_DB` (default: `noise` and
+`ais`).
