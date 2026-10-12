@@ -119,3 +119,67 @@ the boxes plausible. And `yaw` is measured counter-clockwise from the x axis
 while `azimuth` is measured clockwise from north, so the course in the
 convention of the yaw is `90 - azimuth`; comparing the two raw reports a
 disagreement almost everywhere for no reason but the convention.
+
+### Figures
+
+`figures/make_figures.sh` draws the figures of the chapter drawn from data into
+`$OUT`: `export_ais.py` and `export_nuscenes.py` run the MobilityDB queries of
+each figure and write its layers as GeoJSON, together with a spec of the map
+figures (the layers, their styles, the extent, and the size), and `render.sh`
+draws each spec with `render_figures.py` in the Python of QGIS, over an
+OpenStreetMap basemap. The figures that are not maps are drawn by
+`export_nuscenes.py` with matplotlib. The databases are named by the PostgreSQL
+environment variables, and by `AIS_DB` and `NUSCENES_DB` (default: `ais` and
+`nuscenes`). `QGIS_PY` names the Python of QGIS, for instance `python3` on a
+Linux installation of QGIS; by default it is the QGIS 3.40 installation of
+Windows called from WSL, which needs `$OUT` on a Windows drive.
+
+The wind farm figure also reads the table `WindTurbine`, which
+`load_turbines.sql` loads into the AIS database from `data/anholt_turbines.csv`:
+the positions of the 111 turbines of the Anholt offshore wind farm as mapped in
+OpenStreetMap, © OpenStreetMap contributors, available under the Open Database
+License (https://www.openstreetmap.org/copyright).
+
+| Figure | Script, output |
+|---|---|
+| The vessels as temporal points and as temporal rigid geometries, in the port of Frederikshavn | `export_ais.py`, `ais_layer_points.png`, `ais_layer_hulls.png` |
+| A ferry turning in the port of Gedser | `export_ais.py`, `ais_turn_swept.png`, `ais_turn_paths.png` |
+| A vessel entering its berth backwards, in the port of Køge | `export_ais.py`, `ais_dock.png` |
+| Heading flip of a double-ended ferry | `export_ais.py`, `ais_flip.png` |
+| Two ferries crossing the Øresund | `export_ais.py`, `ais_encounter_context.png`, `ais_encounter_zoom.png` |
+| Heading and course of a trawler | `export_ais.py`, `ais_crab.png` |
+| The Anholt offshore wind farm: its turbines, their centroid, and their convex and concave hulls | `export_ais.py`, `ais_windfarm.png` |
+| A nuScenes scene at one instant | `export_nuscenes.py`, `nus_scene.png` |
+| Ground swept in a nuScenes scene | `export_nuscenes.py`, `nus_swept.png` |
+| The sensor rig of the nuScenes vehicle | `export_nuscenes.py`, `nus_rig.pdf` |
+| Pitch of the recording vehicle | `export_nuscenes.py`, `nus_pitch.pdf` |
+| Objects in the frame of the front camera | `export_nuscenes.py`, `nus_camera.pdf` |
+
+### Checking the Text
+
+`text_numbers.sql` computes the numbers the text of the AIS use case quotes and
+no listing prints: the close encounters, the pairs of vessels within 100 m of
+each other, read as hulls and as antennas, and the approach of the vessels to
+the Anholt wind farm (its centroid and its convex and concave hulls). It reads
+the tables of `ais_poses.sql` and `load_turbines.sql`, so it runs after them:
+
+    psql -d ais -f text_numbers.sql
+
+The two scripts of `check/` run the listings of the chapter against a database
+and need the LaTeX source of the chapter, `chapter4.tex`:
+
+- `check/book_listings.py` reads the listings of the type sections, runs them
+  through `psql` and compares each answer with the result the book prints under
+  it; its `compare` step writes `pose_examples.sql`, the statements in the order
+  of the chapter with their answers:
+
+      python3 check/book_listings.py extract chapter4.tex listings.sql
+      psql -X -d <database> -f listings.sql > listings.out 2>&1
+      python3 check/book_listings.py compare chapter4.tex listings.out pose_examples.sql
+
+- `check/ais_listings_run.py` runs every listing of the AIS use case on the AIS
+  database (named by the PostgreSQL environment variables and `AIS_DB`), and
+  reports, per statement, its row count, its time and its error. It reads every
+  row of a query, so that each column is computed, and needs `psycopg2`:
+
+      python3 check/ais_listings_run.py chapter4.tex
