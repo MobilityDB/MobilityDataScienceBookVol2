@@ -24,8 +24,9 @@ Spark. The appendix "The Flights Data of the Book" describes the data and the ru
 
 - Apache Spark 4.0 with Apache Sedona 1.8.0 and Delta Lake 4.0.0, as for the Citi Bike data.
 - MobilitySpark, its JMEOS jar and `libmeos.so`, built as in `chapter8/Dockerfile.leti`.
-- For `build.sh`: PostgreSQL 18 with PostGIS 3.6 and MobilityDB 1.4, and the DuckDB shell 1.5.
-- curl.
+- For `build.sh`: PostgreSQL 18 with PostGIS 3.6 (and its `shp2pgsql`) and MobilityDB 1.4, and
+  the DuckDB shell 1.5.
+- curl and unzip.
 
 ### Building the data
 
@@ -73,3 +74,17 @@ the database that `build.sh` builds, writes its output to `out/flights_dashboard
 the number of rows of each answer with `expected/flights_dashboards.rows`, those of the run of
 MobilityDB whose answers the notebooks of MobilitySpark and MobilityFlink reproduce. It takes about
 nine minutes.
+
+### The queries in MobilityDB
+
+    bash run_all.sh flights_queries
+
+runs `flights_queries.sql`, the queries of the analysis of the flights of chapter 8 that the
+notebook `chapter8/8.4 Queries-flights-MobilitySpark.ipynb` runs in Spark: the flights over
+Europe between 8 and 9 o'clock, the flights leaving Brussels, the flights over each country of
+Natural Earth with the distance they fly there, the number of aircraft in the air over Europe at
+each instant of the day, and the time that each flight spends within 15 km of each holding fix of
+London Heathrow, measured on the WGS 84 spheroid. `fetch_data.sh` downloads the countries, the
+shapefile `ne_50m_admin_0_countries` at the scale 1:50m, into `data/flights/countries/`, and
+`build.sh` loads them into the table `CountriesInput` with `shp2pgsql` of PostGIS. The rows of
+the five answers are written into `out/flights_queries_q<n>.csv`. It takes about six minutes.

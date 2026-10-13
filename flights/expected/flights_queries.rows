@@ -1,0 +1,13 @@
+SELECT 73
+SELECT 5086
+(1 row)
+SELECT 245
+(1 row)
+SELECT 70
+(1 row)
+(10 rows)
+SELECT 1
+(1 row)
+SELECT 1647
+(4 rows)
+(10 rows)

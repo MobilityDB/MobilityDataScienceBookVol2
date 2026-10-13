@@ -11,7 +11,7 @@ set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
 cd "$HERE"
 export PGDATABASE=${PGDATABASE:-flights}
-SCRIPTS=${*:-flights_dashboards}
+SCRIPTS=${*:-flights_dashboards flights_queries}
 mkdir -p out
 status=0
 for s in $SCRIPTS; do
