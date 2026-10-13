@@ -88,3 +88,17 @@ London Heathrow, measured on the WGS 84 spheroid. `fetch_data.sh` downloads the 
 shapefile `ne_50m_admin_0_countries` at the scale 1:50m, into `data/flights/countries/`, and
 `build.sh` loads them into the table `CountriesInput` with `shp2pgsql` of PostGIS. The rows of
 the five answers are written into `out/flights_queries_q<n>.csv`. It takes about six minutes.
+
+### The baseline of the stream queries in MobilityDB
+
+    bash run_all.sh flights_stream_queries
+
+runs `flights_stream_queries.sql`, the trajectories that the job
+`chapter9/Flink_Examples/flights_stream/flights_queries.py` builds from the stream in MobilityFlink,
+built in MobilityDB from the reports of `FlightsPositions`: the trajectory of each aircraft over
+the envelope of Europe per hour; the flights that end at Brussels, a flight being the reports of
+an aircraft until a silence of one hour; the number of aircraft in the air over Europe at each
+instant of each hour; and the time that each flight spends within 15 km of each holding fix of
+London Heathrow. The velocity and the call sign of each report are read from the first state
+vector that carries it, as the walk of the stream reads them. The rows of the four answers are
+written into `out/flights_stream_queries_q<n>.csv`. It takes about eleven minutes.
