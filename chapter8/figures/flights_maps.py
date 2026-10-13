@@ -10,10 +10,11 @@ side, each a QGIS job (#job of mapjob.py) that qgis_map.py renders as a PDF of h
 width: the Shortbread basemap of the book as one image of 300 dpi, and the positions with the
 colors of the dashboards, viridis on the altitude. The 7,305 positions of dashboard 1 are
 vectors; the 100,000 positions of a panel of dashboard 3 and the noise heat map of dashboard 1, a
-density surface, are dense layers drawn as one image of 300 dpi. The panels carry no text: the
-LaTeX overlay <figure>_overlay.tex sets them side by side with the color scale and its ticks in
-the style of the captions. Dashboard 3 draws, as the dashboard does, a sample of MAX_POINTS
-positions taken at random with the seed 0 among those with a position and an altitude.
+density surface, are dense layers drawn as one image of 300 dpi. The panels carry no text: they
+are the \\subfloat panels of their figure in chapter8.tex, and <figure>_scale.tex is the color
+scale of the altitudes with its ticks and its title in the style of the captions, set under the
+two panels. Dashboard 3 draws, as the dashboard does, a sample of MAX_POINTS positions taken at
+random with the seed 0 among those with a position and an altitude.
 """
 import os
 import sys
@@ -58,56 +59,25 @@ def gaussian(grid, sigma):
     return np.real(np.fft.ifft2(np.fft.fft2(grid) * kernel))
 
 
-def overlay(stem, left, right, spans, vmin, vmax, ticks):
-    """<stem>_overlay.tex: the two panels side by side over the text width and, under the given
-    horizontal span, the viridis scale from vmin to vmax as shaded segments, with its ticks, in
-    the style of the captions; the caption states the quantity and its unit."""
+def horizontal_scale(stem, vmin, vmax, ticks, width, title):
+    """<stem>_scale.tex: the scale of the altitudes set under the two \\subfloat panels of the
+    figure in chapter8.tex, the viridis of #colors in eight shaded segments; width is its length as
+    a fraction of the text width, its ticks below and its title above, in the style of the
+    captions."""
     n = 8
-    pw, gap = PANEL / TEXTWIDTH, GAP / TEXTWIDTH
-    lines = [f"% Written by flights_maps.py: the panels and the color scale of {stem}."]
-    lines += ["\\definecolor{%sv%d}{rgb}{%.4f,%.4f,%.4f}" % (stem, k, *VIRIDIS(k / n)[:3])
-              for k in range(n + 1)]
-    lines += ["\\begin{tikzpicture}",
-              "\\node[anchor=south west, inner sep=0] (img) {"
-              "\\includegraphics[width=%.4f\\textwidth]{figs/chap8/%s}\\hspace{%.4f\\textwidth}"
-              "\\includegraphics[width=%.4f\\textwidth]{figs/chap8/%s}};" % (pw, left, gap, pw, right),
-              "\\begin{scope}[x={(img.south east)}, y={(img.north west)}, font=\\captionstyle]"]
-    a, b = spans
-    for k in range(n):
-        lines.append("\\shade[left color=%sv%d, right color=%sv%d] (%.4f,0) ++(0,-6pt) "
-                     "rectangle (%.4f,-3pt);" % (stem, k, stem, k + 1, a + (b - a) * k / n,
-                                                 a + (b - a) * (k + 1) / n))
-    # The end labels align with the ends of the scale, so that none passes the text width
-    for t in ticks:
-        x = a + (b - a) * (t - vmin) / (vmax - vmin)
-        anchor = "north west" if t == ticks[0] else "north east" if t == ticks[-1] else "north"
-        lines.append("\\draw[line width=0.2pt] (%.4f,0) ++(0,-6pt) -- ++(0,-1.5pt) "
-                     "node[anchor=%s, inner sep=1pt] {%s};"
-                     % (x, anchor, f"{t:,}".replace(",", "\\,")))
-    lines += ["\\end{scope}", "\\end{tikzpicture}"]
-    open(f"{OUT}/{stem}_overlay.tex", "w", encoding="utf-8").write("\n".join(lines) + "\n")
-
-
-def vertical_scale(stem, vmin, vmax, ticks, height, title):
-    """<stem>_scale.tex: the scale of #overlay set upright between the two panels of the figure,
-    which are \\subfloat panels of chapter8.tex, with the same viridis segments and colour names;
-    height is the height of a panel in points, the scale spanning its middle 0.8 with its ticks to
-    the right and its title above."""
-    n = 8
-    lines = [f"% Written by flights_maps.py: the vertical scale set between the panels of {stem}."]
+    lines = [f"% Written by flights_maps.py: the horizontal scale set under the panels of {stem}."]
     lines += ["\\definecolor{%sv%d}{rgb}{%.4f,%.4f,%.4f}%%" % (stem, k, *VIRIDIS(k / n)[:3])
               for k in range(n + 1)]
-    lines += ["\\begin{tikzpicture}[x=1pt, y=1pt, font=\\captionstyle]",
-              "\\def\\H{%.2f}%% the height of a panel" % height]
+    lines += ["\\begin{tikzpicture}[x=%.4f\\textwidth, y=1pt, font=\\captionstyle]" % width]
     for k in range(n):
-        lines.append("\\shade[bottom color=%sv%d, top color=%sv%d] (0, {0.1*\\H + %d*0.1*\\H}) "
-                     "rectangle (5, {0.1*\\H + %d*0.1*\\H});" % (stem, k, stem, k + 1, k, k + 1))
-    lines.append("\\draw[line width=0.2pt] (0, 0.1*\\H) rectangle (5, 0.9*\\H);")
+        lines.append("\\shade[left color=%sv%d, right color=%sv%d] (%.4f, 0) rectangle (%.4f, 5);"
+                     % (stem, k, stem, k + 1, k / n, (k + 1) / n))
+    lines.append("\\draw[line width=0.2pt] (0, 0) rectangle (1, 5);")
     for t in ticks:
-        f = 0.1 + 0.8 * (t - vmin) / (vmax - vmin)
-        lines.append("\\draw[line width=0.2pt] (5, {%.4f*\\H}) -- ++(1.5, 0) "
-                     "node[anchor=west, inner sep=1pt] {%s};" % (f, f"{t:,}".replace(",", "\\,")))
-    lines += ["\\node[anchor=south, inner sep=1pt] at (2.5, 0.9*\\H + 2) {%s};" % title,
+        x = (t - vmin) / (vmax - vmin)
+        lines.append("\\draw[line width=0.2pt] (%.4f, 0) -- ++(0, -1.5) "
+                     "node[anchor=north, inner sep=1pt] {%s};" % (x, f"{t:,}".replace(",", "\\,")))
+    lines += ["\\node[anchor=south, inner sep=1pt] at (0.5, 7) {%s};" % title,
               "\\end{tikzpicture}%"]
     open(f"{OUT}/{stem}_scale.tex", "w", encoding="utf-8").write("\n".join(lines) + "\n")
 
@@ -133,7 +103,9 @@ def heat_image(rows, extent, path):
 
 def dashboard1():
     rows = project(pd.read_csv(f"{ANSWERS}/dashboard1.sql.0.csv"))
-    extent = extent3857(3.95, 4.95, 50.55, 51.15)
+    # The envelope of Brussels to which the query restricts the positions, longitude 4.25 to 4.60
+    # and latitude 50.75 to 50.95, with a margin
+    extent = extent3857(4.20, 4.65, 50.72, 50.98)
     heat_image(rows, extent, f"{OUT}/flightsDashboard1_heat.png")
     job(OUT, "flightsDashboard1_left", extent, PANEL, [
         {"type": "raster", "path": "flightsDashboard1_heat.png", "image": True}])
@@ -142,13 +114,16 @@ def dashboard1():
     job(OUT, "flightsDashboard1_right", extent, PANEL, [
         {"path": "flightsDashboard1_positions.geojson", "kind": "marker", "color_field": "color",
          "style": {"name": "circle", "color": "0,0,0,255", "outline_style": "no", "size": "0.35"}}])
-    overlay("flightsDashboard1", "flightsDashboard1_left.pdf", "flightsDashboard1_right.pdf",
-            ((PANEL + GAP) / TEXTWIDTH, 1.0), 0, 2000, [0, 500, 1000, 1500, 2000])
+    horizontal_scale("flightsDashboard1", 0, 2000, [0, 500, 1000, 1500, 2000], 0.45,
+                     "Altitude (m)")
     return len(rows), rows["ICAO24"].nunique()
 
 
 def dashboard3():
-    extent = extent3857(-35.6, 44.8, 24.6, 72.0)
+    # Europe where its positions lie, longitude -20 to 40 and latitude 30 to 66, which leaves out
+    # less than 1 % of the positions over the envelope of Europe, longitude -35.6 to 44.8 and
+    # latitude 24.6 to 72 (0.94 % of those of the left panel, 0.73 % of the right one)
+    extent = extent3857(-20.0, 40.0, 30.0, 66.0)
     counts = []
     for side, name in (("left", "dashboard3.sql.0.csv"), ("right", "dashboard3.sql.1.csv")):
         rows = pd.read_csv(f"{ANSWERS}/{name}").dropna(subset=["Lon", "Lat", "Altitude"])
@@ -162,9 +137,8 @@ def dashboard3():
              "style": {"name": "circle", "color": "0,0,0,255", "outline_style": "no", "size": "0.12"}}],
             streets=None, border="#9a9a9a")
         counts.append((name, len(rows), len(shown)))
-    # The panels are 0.41\textwidth (332.897 pt) wide with the 162/163 aspect of their extent
-    vertical_scale("flightsDashboard3", 0, 12000, [0, 3000, 6000, 9000, 12000], 135.65,
-                   "Altitude (m)")
+    horizontal_scale("flightsDashboard3", 0, 12000, [0, 3000, 6000, 9000, 12000], 0.45,
+                     "Altitude (m)")
     return counts
 
 
