@@ -136,6 +136,7 @@ it reads and writes lives in the AIS database of the book, built by `../ais/`.
 | `EvalMasks`, view `ModelInput` | The positions every model is asked to reconstruct, and the sequences given to the model | `04_masks.sql` |
 | `ReconstructedLonLat`, `Reconstructed`, view `Errors` | The reconstructions of the models `crossdomain` and `coordinates` and of the baseline `linear`, and their errors | `run_model.py`, `05_evaluate.sql` |
 | `GapPaths`, `GapAreas` | The reconstructed path of every gap, and the protected areas the vessel could have entered | `06_exact.sql` |
+| `Reconstructed`, model `hermite` | The positions inside every gap on the cubic Hermite curve between the reports that bound it | `07_hermite.sql` |
 
 #### Software
 
@@ -184,3 +185,53 @@ For the whole day, `05_evaluate.sql` prints the errors of the book:
     coordinates | recovery   |     79636 |      97 |         1 |    176
     crossdomain | recovery   |     79636 |      95 |         1 |    178
     linear      | recovery   |     79636 |      53 |         1 |     37
+
+and `07_hermite.sql` counts the gaps in which the Hermite curve departs from the
+straight segment of the baseline `linear`:
+
+    gaps | curved | over100 | over500
+    8192 |   1947 |     841 |     258
+
+#### Synthetic gaps
+
+`usecase/synthetic_gaps.py` compares the model, the straight segment, and the
+Hermite curve on synthetic gaps: in the 693 stretches of 181 minutes of the
+vessels moving at 3 knots or more, the central 5 to 120 minutes are hidden and
+reconstructed from the positions around them, and the script prints, for each
+length, the median and the mean error of each method and the share of the
+stretches in which the curve is more accurate than the segment. It reads the
+table `Ships` of the AIS database and runs the checkpoint of the thesis without
+descriptions, so it does not need the embeddings; it runs on the GPU when there
+is one. From `usecase/`, after `run_usecase.sh` has cloned the thesis:
+
+    THESIS=data/FoundationModel PGDATABASE=ais python3 synthetic_gaps.py
+
+### Figures
+
+The directory `figures/` draws the figures of the use case from the tables of
+the AIS database once `run_usecase.sh` has run. The charts are drawn with
+matplotlib (`figures/requirements.txt`) through its PGF backend, which needs
+`pdflatex` with the packages `lmodern` and `xcolor`, so that their text is set
+in the face of the book; each export writes its CSV files into the working
+directory, and each drawing script reads them from there and writes the PDF
+files the book includes. From `figures/`:
+
+    psql -d ais -f export_gap3584.sql && python3 fig_gap3584.py
+    psql -d ais -f export_errors.sql && python3 curves.py && python3 fig_errors.py
+    PGDATABASE=ais OUT=out python3 export_hermite.py
+    for j in out/job_*.json; do OUT=out bash ../../chapter5/figures/render.sh $j; done
+
+| Figure | Scripts | Files |
+|---|---|---|
+| The tasks on the gap 3584 and the reconstructions of `crossdomain` | `export_gap3584.sql`, `fig_gap3584.py` | `gap3584_tasks_a_v2.pdf`, `gap3584_tasks_b.pdf`, `gap3584_tasks_legend.pdf` |
+| The paired differences of the error per window, by speed class | `export_errors.sql`, `fig_errors.py` | `errors_paired.pdf` |
+| The median error against the isolation and the horizon | `export_errors.sql`, `curves.py`, `fig_errors.py` | `errors_isolation.pdf`, `errors_horizon.pdf` |
+| The reachable region, the reconstructed path, and the protected areas of the gap 5452 | `export_errors.sql`, `fig_errors.py` | `errors_q14_gap5452.pdf` |
+| The straight segment and the Hermite curve on two gaps and two hidden turns | `export_hermite.py`, then `render.sh` of chapter 5 | `gap4907`, `gap7902`, `turn209276000`, `turn210620000` |
+
+`export_hermite.py` writes the layers of each map into a GeoPackage, the job of
+`render_map.py` of chapter 5 that draws it, and `summary.json`, which gives for
+each map the errors or the separation of the straight segment and the curve that
+the chapter quotes. The labels of the maps, their scale bar, and their legend are
+set by the chapter in LaTeX over the images. `render.sh` runs the Python of
+QGIS named by `QGIS_PY`, as in the section "Figures" of `../chapter5/README.md`.
