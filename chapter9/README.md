@@ -115,3 +115,60 @@ takes 76 minutes; a different speed-up factor is its first argument, and a facto
 replays it as fast as the producer sends, in less than four minutes. Given the argument `bounded`,
 the jobs read their input topic up to its current end and stop, so that, run after the replay,
 they answer over the whole day.
+
+### Measurements of the air traffic stream
+
+The directory `Flink_Examples/flights_stream/measure` holds the scripts that measure and compare
+the answers of the stream that the use case states, with the setup above. Each session starts its
+own Kafka broker in the Docker container `flights-kafka` on port 9092, so that no other broker
+may run there, replays the day at full speed, runs the
+jobs bounded over the topics up to their end, timing each, and stops the broker; it runs from the
+directory that holds `data/` and `src/libmeos.so`, with `MEOS_LIB` the directory of that
+`libmeos.so` and `PYTHON` the Python with the packages above:
+
+- `report_delay.sql` counts with DuckDB the position reports of the Parquet day, the delay
+  between the time of a report and the first state vector that carries it, the reports that
+  arrive after a later report of their aircraft, and their lateness:
+  `DATA=data duckdb < $W/measure/report_delay.sql`.
+- `export_baseline.sql` writes into the working directory the answers of MobilityDB that
+  `compare.py` reads, the position reports of `FlightsPositions` and the rows of dashboard 1,
+  from the database that `flights/build.sh` and `flights/run_all.sh` build.
+- `dashboards_session.sh <out>` runs the walk and `flights_dashboards.py`, and `compare.py` then
+  dumps their topics into `<out>` and compares the positions and the rows of dashboard 1 with
+  those of MobilityDB in `$BASELINE` (default: `baseline`), writing `<out>/summary.json`.
+- `queries_session.sh <out>` runs the walk and `flights_queries.py` and dumps the topics
+  `hourly-trips`, `brussels-arrivals`, `airborne-hourly` and `holding` into `<out>`;
+  `compare_queries.py <out> <flights/out>` compares the last two with the answers of
+  `flights/flights_stream_queries.sql`, and `chapter8/figures/flights_stream_maps.py` draws the
+  maps of the first two.
+
+For instance, with `W=Flink_Examples/flights_stream` as above:
+
+    mkdir -p baseline && (cd baseline && psql -d flights -f ../$W/measure/export_baseline.sql)
+    MEOS_LIB=<directory of libmeos.so> bash $W/measure/dashboards_session.sh out/dashboards
+    MEOS_LIB=<directory of libmeos.so> bash $W/measure/queries_session.sh out/queries
+
+### Figures
+
+The directory `figures` holds the scripts that print the dashboards of the chapter to the PDF
+files of its figures, with `capture.py`, which opens a page in the Chromium of Playwright
+(`pip install playwright && playwright install chromium`) and prints it once a condition holds
+in the page and the basemap has settled, at the printed width of the figure and with the
+basemap at 300 dpi. `citibike_dashboards.sh` runs the Kafka broker, the Flink job, the map
+server and the producers of each Citi Bike example as above, over the trips of the day up to the
+instant that the figure shows, and prints the page; `flights_dashboards.sh <out> [<hour>]` runs
+the walk, the dashboards job and the Streamlit application while the day is replayed at its
+default speed-up, and prints the page once the dashboards show the given hour (default: 10). Run
+them from the directory that holds `data/`, here the directory `chapter9` with `data` linked in
+it:
+
+    bash figures/citibike_dashboards.sh top10 geofence boro slidejoin
+    MEOS_LIB=<directory of libmeos.so> bash figures/flights_dashboards.sh out
+
+| Figure | Script, output |
+|---|---|
+| Top ten stations in a sliding window | `citibike_dashboards.sh top10`, `out/top10.pdf` |
+| Geofencing | `citibike_dashboards.sh geofence`, `out/geofence.pdf` |
+| Borough occupation | `citibike_dashboards.sh boro`, `out/boro.pdf` |
+| Joining streams: the balance of the stations | `citibike_dashboards.sh slidejoin`, `out/slidejoin.pdf` |
+| The dashboards of the air traffic stream | `flights_dashboards.sh`, `out/flightsStreamDashboards.pdf` |
