@@ -1,0 +1,121 @@
+{
+ "crs": "EPSG:3857",
+ "extent": [
+  962912.0431249354,
+  7332808.426316423,
+  1363665.3144544822,
+  7971520.084533203
+ ],
+ "size": [
+  1125,
+  1793
+ ],
+ "dpi": 300,
+ "land": "#f2efe9",
+ "layers": [
+  {
+   "type": "shortbread",
+   "water": "#aad3df",
+   "streets": "#ffffff",
+   "buildings": "#d9d0c9"
+  },
+  {
+   "type": "vector",
+   "name": "n319114200_04",
+   "path": "encounter_sea.geojson",
+   "filter": "\"layer\" = 'n319114200_04'",
+   "kind": "fill",
+   "style": {
+    "color": "180,180,235,90",
+    "outline_color": "#a0a0dc",
+    "outline_width": "0.3"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "n273277840_04",
+   "path": "encounter_sea.geojson",
+   "filter": "\"layer\" = 'n273277840_04'",
+   "kind": "fill",
+   "style": {
+    "color": "170,220,170,90",
+    "outline_color": "#8cc88c",
+    "outline_width": "0.3"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "n319114200_12",
+   "path": "encounter_sea.geojson",
+   "filter": "\"layer\" = 'n319114200_12'",
+   "kind": "fill",
+   "style": {
+    "color": "100,110,200,110",
+    "outline_color": "#5050b0",
+    "outline_width": "0.3"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "n273277840_12",
+   "path": "encounter_sea.geojson",
+   "filter": "\"layer\" = 'n273277840_12'",
+   "kind": "fill",
+   "style": {
+    "color": "90,160,110,110",
+    "outline_color": "#3d8a4c",
+    "outline_width": "0.3"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "n319114200_20",
+   "path": "encounter_sea.geojson",
+   "filter": "\"layer\" = 'n319114200_20'",
+   "kind": "fill",
+   "style": {
+    "color": "40,50,160,140",
+    "outline_color": "#1c1c80",
+    "outline_width": "0.3"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "n273277840_20",
+   "path": "encounter_sea.geojson",
+   "filter": "\"layer\" = 'n273277840_20'",
+   "kind": "fill",
+   "style": {
+    "color": "40,120,70,140",
+    "outline_color": "#145a24",
+    "outline_width": "0.3"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "traj319114200",
+   "path": "encounter_sea.geojson",
+   "filter": "\"layer\" = 'traj319114200'",
+   "kind": "line",
+   "style": {
+    "line_color": "#2a2aa0",
+    "line_width": "0.45",
+    "line_style": "solid",
+    "capstyle": "round"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "traj273277840",
+   "path": "encounter_sea.geojson",
+   "filter": "\"layer\" = 'traj273277840'",
+   "kind": "line",
+   "style": {
+    "line_color": "#1a6b2a",
+    "line_width": "0.45",
+    "line_style": "solid",
+    "capstyle": "round"
+   }
+  }
+ ]
+}

@@ -10,8 +10,8 @@ examples and exercises in the book.
 
 The chapter has two use cases: the wind fields of the Atlantic storms of 2024
 as temporal geometries, on the best tracks of the National Hurricane Center of
-NOAA, and the underwater noise of vessels as temporal circular buffers, on one
-day of AIS data of the Danish Maritime Authority. The scripts run against
+NOAA, and the underwater noise of vessels as temporal circular buffers, on
+January 20, 2026, from the AIS database of the book. The scripts run against
 **PostgreSQL 18, PostGIS 3.6 and MobilityDB 1.4**.
 
 ### The Wind Fields of the Atlantic Storms
@@ -73,65 +73,85 @@ one as a comment, for the season 2024.
 
 #### Datasets
 
-- **AIS**: the day 2025-01-01, http://aisdata.ais.dk/2025/aisdk-2025-01-01.zip,
-  unzipped as `aisdk-2025-01-01.csv`.
+- **AIS**: the tables `AISClean` and `Vessels` of the AIS database of the book,
+  built by the scripts of `ais/` of this repository for January 20, 2026.
 - **Ports, sea cells and protected areas**: the files `port.csv`,
-  `sea_cells.csv.gz` and `natural_areas.csv.gz` read by the loader.
-
-All the files are placed in one directory on the database server, which holds
-no other file with the extension `.csv` sorting before the AIS file.
+  `sea_cells.csv.gz` and `natural_areas.csv.gz` read by the loader, placed in
+  one directory on the database server.
 
 #### Loading
 
-tcbuffer_load.sql defines the loading functions. Loading one day builds the
-table `VesselTrip`, with the trajectory of each trip (`Trip`), the source level
-of its noise (`SL`), the radius of the area affected by the noise (`Radius`),
-the resulting temporal circular buffer (`Noise`), and its traversed area, and
-the table `NaturalAreas`:
+    DATA_DIR=/absolute/path/to/data bash tcbuffer_load_ais.sh
 
-    \i tcbuffer_load.sql
-    SET tcbuffer.datadir = '/absolute/path/to/data/';
-    SELECT tcbuffer_load(1);
+tcbuffer_load_ais.sh creates the database `noise` (`NOISE_DB`), copies into it
+the tables `AISClean` and `Vessels` of the AIS database `ais` (`AIS_DB`), and
+runs the functions of tcbuffer_load.sql: `tcbuffer_areas()` loads the tables
+`Port`, `SeaCells` and `NaturalAreas` from `DATA_DIR`, tcbuffer_input_ais.sql
+builds from `AISClean` the table `AISInputTarget`, and
+`tcbuffer_trajectories()` builds the table `VesselTrip`, with the trajectory of
+each trip (`Trip`), the source level of its noise (`SL`), the radius of the
+area affected by the noise (`Radius`), the resulting temporal circular buffer
+(`Noise`), and its traversed area.
 
 The source level follows the reference spectrum model of MacGillivray and de
 Jong for the one-third octave band of 63 Hz, and the radius assumes spherical
 spreading down to the ambient noise level of the sea cell, capped at 10 km.
+
+The function `tcbuffer_load()` of tcbuffer_load.sql builds the same tables from
+the CSV files of the Danish Maritime Authority, such as
+http://aisdata.ais.dk/2025/aisdk-2025-01-01.zip unzipped as
+`aisdk-2025-01-01.csv`, placed in the directory of the other files, which then
+holds no other file with the extension `.csv` sorting before the AIS file:
+
+    \i tcbuffer_load.sql
+    SET tcbuffer.datadir = '/absolute/path/to/data/';
+    SELECT tcbuffer_load(1);
 
 #### Queries
 
 tcbuffer_case_study.sql: the queries of the case study, in the order of the
 chapter, with the answer of each one as a comment: the area affected by the
 noise of a fishing vessel, the relationships between its moving region and a
-protected area, and the temporal distance between the moving regions of the
-fishing vessel and of a passenger vessel, the exposure of the marine and
-coastal protected areas to the noise of the whole day (the table `Exposure`),
-and the acoustic encounters, the pairs of vessels whose noise regions overlap
-while their trajectories stay apart (the tables `Encounter` and
-`SeaEncounter`).
+protected area, the exposure of the marine and coastal protected areas to the
+noise of the whole day (the table `Exposure`), the temporal distance between
+the moving regions of the fishing vessel and of a passenger vessel, and the
+acoustic encounters, the pairs of vessels whose noise regions overlap while
+their trajectories stay apart (the tables `Encounter` and `SeaEncounter`).
 
 text_numbers.sql: the numbers the text of the case study quotes and no listing
-prints, on the tables tcbuffer_case_study.sql builds, so it runs after it: how
-many trips the noise of reaches how many protected areas their trajectories do
-not enter (the table `ExposureAll`), how long the most exposed areas stay quiet
-during the day, and the number, the median length and the greatest separation
-of the encounters at sea.
+prints, on the tables tcbuffer_case_study.sql builds, so it runs after it: the
+trips of the day and the length of the trip of the fishing vessel, the smallest
+distance between the trajectories of the two vessels, how many trips the noise
+of reaches how many protected areas their trajectories do not enter (the table
+`ExposureAll`), how long the protected areas stay quiet during the day, and the
+number and the median length of the encounters at sea.
+
+exercises.sql: the exercises of the chapter on the database of the case study
+and on temporal circular buffers of literal values, with the answer of each one
+as a comment, run after tcbuffer_case_study.sql.
 
 #### Figures
 
-The directory figures/ holds export_uwn.sh, which writes the layers of the two
-figures of the case study from the database as GeoPackage files, and the job
-files that the renderer of chapter 5 (`chapter5/figures/render_map.py`) draws
-with QGIS. The job files state the output and layer paths of a Windows machine
-and are edited to the directory where export_uwn.sh writes.
+`figures/make_figures.sh` draws the maps of the chapter into `$OUT` as vector
+PDFs over the OpenStreetMap vector tiles:
 
-`figures/make_figures.sh` draws the other figures of the chapter drawn from data
-into `$OUT`, with the pipeline of chapter 4 (`chapter4/figures/figlib.py` and
-`render.sh`): `export_figures.py` writes the layers and the spec of four maps, the
-noise region of the fishing vessel leaving Østerby, the hull of a ro-ro vessel
-turning in Göteborg (from the AIS database of chapter 4), the protected area W
-in the Øresund at the instant the noise of 85 vessels reaches it, and an
-acoustic encounter at sea, and `fig_dist_tcbuffer_point.py` draws the turning
-point of the temporal distance between a temporal circular buffer and a point,
-at the circle MobilityDB answers. The databases are named by the PostgreSQL
-environment variables, and by `NOISE_DB` and `AIS_DB` (default: `noise` and
-`ais`).
+| Script | Layers | Map |
+|---|---|---|
+| `noise_region.sql` | The noise region of the fishing vessel SLESVIG leaving Østerby at 4:15, 4:30, 4:45, 5:00 and 5:15, and its trajectory | `ais_noise_region.pdf` |
+| `hull.sql` | Six placements of the hull of the ro-ro vessel FICARIA SEAWAYS turning in Göteborg, from the table `ShipsRigid` of chapter 4, and the trajectory of its GPS antenna | `ais_hull_turn.pdf` |
+| `exposure_w.sql` | The protected area W and the noise regions of the vessels heard in it at the instant of the largest number of them, split by speed | `ais_exposure_w.pdf` |
+| `encounter_sea.sql` | The trajectories of TRIUMF and PUMA and their noise regions at 4:00, 12:00 and 20:00 | `ais_encounter_sea.pdf` |
+| `uwn_layers.sql`, `uwn_noise.sql` | The trajectories and the traversed areas of the noise of the fishing vessel and of the passenger vessel, the protected areas around Læsø, and the shortest lines between the two noise regions | `traversed_area_uwn.pdf`, `shortest_line_uwn.pdf` |
+| `storms_export.sql` | The tracks, the wind fields and the circles of the wind fields of 34 knots of the Atlantic storms of 2024 | `storms_tpoint.pdf`, `storms_tgeo.pdf`, `storms_tcbuffer.pdf` |
+
+Each SQL script writes GeoJSON layers in longitude and latitude. The job
+`job_<map>.json` of each AIS map states its extent, its size, and the style of
+each layer, and `hybrid_pdf.py` draws it with QGIS and the renderer of chapter
+5 (`chapter5/figures/render_map.py`). The spec `storms_<map>.json` of each
+storm map states the same, and `render_storms.py` draws it. The script also
+draws with `fig_dist_tcbuffer_point.py` the turning point of the temporal
+distance between a temporal circular buffer and a point, at the circle
+MobilityDB answers. The databases are named by the PostgreSQL environment
+variables and by `NOISE_DB`, `AIS_DB` and `STORMS_DB` (default: `noise`, `ais`
+and `storms`); `QGIS_PY` names the Python of QGIS, which is by default the QGIS
+3.40 installation of Windows called from WSL.

@@ -173,21 +173,17 @@ END;
 $$;
 
 -- -----------------------------------------------------------------------------
--- Load the input files Port, SeaCells, NaturalAreas, and AISInput, where
--- the latter contains several days of AIS data input from the directory data/ 
+-- Load the input files of the tables Port, SeaCells, and NaturalAreas from the
+-- directory tcbuffer.datadir
 -- -----------------------------------------------------------------------------
 
-DROP FUNCTION IF EXISTS tcbuffer_input;
-CREATE FUNCTION tcbuffer_input(SF integer DEFAULT 1)
-RETURNS void LANGUAGE plpgsql STRICT AS $$
+DROP FUNCTION IF EXISTS tcbuffer_areas;
+CREATE FUNCTION tcbuffer_areas()
+RETURNS void LANGUAGE plpgsql AS $$
 DECLARE
-  tableSize text;
-  tableCount text;
   -- Directory of the input files on the server, with a trailing slash, set
   -- before loading with SET tcbuffer.datadir = '/absolute/path/to/data/';
   filePath text = current_setting('tcbuffer.datadir');
-  fileName text;
-  fileNames text[];
 BEGIN
   CREATE EXTENSION IF NOT EXISTS mobilitydb CASCADE;
 
@@ -288,6 +284,29 @@ BEGIN
   CREATE INDEX IF NOT EXISTS PortGeomGix ON Port USING GIST (Geom);
   CREATE INDEX IF NOT EXISTS SeaCellGeomGix ON SeaCells USING GIST (Geom);
   CREATE INDEX IF NOT EXISTS NaturalAreasGeomGist ON NaturalAreas USING GIST (Geom);
+
+  RETURN;
+END;
+$$;
+
+-- -----------------------------------------------------------------------------
+-- Load the input files Port, SeaCells, NaturalAreas, and AISInput, where
+-- the latter contains several days of AIS data input from the directory data/ 
+-- -----------------------------------------------------------------------------
+
+DROP FUNCTION IF EXISTS tcbuffer_input;
+CREATE FUNCTION tcbuffer_input(SF integer DEFAULT 1)
+RETURNS void LANGUAGE plpgsql STRICT AS $$
+DECLARE
+  tableSize text;
+  tableCount text;
+  -- Directory of the input files on the server, with a trailing slash, set
+  -- before loading with SET tcbuffer.datadir = '/absolute/path/to/data/';
+  filePath text = current_setting('tcbuffer.datadir');
+  fileName text;
+  fileNames text[];
+BEGIN
+  PERFORM tcbuffer_areas();
 
   RAISE INFO 'Creating table AISInput';
   -- Create the table that stores the CSV files
