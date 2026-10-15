@@ -1,0 +1,4 @@
+SELECT MMSI, COUNT(*) AS MessageCount
+FROM AISInput
+GROUP BY MMSI
+ORDER BY MessageCount DESC;

@@ -1,0 +1,88 @@
+{
+ "rounds": 3,
+ "duck_db": "hanoi.duckdb",
+ "duck_setup": [
+  "SET TimeZone = 'UTC';",
+  "SET threads = 1;",
+  "SET memory_limit = '7000MB';"
+ ],
+ "pg_db": "hanoi",
+ "pg_setup": [
+  "SET TimeZone = 'UTC';"
+ ],
+ "queries": {
+  "h1": {
+   "file": "h1.sql",
+   "pg_file": "pg_h1.sql",
+   "timeout": 2400,
+   "duck_timeout": 2400,
+   "once": true
+  },
+  "h2": {
+   "file": "h2.sql",
+   "pg_file": "pg_h2.sql",
+   "timeout": 2400,
+   "duck_timeout": 2400,
+   "once": true
+  },
+  "h3": {
+   "file": "h3.sql",
+   "pg_file": "pg_h3.sql",
+   "timeout": 2400,
+   "duck_timeout": 2400,
+   "once": true
+  },
+  "h4": {
+   "file": "h4.sql",
+   "pg_file": "pg_h4.sql",
+   "timeout": 2400,
+   "duck_timeout": 2400,
+   "once": true
+  },
+  "h5": {
+   "file": "h5.sql",
+   "pg_file": "pg_h5.sql",
+   "timeout": 2400,
+   "duck_timeout": 2400
+  },
+  "h6": {
+   "file": "h6.sql",
+   "pg_file": "pg_h6.sql",
+   "timeout": 2400,
+   "duck_timeout": 2400,
+   "once": true
+  },
+  "h7": {
+   "file": "h7.sql",
+   "pg_file": "pg_h7.sql",
+   "timeout": 2400,
+   "duck_timeout": 2400,
+   "once": true
+  },
+  "h8": {
+   "file": "h8.sql",
+   "pg_file": "pg_h8.sql",
+   "timeout": 2400,
+   "duck_timeout": 2400
+  },
+  "h9": {
+   "file": "h9.sql",
+   "pg_file": "pg_h9.sql",
+   "timeout": 2400,
+   "duck_timeout": 2400
+  },
+  "h10": {
+   "file": "h10.sql",
+   "pg_file": "pg_h10.sql",
+   "timeout": 2400,
+   "duck_timeout": 2400,
+   "once": true
+  },
+  "h11": {
+   "file": "h11.sql",
+   "pg_file": "pg_h11.sql",
+   "timeout": 2400,
+   "duck_timeout": 2400
+  }
+ }
+}

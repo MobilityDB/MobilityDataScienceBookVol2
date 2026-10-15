@@ -54,3 +54,39 @@ psql -d hanoi_sf0.05 -p 5432 (or your port) -h localhost
 
 ----------------------------------------
 
+### Timings
+
+The folder `timing` runs the queries whose times the chapter compares: those of the section
+"Querying DuckDB" in DuckDB with the spatial extension and in PostgreSQL with PostGIS (`ais`),
+those of the AIS use case of MobilityDuck in MobilityDuck and in MobilityDB (`ships`), and those
+of the BerlinMOD-Hanoi use case in MobilityDuck and in MobilityDB (`hanoi`). `bench.py` runs
+each query three times in each engine, alternately, and records for each run the second of two
+consecutive executions, or the only execution of the queries marked `once` in `spec.json`; it
+prints how many times longer PostgreSQL took than DuckDB in each round. DuckDB runs the AIS
+queries with all the cores of the machine, and MobilityDuck the other queries with one thread.
+
+1. Build the AIS database of the book with the scripts of the folder `ais` of this repository,
+   in the PostgreSQL database `ais`, and add to its table `AISInput` the point geometry `Geom`:
+   `psql -d ais -f timing/ais/aisinput_pg.sql`.
+2. In `timing/ais`, with the file `aisdk-2026-01-20.csv` unzipped there, create the DuckDB
+   database of the section: `duckdb ais.duckdb < aisinput_duckdb.sql`.
+3. In `timing/ships`, copy the table `Ships` into MobilityDuck,
+   `PGDATABASE=ais duckdb -unsigned ships.duckdb < ships_duckdb.sql`, then write the ships of
+   the reservoir samples of DuckDB into PostgreSQL: `PGDATABASE=ais bash ships_sample.sh`.
+4. Restore into the PostgreSQL database `hanoi` the data set that the
+   [BerlinMOD-Hanoi](https://github.com/MobilityDB/MobilityDB-BerlinMOD-Hanoi) repository
+   publishes for a scale factor of 0.01, create its table `Bins` and its view `Trips200`,
+   `psql -d hanoi -f timing/hanoi/hanoi_pg.sql`, and, in `timing/hanoi`, copy it into
+   MobilityDuck: `PGDATABASE=hanoi duckdb -unsigned hanoi.duckdb < hanoi_duckdb.sql`.
+5. Run the timings, for instance `python3 bench.py ais/spec.json ais.json` in `timing`, and
+   likewise with `ships/spec.json` and `hanoi/spec.json`. `DUCKDB` names the DuckDB shell and
+   `PSQL` names psql; when the shell does not carry MobilityDuck, `MOBILITYDUCK_EXTENSION` names
+   the file of the extension, which steps 3 and 4 then load with
+   `LOAD spatial; LOAD '/path/to/mobilityduck.duckdb_extension';` before the script. The usual
+   libpq variables (`PGHOST`, `PGPORT`, `PGUSER`) select the PostgreSQL server.
+
+The queries of `ships` and `hanoi` are written by `make_queries.py`, which holds the listings
+of the chapter: `mN.sql` and `hN.sql` are the MobilityDuck queries as the chapter prints them,
+and `pg_mN.sql` and `pg_hN.sql` their MobilityDB twins. The AIS queries `qN.sql` name the
+spherical distance `ST_DISTFN`, which `bench.py` replaces by `ST_Distance_Sphere` in DuckDB and
+by `ST_DistanceSphere` in PostGIS.

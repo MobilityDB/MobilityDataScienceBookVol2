@@ -1,0 +1,98 @@
+{
+ "rounds": 3,
+ "duck_db": "ships.duckdb",
+ "duck_setup": [
+  "SET TimeZone = 'UTC';",
+  "SET threads = 1;",
+  "SET memory_limit = '7000MB';"
+ ],
+ "pg_db": "ais",
+ "pg_setup": [
+  "SET TimeZone = 'UTC';"
+ ],
+ "queries": {
+  "m1": {
+   "file": "m1.sql",
+   "pg_file": "pg_m1.sql",
+   "timeout": 1800
+  },
+  "m2": {
+   "file": "m2.sql",
+   "pg_file": "pg_m2.sql",
+   "timeout": 1800
+  },
+  "m3": {
+   "file": "m3.sql",
+   "pg_file": "pg_m3.sql",
+   "timeout": 1800
+  },
+  "m4": {
+   "file": "m4.sql",
+   "pg_file": "pg_m4.sql",
+   "timeout": 1800
+  },
+  "m7": {
+   "file": "m7.sql",
+   "pg_file": "pg_m7.sql",
+   "timeout": 1800
+  },
+  "m8": {
+   "file": "m8.sql",
+   "pg_file": "pg_m8.sql",
+   "timeout": 1800
+  },
+  "m9": {
+   "file": "m9.sql",
+   "pg_file": "pg_m9.sql",
+   "timeout": 1800
+  },
+  "m5_300": {
+   "file": "m5.sql",
+   "pg_file": "pg_m5.sql",
+   "duck_subst": {
+    "NSAMPLE": "300"
+   },
+   "pg_subst": {
+    "NSAMPLE": "300"
+   },
+   "timeout": 1800,
+   "once": true
+  },
+  "m5_600": {
+   "file": "m5.sql",
+   "pg_file": "pg_m5.sql",
+   "duck_subst": {
+    "NSAMPLE": "600"
+   },
+   "pg_subst": {
+    "NSAMPLE": "600"
+   },
+   "timeout": 1800,
+   "once": true
+  },
+  "m6_300": {
+   "file": "m6.sql",
+   "pg_file": "pg_m6.sql",
+   "duck_subst": {
+    "NSAMPLE": "300"
+   },
+   "pg_subst": {
+    "NSAMPLE": "300"
+   },
+   "timeout": 1800,
+   "once": true
+  },
+  "m6_600": {
+   "file": "m6.sql",
+   "pg_file": "pg_m6.sql",
+   "duck_subst": {
+    "NSAMPLE": "600"
+   },
+   "pg_subst": {
+    "NSAMPLE": "600"
+   },
+   "timeout": 1800,
+   "once": true
+  }
+ }
+}

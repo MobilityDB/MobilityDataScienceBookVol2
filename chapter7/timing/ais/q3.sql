@@ -1,0 +1,4 @@
+SELECT MMSI, MIN(t) AS FirstSeen, MAX(t) AS LastSeen
+FROM AISInput
+GROUP BY MMSI
+ORDER BY LastSeen;

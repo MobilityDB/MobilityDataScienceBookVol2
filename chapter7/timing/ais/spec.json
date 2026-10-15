@@ -1,0 +1,114 @@
+{
+ "rounds": 3,
+ "duck_db": "ais.duckdb",
+ "duck_setup": [
+  "SET TimeZone = 'UTC';",
+  "SET geometry_always_xy = true;"
+ ],
+ "pg_db": "ais",
+ "pg_setup": [
+  "SET TimeZone = 'UTC';"
+ ],
+ "queries": {
+  "q1": {
+   "file": "q1.sql",
+   "duck_subst": {
+    "ST_DISTFN": "ST_Distance_Sphere"
+   },
+   "pg_subst": {
+    "ST_DISTFN": "ST_DistanceSphere"
+   },
+   "timeout": 1800
+  },
+  "q2": {
+   "file": "q2.sql",
+   "duck_subst": {
+    "ST_DISTFN": "ST_Distance_Sphere"
+   },
+   "pg_subst": {
+    "ST_DISTFN": "ST_DistanceSphere"
+   },
+   "timeout": 1800
+  },
+  "q3": {
+   "file": "q3.sql",
+   "duck_subst": {
+    "ST_DISTFN": "ST_Distance_Sphere"
+   },
+   "pg_subst": {
+    "ST_DISTFN": "ST_DistanceSphere"
+   },
+   "timeout": 1800
+  },
+  "q4": {
+   "file": "q4.sql",
+   "duck_subst": {
+    "ST_DISTFN": "ST_Distance_Sphere"
+   },
+   "pg_subst": {
+    "ST_DISTFN": "ST_DistanceSphere"
+   },
+   "timeout": 1800
+  },
+  "q5": {
+   "file": "q5.sql",
+   "duck_subst": {
+    "ST_DISTFN": "ST_Distance_Sphere"
+   },
+   "pg_subst": {
+    "ST_DISTFN": "ST_DistanceSphere"
+   },
+   "timeout": 1800
+  },
+  "q6": {
+   "file": "q6.sql",
+   "duck_subst": {
+    "ST_DISTFN": "ST_Distance_Sphere"
+   },
+   "pg_subst": {
+    "ST_DISTFN": "ST_DistanceSphere"
+   },
+   "timeout": 1800
+  },
+  "q7": {
+   "file": "q7.sql",
+   "duck_subst": {
+    "ST_DISTFN": "ST_Distance_Sphere"
+   },
+   "pg_subst": {
+    "ST_DISTFN": "ST_DistanceSphere"
+   },
+   "timeout": 1800
+  },
+  "q8": {
+   "file": "q8.sql",
+   "duck_subst": {
+    "ST_DISTFN": "ST_Distance_Sphere"
+   },
+   "pg_subst": {
+    "ST_DISTFN": "ST_DistanceSphere"
+   },
+   "timeout": 1800
+  },
+  "q9": {
+   "file": "q9.sql",
+   "duck_subst": {
+    "ST_DISTFN": "ST_Distance_Sphere"
+   },
+   "pg_subst": {
+    "ST_DISTFN": "ST_DistanceSphere"
+   },
+   "timeout": 1800
+  },
+  "q10": {
+   "file": "q10.sql",
+   "duck_subst": {
+    "ST_DISTFN": "ST_Distance_Sphere"
+   },
+   "pg_subst": {
+    "ST_DISTFN": "ST_DistanceSphere"
+   },
+   "timeout": 1800
+  }
+ }
+}
