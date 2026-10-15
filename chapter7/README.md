@@ -30,6 +30,29 @@ The extension loads only into the DuckDB version of its build.
    the Hanoi notebook fail with it; the spatial extension of `core_nightly` keeps that
    rewrite to geometries.
 
+### Figures
+
+The folder `figures` draws the maps and plan figures of the chapter with the Folium code of the
+notebooks, over the OpenMapTiles vector tiles of OpenFreeMap drawn by Leaflet.VectorGrid
+(`vtiles.py`, styles in `omtstyle.py`), printed to vector PDF by headless Chromium (`vgprint.py`;
+`vghybrid.py` embeds a dense marker layer as one lossless image). A map PDF carries no text: its
+labels and legends are TikZ overlays (`<figure>_overlay.tex`) set in the font of the captions.
+
+1. Install the Python packages (the figures of the book are drawn with these versions) and the
+   Chromium of Playwright, and, for the hybrid maps, `pdftocairo` of Poppler:
+   `pip install folium==0.20.0 branca==0.8.2 pandas==2.3.3 shapely==2.2.0 matplotlib==3.11.2 pillow==12.3.0 pikepdf==10.16.0 playwright==1.63.0`
+   and `playwright install chromium`. Set `CHROME` to use another Chromium executable.
+2. In the folder `figures`, create `data/ais`, `data/hanoi` and `out`, and write the data of
+   the maps, which the scripts read and write relative to that folder:
+   - `md_figdata.sql` and `duck_figdata.sql` in the DuckDB database of `mobilityDuckAIS.ipynb`;
+   - `hanoi_figdata.sql` in the DuckDB database of `hanoi-book.ipynb`, or
+     `hanoi_figdata_pg.sql` with `psql` in the MobilityDB database of the BerlinMOD-Hanoi
+     generator below.
+3. Draw the maps into `out`: `python3 fig_md.py`, `python3 fig_duck.py` and
+   `python3 fig_hanoi.py`; each takes the names of the figures to draw, by default all of them.
+4. `plan_pdf.py` and `plan_png.py` draw a block of the text of a DuckDB `EXPLAIN ANALYZE` as a
+   vector PDF or a PNG; their docstrings give the arguments.
+
 ### BerlinMOD Data Generator
 
 These files create the BerlinMOD benchmark for the city of Hanoi, based on the hanoi.osm file that can be obtained from OpenStreetMap. To produce the database you shoul follow the step next.
