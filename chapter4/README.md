@@ -155,6 +155,22 @@ License (https://www.openstreetmap.org/copyright).
 | Pitch of the recording vehicle | `export_nuscenes.py`, `nus_pitch.pdf` |
 | Objects in the frame of the front camera | `export_nuscenes.py`, `nus_camera.pdf` |
 
+`figures/planar_graph.py` draws the three panels of the figure of the planar
+graph of the traversed area (Sect. 4.5.5) and needs no database, only
+`shapely`. It builds the 18 segments of the L-shaped body that translates from
+placement A to placement B, splits them at their 6 crossings into a planar graph
+of 18 nodes and 30 edges, and walks its outer boundary through 9 nodes, with
+exact fractions; it checks the area of the walk, 10.625, against the union of
+the placements and of the parallelograms swept by the edges, and prints the
+counts on the standard error. The panels are TikZ pictures, which the chapter
+inputs as its three subfloats:
+
+    OUT=out python3 figures/planar_graph.py
+
+| Figure | Script, output |
+|---|---|
+| The segments, the planar graph, and the walk along the outer boundary of the area an L-shaped body traverses | `planar_graph.py`, `planar_graph_segments.tex`, `planar_graph_graph.tex`, `planar_graph_walk.tex` |
+
 ### Checking the Text
 
 `text_numbers.sql` computes the numbers the text of the AIS use case quotes and
