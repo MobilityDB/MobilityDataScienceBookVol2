@@ -76,6 +76,7 @@ MobilityFlink. Its code is in `Flink_Examples/flights_stream/`:
 | Position and reachability rules, into the topic `flights-positions` | `walk/` (the Java job `flights.FlightsWalk`) |
 | The three dashboards, into the topics `climbing-brussels`, `close-pairs` and `traffic-per-hour` | `flights_dashboards.py` |
 | The dashboards, a Streamlit application reading these topics | `app.py` (http://localhost:8501) |
+| The trajectories of the stream, into the topics `hourly-trips`, `brussels-arrivals`, `airborne-hourly` and `holding` | `flights_queries.py` |
 
 It needs, besides the software above, `duckdb`, `confluent-kafka`, `streamlit` 1.65.0 and
 `pydeck`, a JDK 21 with Maven, and MobilityFlink, which brings the functions of MEOS into Flink:
@@ -94,7 +95,7 @@ the topics, start the two jobs and the application, and finally the producer, fr
 that holds `data/`:
 
     for t in flights-states flights-positions flights-dropped climbing-brussels close-pairs \
-        traffic-per-hour; do
+        traffic-per-hour hourly-trips brussels-arrivals airborne-hourly holding; do
       docker exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 \
         --create --if-not-exists --topic $t
     done
@@ -105,11 +106,12 @@ that holds `data/`:
     java -Xmx1200m -cp "$PYLIB/*:$W/walk/target/flights-walk-1.0.jar:$W/walk/target/lib/*" \
       flights.FlightsWalk &
     python $W/flights_dashboards.py &
+    python $W/flights_queries.py &
     (cd $W && streamlit run app.py --server.enableStaticServing true --theme.base light) &
     python $W/replay_flights.py
 
 The producer replays the day at 20 times its real speed by default, so that the replay of the day
 takes 76 minutes; a different speed-up factor is its first argument, and a factor of 1e12
 replays it as fast as the producer sends, in less than four minutes. Given the argument `bounded`,
-the two jobs read their input topic up to its current end and stop, so that, run after the
-replay, they answer over the whole day.
+the jobs read their input topic up to its current end and stop, so that, run after the replay,
+they answer over the whole day.
