@@ -1,0 +1,31 @@
+{
+ "geojson": "trip6.geojson",
+ "out": "trip6linevspoint.pdf",
+ "width": 884,
+ "height": 636,
+ "dpi": 144,
+ "crs": "EPSG:7760",
+ "extent": [
+  1022450.48,
+  996260.86,
+  1022551.9,
+  996333.83
+ ],
+ "layers": [
+  {
+   "name": "trip 6",
+   "qml": "qml/t6_points.qml"
+  },
+  {
+   "name": "line 6",
+   "qml": "qml/t6_line.qml"
+  },
+  {
+   "name": "grid",
+   "qml": "qml/t6_grid.qml"
+  }
+ ],
+ "labels_out": "trip6linevspoint_labels.json",
+ "label_pt": 21.25,
+ "label_font": "fonts/lmroman9-regular.otf"
+}

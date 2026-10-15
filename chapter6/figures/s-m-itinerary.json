@@ -1,0 +1,36 @@
+{
+ "geojson": "smi.geojson",
+ "out": "s-m-itinerary.pdf",
+ "width": 1146,
+ "height": 758,
+ "dpi": 144,
+ "extent": [
+  257913.8,
+  6250318.5,
+  263678.2,
+  6254131.2
+ ],
+ "layers": [
+  {
+   "name": "trips",
+   "qml": "qml/paris_trips.qml",
+   "obstacle": 0.5
+  },
+  {
+   "name": "pois",
+   "qml": "qml/smi_pois.qml",
+   "label_priority": "min(10, 5 + length(\"name\") / 6)",
+   "label_placement": "AroundPoint"
+  },
+  {
+   "name": "arrondissements",
+   "qml": "qml/paris_arr.qml",
+   "label_placement": "Horizontal",
+   "label_obstacle": 0,
+   "label_priority": 0
+  }
+ ],
+ "labels_out": "s-m-itinerary_labels.json",
+ "label_pt": 21.25,
+ "label_font": "fonts/lmroman9-regular.otf"
+}

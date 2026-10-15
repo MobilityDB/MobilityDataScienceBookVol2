@@ -67,6 +67,50 @@ extract of India. `run_all.sh` writes the output of each script to
 `out/<script>.out`, and the number of rows of each answer to
 `out/<script>.rows`, which it compares with `expected/<script>.rows`.
 
+### Figures
+
+The scripts of `figures/` draw the map figures of the chapter from the database
+built by `build.sh`. `export.sql` writes the layers of each figure as GeoJSON in
+EPSG:4326, each feature carrying the name of its layer in the property `layer`;
+`add_arrondissements.py` adds to the points of interest and itineraries of Paris
+the arrondissements of the dataset
+[arrondissements](https://opendata.paris.fr/explore/dataset/arrondissements/) of
+Paris Data (ODbL), downloaded as GeoJSON. Each figure has a spec (`<figure>.json`:
+its GeoJSON, its output, its size, its extent in the map CRS, and its layers from
+top to bottom with their QML styles), which `render_spec.py` draws in the Python
+of QGIS over the OpenStreetMap Shortbread vector tiles as a vector PDF, without
+the labels, which it writes to `<figure>_labels.json`. `overlay_labels.py` then
+writes the LaTeX overlay of the figure, a TikZ picture setting the labels over
+the PDF in the font of the captions.
+
+The styles of `qml/` are those of the layers of the QGIS projects of the figures,
+extracted by `extract_qml.py`; `make_qml.py` derives from them the styles of the
+districts of Delhi, of the labeled trips, and of the points of interest of Paris.
+The labels are placed in Latin Modern Roman 9, the face of the captions, which
+`render_spec.py` reads from `fonts/lmroman9-regular.otf`. The map of the diagram
+of the patterns is drawn from `patterns_map.json` and placed in the diagram by
+`patterns_vector.py`, which needs `pikepdf`; its input is the diagram as exported from
+its Visio source, whose map is the image `/Image12`.
+
+    cd figures
+    psql -At -v dir=. -f export.sql
+    python3 add_arrondissements.py arrondissements.geojson paris_poi.geojson smi.geojson
+    python3 make_qml.py
+    mkdir -p fonts && cp "$(kpsewhich lmroman9-regular.otf)" fonts/
+    python3 render_spec.py tiledpoint.json      # in the Python of QGIS
+    python3 overlay_labels.py tiledpoint.json 0.35 tiledpoint_overlay.tex
+
+| Figure | Spec, GeoJSON | Scale of the overlay |
+|---|---|---|
+| A tourist application in Paris | `s-m-itinerary.json`, `smi.geojson` | 0.4 |
+| The spatiotemporal and semantic trajectories of a vehicle in Paris (map of the diagram) | `patterns_map.json`, none | |
+| Trip 6 crossing cells 56 and 57 | `trip6linevspoint.json`, `trip6.geojson` | 0.4 |
+| Trip 275 and its cells | `tiledpoint.json`, `trip275.geojson` | 0.35 |
+| The grid and the districts of Delhi | `griddistricts.json`, `griddistricts.geojson` | 0.5 |
+| Result of Query `que:grid-allincrease` for trip 12 | `grid-allincrease.json`, `trip12.geojson` | 0.35 |
+| Pattern {87, 86, 87} of trip 2684 | `missingpattern.json`, `trip2684.geojson` | 0.35 |
+| Trips 3324 and 4 over the districts | `alternate.json`, `development.json`, `districts.geojson` | 0.384, 0.4 |
+
 ### Answers
 
 The number of answers of the Delhi queries, as given in the chapter.
