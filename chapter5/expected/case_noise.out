@@ -1,70 +1,97 @@
 SET
 SET
-== Query: the noise of the fishing vessel of chapter 3 with spreading depending on the depth
+DROP FUNCTION
+CREATE FUNCTION
+DROP FUNCTION
+CREATE FUNCTION
+== vessels of the day with a known class and length
+DROP TABLE
+SELECT 2320
+ vessels 
+---------
+    2320
+
+== vessels under way outside the ports, and the range of their source level (1555 | 106.4 | 195.4)
+DROP TABLE
+SELECT 1555
+DELETE 0
+ noisy | round | round 
+-------+-------+-------
+  1555 | 106.4 | 195.4
+
+== Listing: the radius of the noise from the excess level and the depth
+CREATE FUNCTION
+== Listing: the radius of the fishing vessel with and without the depth
 DROP TABLE
 SELECT 1
-    depthtime    | area  | areadepth 
------------------+-------+-----------
- 01:22:20.905166 | 204.2 |     624.4
+ areasph | areadepth |    inreefsph    |   inreefdepth   
+---------+-----------+-----------------+-----------------
+   165.8 |     378.2 | 01:06:41.329226 | 01:41:15.027631
 
-== time over the bathymetry (05:15), and time with the radius at the cap of 10 km (39 minutes)
-   depthknown    |   cappedtime    
------------------+-----------------
- 05:14:37.115279 | 00:39:13.746848
+== Listing: the ambient noise level of the fishing vessel with the wind
+ minwind | maxwind | minnl | maxnl | areawind 
+---------+---------+-------+-------+----------
+     2.6 |     5.4 |  80.1 |  80.3 |    360.3
 
-== time the noise spends in each protected area it reaches, spherical and depending on the depth
- id  |                nameeng                 |    spherical    |   depthaware    
------+----------------------------------------+-----------------+-----------------
- 200 | Læsø Kommune public                    | 22:36:20.945563 | 23:01:03.804914
- 129 | N                                      | 01:05:55.489208 | 01:23:34.108399
-  14 | Havet omkring Nordre Rønner            | 01:05:52.504638 | 01:23:21.816616
-  22 | Læsø Trindel og Tønneberg Banke        | 00:29:01.135545 | 00:55:53.273667
-   1 | Læsø Trindel/Tønneberg Bank            | 00:28:17.615115 | 00:55:49.312639
- 264 | Nordvestlige Kattegat                  | 00:14:57.477705 | 00:39:41.740987
-   4 | Waters around Læsø                     | 00:14:57.460168 | 00:39:41.184218
-  35 | Strandenge på Læsø og havet syd herfor |                 | 00:17:10.450491
-
-== Listing: the ambient noise level along the trips from the wind of ERA5
+== the three moving regions of the noise of every vessel
 DROP TABLE
-SELECT 2110
-== wind and ambient noise met by the fishing vessel (7.1 to 13.1 m/s, 80.5 to 82.2 dB)
+SELECT 1055
+DROP TABLE
+SELECT 1529
+DROP TABLE
+SELECT 1555
+ALTER TABLE
+UPDATE 1555
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+ANALYZE
+== pairs of a vessel and a protected area its noise may reach under some model
+DROP TABLE
+SELECT 34001
+== vessels, vessels over the bathymetry, and vessels for which the depth law applies at some instant (1555 | 974 | 946)
+ vessels | overbathy | depthmatters 
+---------+-----------+--------------
+    1555 |       974 |          946
+
+== Table: pairs reached under the three models, the pairs and areas the depth adds, and the pairs gained and lost with both fields (6628 | 6992 | 6985 | 364 | 146 | 359 | 2)
+ spherical | depthaware | depthwind | depthgained | depthgainedareas | envgained | envlost 
+-----------+------------+-----------+-------------+------------------+-----------+---------
+      6628 |       6992 |      6985 |         364 |              146 |       359 |       2
+
+== the fishing vessel: type, length, period under way, sequences, km, source level, time over the bathymetry, depth (Fishing | 15 | 05:29:12 | 17:16:58 | 7 | 44.6 | 121.0 | 148.5 | 03:09:05.740078 | 0.3 | 60.7)
+ shiptype | length |         startt         |          endt          | seqs |  km  | minsl | maxsl |   depthknown    | mindepth | maxdepth 
+----------+--------+------------------------+------------------------+------+------+-------+-------+-----------------+----------+----------
+ Fishing  |     15 | 2026-01-20 05:29:12+00 | 2026-01-20 17:16:58+00 |    7 | 44.6 | 121.0 | 148.5 | 03:09:05.740078 |      0.3 |     60.7
+
+== nearest port to the start and to the end of its trip (Vesterø Havn, Læsø, 11719 m and 11723 m)
+   k   |      portname      |   d   
+-------+--------------------+-------
+ start | Vesterø Havn, Læsø | 11719
+
+  k  |      portname      |   d   
+-----+--------------------+-------
+ end | Vesterø Havn, Læsø | 11723
+
+== time under the depth law, time at the cap of 10 km, largest radius spherical and depending on the depth (01:49:36.313068 | | 2650 | 7611)
+    depthlaw     | atcap | maxrsph | maxrdep 
+-----------------+-------+---------+---------
+ 01:49:36.313068 |       |    2650 |    7611
+
+== wind and ambient noise met by the fishing vessel (2.6 | 5.4 | 80.1 | 80.3)
  minwind | maxwind | minnl | maxnl 
 ---------+---------+-------+-------
-     7.1 |    13.1 |  80.5 |  82.2
+     2.6 |     5.4 |  80.1 |  80.3
 
-== highest wind of the day in the ERA5 field (21.5 m/s)
- maxwind 
----------
-    21.5
-
-== the noise of every trip with spreading depending on the depth
-DROP TABLE
-SELECT 2111
-CREATE INDEX
-CREATE INDEX
-ANALYZE
-== trips, and trips whose spreading depends on the depth at some time (2111 | 577)
- trips | depthtrips 
--------+------------
-  2111 |        577
-
-== pairs reached with spherical spreading and depending on the depth, and the pairs and areas the depth adds (4147 | 4334 | 191 | 103)
- spherical | depthaware | depthonly | depthonlyareas 
------------+------------+-----------+----------------
-      4147 |       4334 |       191 |            103
-
-== the noise of every trip depending on the depth and on the wind
-DROP TABLE
-SELECT 2111
-CREATE INDEX
-ANALYZE
-== area of the noise of the fishing vessel with both fields (596.5 km2)
- areaenv 
----------
-   596.5
-
-== Table: pairs reached under the three models, and the pairs gained and lost with both fields (4147 | 4334 | 4263 | 30 | 146)
- spherical | depthaware | depthwind | lostwithwind | gainedwithenv 
------------+------------+-----------+--------------+---------------
-      4147 |       4334 |      4263 |           30 |           146
+== time the noise spends in each protected area it reaches under the three models (reef area 22: 01:06:41.329226 | 01:41:15.027631; area 35 only with the depth, 00:05:53.168909)
+ id  |                nameeng                 |                                 desigeng                                  |       sph       |       dep       |       env       
+-----+----------------------------------------+---------------------------------------------------------------------------+-----------------+-----------------+-----------------
+   1 | Læsø Trindel/Tønneberg Bank            | Baltic Sea Protected Area (HELCOM)                                        | 01:05:59.017514 | 01:41:15.34139  | 01:40:05.171725
+  22 | Læsø Trindel og Tønneberg Banke        | Marine Protected Area (OSPAR)                                             | 01:06:41.329226 | 01:41:15.027631 | 01:40:05.073463
+ 129 | N                                      | Marine Strategy Area                                                      | 00:41:57.735473 | 00:56:24.438552 | 00:53:23.678932
+  14 | Havet omkring Nordre Rønner            | Marine Protected Area (OSPAR)                                             | 00:41:23.511486 | 00:54:53.718653 | 00:52:49.316277
+ 200 | Læsø Kommune public                    | §3 protected habitats (all lakes, bogs, streams, heaths and meadows etc.) | 00:24:46.974129 | 00:40:18.336719 | 00:38:38.960993
+ 264 | Nordvestlige Kattegat                  | Special Protection Area (Birds Directive)                                 | 00:23:46.139024 | 00:39:14.64062  | 00:37:08.456
+   4 | Waters around Læsø                     | Baltic Sea Protected Area (HELCOM)                                        | 00:23:43.677832 | 00:39:09.17718  | 00:36:53.2775
+  35 | Strandenge på Læsø og havet syd herfor | Marine Protected Area (OSPAR)                                             |                 | 00:05:53.168909 | 00:03:56.911851
 

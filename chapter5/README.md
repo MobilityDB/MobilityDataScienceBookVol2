@@ -36,7 +36,11 @@ EPSG:25832, or kept in longitude and latitude in the columns whose name ends in
   `expected/` holds the results of this commit. The temporal cells, the reading
   of rasters and RaQuet tiles, and the moving regions of the noise case study
   depend on the MobilityDB version: another commit may move an instant or a
-  count.
+  count. The noise case study needs, on top of this commit, the normalization
+  of the time of a sequence set and the difference of two span sets of the
+  master branch:
+
+      git cherry-pick 15e1d2812e f79133c583
 - GDAL 3.8 with its Python bindings, and the PostGIS loader `raster2pgsql`.
 - Python 3 with the packages `copernicusmarine` 2.4.1, `cdsapi`, `psycopg2`,
   `pyarrow`, `Pillow`, and `raquet-io` 0.9.0.
@@ -62,7 +66,7 @@ e-mail of the account) and the Copernicus Climate Data Store (an API key in
 | Ports | [GISCO ports 2013](https://ec.europa.eu/eurostat/web/gisco/geodata/transport-networks), Eurostat | © European Union, reuse with acknowledgement |
 | Protected areas | [World Database on Protected Areas](https://www.protectedplanet.net), Denmark | UNEP-WCMC and IUCN, Protected Planet; no redistribution, no commercial use |
 | Waves, temperature, salinity | Copernicus Marine Service, `BALTICSEA_ANALYSISFORECAST_PHY_003_006`, `BALTICSEA_ANALYSISFORECAST_WAV_003_010`, `NWSHELF_ANALYSISFORECAST_PHY_004_013`, `NWSHELF_ANALYSISFORECAST_WAV_004_014` | "Generated using E.U. Copernicus Marine Service Information" |
-| Wind | ERA5 hourly data on single levels, 10 m wind, days 2026-01-20 and 2025-01-01 | CC-BY-4.0 |
+| Wind | ERA5 hourly data on single levels, 10 m wind, day 2026-01-20 | CC-BY-4.0 |
 | Cell grids figure | `doc/images/cellindex.png` of the MobilityDB manual | as the manual |
 
 `build_aux_data.sh` builds `data/port.csv` and `data/natural_areas.csv.gz`,
@@ -106,7 +110,6 @@ alone, for instance `bash load_all.sh fields`.
 `run_all.sh` writes the output of each script to `out/` and compares it with
 `expected/`, which holds the output that gives the answers of the book. Each
 script states, before each listing of the chapter, the answer the book prints.
-
 ### Scripts of the sections
 
 | Section of the chapter | Script |
@@ -125,18 +128,21 @@ script states, before each listing of the chapter, the answer the book prints.
 
 The scripts run in this order, since later ones use tables of earlier ones:
 `map_algebra.sql` builds the rasters `Seabed`, `SeabedMean`, and
-`BathymetryMin100`, and `grids_and_cells.sql` the table `Ships200` of the first
-200 vessels of the day.
+`BathymetryMin100`, `grids_and_cells.sql` the table `Ships200` of the first
+200 vessels of the day, and `case_clearance.sql` the table `PortAreas` of the
+port areas.
 
-The noise case study runs on the database of chapter 3 (AIS day 2025-01-01),
-loaded as its README states, with the bathymetry and the wind of that day
-added:
-
-    bash fetch_data.sh era5
-    PGDATABASE=<chapter 3 database> bash load_all.sh ddm
-    bash prep_wind.sh 20250101
-    PGDATABASE=<chapter 3 database> bash load_field.sh $DATA/era5/wind25832_20250101 WindSpeed 50x50 20250101
-    NOISE_DB=<chapter 3 database> bash run_all.sh case_noise
+`case_noise.sql` computes the noise of the vessels of the day under way outside
+the ports with the source level of chapter 3 (the functions `ComputeVc` and
+`ComputeSL` of `chapter3/tcbuffer_load.sql`, at 63 Hz), and the function
+`noiseRadius` of the chapter, which turns the excess level and the depth along
+a trip into the radius of its noise. It builds, for each vessel, the moving
+regions of its noise under spherical spreading with an ambient noise of 80 dB,
+under spreading depending on the depth of the bathymetry, and under spreading
+depending on the depth with the ambient noise raised by the wind of ERA5, and
+counts the pairs of a vessel and a protected area reached under each model.
+Building the three moving regions of every vessel and the pairs takes
+15 to 20 minutes.
 
 ### Figures
 

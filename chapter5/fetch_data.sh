@@ -66,10 +66,9 @@ for part in $PARTS; do
     sub cmems_mod_nws_wav_anfc_1.5km_PT1H-i nws_wav_20260120.nc -v VHM0 -v VMDR
     ;;
   era5)
-    # 10 m wind of ERA5 for the day of the chapter and for the day of the noise
-    # case study of chapter 3.
+    # 10 m wind of ERA5 for the day of the chapter.
     mkdir -p "$DATA/era5"
-    for d in 20260120 20250101; do
+    for d in 20260120; do
       if [ -s "$DATA/era5/era5_wind10m_$d.nc" ]; then echo "present: era5 $d"; else
         python3 "$HERE/fetch_era5.py" "$d" "$DATA/era5/era5_wind10m_$d.nc"; fi
     done

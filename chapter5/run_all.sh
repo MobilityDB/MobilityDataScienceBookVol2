@@ -2,8 +2,7 @@
 # Run the scripts of the chapter in the order of its sections on the database
 # loaded by load_all.sh, write the output of each to out/<script>.out, and
 # compare it with expected/<script>.out, the output of the run that produced the
-# answers printed in the book. The noise case study runs on the database of
-# chapter 3, named by NOISE_DB; without it, that script is skipped.
+# answers printed in the book.
 #
 #   bash run_all.sh [script ...]
 set -e
@@ -15,14 +14,8 @@ SCRIPTS=${*:-raster_tutorial map_algebra depth_under_vessel fields_along_trips \
 mkdir -p out
 status=0
 for s in $SCRIPTS; do
-  if [ "$s" = case_noise ]; then
-    if [ -z "$NOISE_DB" ]; then echo "skipped: case_noise (set NOISE_DB)"; continue; fi
-    DB="-d $NOISE_DB"
-  else
-    DB=""
-  fi
   echo "running: $s"
-  psql -X -v ON_ERROR_STOP=1 $DB -f "$s.sql" > "out/$s.out" 2>&1
+  psql -X -v ON_ERROR_STOP=1 -f "$s.sql" > "out/$s.out" 2>&1
   if [ -f "expected/$s.out" ]; then
     if diff -q "expected/$s.out" "out/$s.out" > /dev/null; then
       echo "  same as expected/$s.out"
