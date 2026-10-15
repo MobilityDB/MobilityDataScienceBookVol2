@@ -1,0 +1,35 @@
+{
+ "geojson": "griddistricts.geojson",
+ "out": "griddistricts.pdf",
+ "width": 812,
+ "height": 828,
+ "dpi": 144,
+ "crs": "EPSG:7760",
+ "extent": [
+  991598.0,
+  974498.0,
+  1039644.0,
+  1023491.0
+ ],
+ "layers": [
+  {
+   "name": "alltrips",
+   "type": "line",
+   "color": "#1a1aff",
+   "width": 0.45
+  },
+  {
+   "name": "grid",
+   "type": "fill",
+   "color": "60,50,50,15",
+   "outline": "35,35,35,102",
+   "outline_width": 0.2
+  },
+  {
+   "name": "districts",
+   "qml": "qml/gd_districts.qml",
+   "label_unplaced": true
+  }
+ ],
+ "labels_out": "griddistricts_labels.json"
+}

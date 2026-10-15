@@ -1,0 +1,10 @@
+*.geojson
+*_labels.json
+*.pdf
+*.tex
+fonts/
+__pycache__/
+qml/gd_districts.qml
+qml/alt_districts.qml
+qml/trip_*.qml
+qml/smi_pois.qml

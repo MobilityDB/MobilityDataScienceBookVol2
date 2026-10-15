@@ -1,0 +1,27 @@
+{
+ "geojson": "districts.geojson",
+ "out": "development.pdf",
+ "width": 536,
+ "height": 726,
+ "dpi": 144,
+ "crs": "EPSG:7760",
+ "extent": [
+  1028354.76,
+  999716.72,
+  1032321.16,
+  1005089.12
+ ],
+ "layers": [
+  {
+   "name": "trip 4",
+   "qml": "qml/trip_blue.qml"
+  },
+  {
+   "name": "districts",
+   "qml": "qml/alt_districts.qml"
+  }
+ ],
+ "labels_out": "development_labels.json",
+ "label_pt": 21.25,
+ "label_font": "fonts/lmroman9-regular.otf"
+}
