@@ -1,0 +1,111 @@
+"""Run the statements of flights_queries.sql, the tables of the five queries of the notebook
+8.4 Queries-flights-MobilitySpark, on the YARN cluster, timing each one, then write their
+summaries and the rows that the maps draw.
+
+    spark-submit run_queries.py <rounds> <step> ...
+    steps: countries q1 q2 q3 q4 q5 export
+
+`statements`, `log`, `query` and `ddl` are those of run_dashboards.py. Step countries builds the
+table countries, q1 to q5 the table of each query, printing its summary, and export writes the
+rows of the maps, as the last cell of the notebook does. Each answer is written to
+$OUT/<name>.csv (default: out/queries below the working directory) and each time to
+$OUT/times.tsv."""
+import csv, os, sys, time
+
+from pyspark.sql import SparkSession
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.environ.get("OUT", "out/queries")
+os.makedirs(OUT, exist_ok=True)
+rounds = int(sys.argv[1])
+steps = sys.argv[2:]
+
+spark = SparkSession.builder.appName("Flights-Queries") \
+    .config("spark.sql.session.timeZone", "UTC").getOrCreate()
+jvm = spark._jvm
+conf = spark.sparkContext._jsc.hadoopConfiguration()
+for t in ("flights", "flightseu", "countries", "morningflights", "brusselsdepartures",
+          "countrytraffic", "airbornecount", "holding"):
+    path = jvm.org.apache.hadoop.fs.Path(f"/spark-warehouse/{t}")
+    fs = path.getFileSystem(conf)
+    if fs.exists(jvm.org.apache.hadoop.fs.Path(f"/spark-warehouse/{t}/_delta_log")):
+        spark.sql(f"CREATE TABLE IF NOT EXISTS {t} USING DELTA LOCATION '/spark-warehouse/{t}'")
+    else:
+        fs.delete(path, True)
+
+
+def statements():
+    with open(os.path.join(HERE, "flights_queries.sql")) as f:
+        lines = [ln for ln in f.read().splitlines() if not ln.lstrip().startswith("--")]
+    return [s.strip() for s in "\n".join(lines).split(";") if s.strip()]
+
+
+def log(name, rnd, secs, info):
+    with open(os.path.join(OUT, "times.tsv"), "a") as f:
+        f.write(f"{time.strftime('%H:%M:%S')}\t{name}\t{rnd}\t{secs:.1f}\t{info}\n")
+    print(f"TIME {name} round {rnd}: {secs:.1f} s  {info}", flush=True)
+
+
+def query(name, sql, rnd=1):
+    t0 = time.time()
+    rows = spark.sql(sql).collect()
+    secs = time.time() - t0
+    with open(os.path.join(OUT, name + ".csv"), "w", newline="") as f:
+        w = csv.writer(f)
+        if rows:
+            w.writerow(rows[0].__fields__)
+        for r in rows:
+            w.writerow(["" if v is None else v for v in r])
+    log(name, rnd, secs, f"{len(rows)} rows")
+    return rows
+
+
+def ddl(name, stmts, rnd, check):
+    t0 = time.time()
+    for s in stmts:
+        spark.sql(s).collect()
+        if s.upper().startswith("DROP TABLE IF EXISTS "):
+            path = jvm.org.apache.hadoop.fs.Path("/spark-warehouse/" + s.split()[-1])
+            path.getFileSystem(conf).delete(path, True)
+    secs = time.time() - t0
+    log(name, rnd, secs, spark.sql(check).collect()[0])
+
+
+S = statements()   # view, drop/create countries, drop/create x 5 queries
+for rnd in range(1, rounds + 1):
+    for step in steps:
+        if step == "countries":
+            ddl("countries", S[0:3], rnd, "SELECT count(*) FROM countries")
+        elif step == "q1":
+            ddl("q1", S[3:5], rnd, "SELECT count(*), count(DISTINCT icao24), "
+                "sum(geoLength(trip)) / 1000 FROM morningflights")
+        elif step == "q2":
+            ddl("q2", S[5:7], rnd, "SELECT count(*), count(DISTINCT icao24), sum(km) "
+                "FROM brusselsdepartures")
+        elif step == "q3":
+            ddl("q3", S[7:9], rnd, "SELECT count(*), sum(flights), sum(km) "
+                "FROM countrytraffic")
+        elif step == "q4":
+            ddl("q4", S[9:11], rnd, "SELECT numInstants(aircraft), maxValue(aircraft), "
+                "twAvg(aircraft) FROM airbornecount")
+        elif step == "q5":
+            ddl("q5", S[11:13], rnd, "SELECT count(*), count(DISTINCT icao24), "
+                "sum(geoLength(trip)) / 1000 FROM holding")
+        elif step == "export":
+            query("q1_rows", "SELECT icao24, callsign, geoLength(trip) AS length, "
+                  "ST_AsText(ST_GeomFromEWKB(unhex(asHexEWKB(trajectory(geoTransform(trip, 4326)))))) AS wkt FROM morningflights")
+            query("q2_rows", "SELECT icao24, callsign, km, ST_AsText(ST_GeomFromEWKB(unhex(asHexEWKB(route)))) AS wkt, "
+                  "ST_AsText(ST_GeomFromEWKB(unhex(asHexEWKB(destination)))) AS destination FROM brusselsdepartures")
+            query("q3_rows", "SELECT name, flights, km FROM countrytraffic ORDER BY name")
+            query("q4_rows", "SELECT numInstants(aircraft) AS instants, maxValue(aircraft) AS peak, "
+                  "startTimestamp(atValue(aircraft, maxValue(aircraft))) AS peaktime, "
+                  "twAvg(aircraft) AS average FROM airbornecount")
+            query("q4_hours", "SELECT h AS hour, valueAtTimestamp(aircraft, h) AS aircraft "
+                  "FROM airbornecount LATERAL VIEW explode(sequence(timestamp '2026-03-01 00:00:00', "
+                  "timestamp '2026-03-01 23:00:00', interval 1 hour)) AS h ORDER BY h")
+            query("q4_series", "SELECT asText(aircraft) AS aircraft FROM airbornecount")
+            query("q5_rows", "SELECT fix, icao24, callsign, CAST(duration(trip) AS STRING) AS holding, "
+                  "geoLength(trip) / 1000 AS km, "
+                  "ST_AsText(ST_GeomFromEWKB(unhex(asHexEWKB(trajectory(trip))))) AS wkt "
+                  "FROM holding ORDER BY fix, icao24, callsign")
+spark.stop()

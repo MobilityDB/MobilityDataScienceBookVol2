@@ -172,3 +172,57 @@ docker run -d --name  thebook  -v c:\Users\lgomez\sedona_opt:/workspace -e  DRIV
 
 
 
+### Figures and measurements of the air traffic use case
+
+The directory `figures` holds the scripts that draw the figures of the chapter; `render.sh`
+renders the QGIS jobs that they write (see the comment at its top for `QGIS_PY`).
+`flights_dashboard2.sql` writes into `out/` the answers of MobilityDB that the figures of
+dashboard 2 draw, from the tables of `flights/flights_build.sql` and
+`flights/flights_dashboards.sql`, and prints the closest pair and the place of its nearest
+approach; `flights_dashboard2_maps.py` draws from them the distance and the altitudes of the two
+aircraft as vector charts and writes the QGIS job of their position reports:
+
+    mkdir -p out && psql -d flights -f figures/flights_dashboard2.sql
+    python figures/flights_dashboard2_maps.py out figs 36.4376427601968 41.75345135029372 THY325 BOX571
+    bash figures/render.sh figs flightsDashboard2_map.json
+
+`history_server.py` captures with headless Chrome the pages of the Spark History Server
+(http://localhost:18080) shown in the section on query processing, given the identifier of the
+running application of the notebook:
+
+    python figures/history_server.py <application id> figs
+
+| Figure | Script, output |
+|---|---|
+| The applications and the jobs in the History Server | `history_server.py`, `incomplete.png`, `incomplete2.png`, `thesparkapp.png`, `completedquery.png` |
+| The distance between the two closest aircraft | `flights_dashboard2_maps.py`, `flightsDashboard2_distance.pdf` |
+| The position reports and the altitudes of the two closest aircraft | `flights_dashboard2_maps.py`, `flightsDashboard2_map.pdf`, `flightsDashboard2_altitude.pdf` |
+
+The directory `measure` holds the scripts that measure the times and compare the answers that
+the chapter states for the air traffic use case on the cluster of `docker-compose-nozeppelin.yml`.
+`run_notebook.sh` executes a notebook in the container `sedona_20` with `jupyter nbconvert`,
+sampling the memory of the machine, and `notebook_times.py` prints the time of each cell of the
+executed notebook, for instance for the notebook that builds the flights tables:
+
+    docker cp "8.3 Create tables from scratch-flights-MobilitySpark.ipynb" sedona_20:/opt/notebooks/
+    bash measure/run_notebook.sh "/opt/notebooks/8.3 Create tables from scratch-flights-MobilitySpark.ipynb" 1
+    docker cp sedona_20:/opt/notebooks/out1.ipynb out/ && python measure/notebook_times.py out/out1.ipynb
+
+`run_dashboards.py` runs the tables and the panels of the three dashboards of `dashboards/`, and
+`run_queries.py` the statements of `flights_queries.sql`, which build the tables of the five
+queries of the notebook 8.4, a given number of rounds, writing the time of each step into
+`times.tsv` and the answers as CSV files. They run with `spark-submit` in the container
+`sedona_20`, with the directory `chapter8` copied into it:
+
+    docker cp . sedona_20:/opt/chapter8
+    docker exec -w /opt/chapter8 sedona_20 spark-submit measure/run_dashboards.py 3 tables closepair d1 d2 d3
+    docker exec -w /opt/chapter8 sedona_20 spark-submit measure/run_queries.py 3 countries q1 q2 q3 q4 q5 export
+    docker cp sedona_20:/opt/chapter8/out .
+
+`compare_dashboard1.py` compares the rows of dashboard 1 of Spark (`out/dashboards/d1.csv`) with
+those that `flights/run_all.sh` writes into `flights/out/flights_dashboards.out`, and
+`compare_dashboard2.py` the panels of dashboard 2 of Spark with the answers of
+`figures/flights_dashboard2.sql`:
+
+    python measure/compare_dashboard1.py ../flights/out/flights_dashboards.out out/dashboards/d1.csv
+    python measure/compare_dashboard2.py out/dashboards out
