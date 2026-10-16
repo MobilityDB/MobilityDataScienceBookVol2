@@ -54,7 +54,8 @@ are those of a session in Central European Time, as the chapter prints them.
 #### Loading the data
 
 1. The AIS data: `ais/fetch_data.sh day` and `ais/build.sh` of this repository build the
-   PostgreSQL database `PG_AIS`. Then
+   PostgreSQL database `PG_AIS`, and `psql "$PG_AIS" -f load/aisinput_pg.sql` adds to its table
+   `AISInput` the point geometry that the PostGIS queries of Sect. "Querying DuckDB" read. Then
    `./run_duckdb.sh "$CH7_DB_DIR/ais.duckdb" values/section_duckdb.sql` runs the listings of
    Sect. "DuckDB" in their order: it creates the table `AISInput` of `ais.duckdb` from the CSV
    file, prints the result of each listing, and writes `$AIS_DIR/ais.parquet`.
