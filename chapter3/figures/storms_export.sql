@@ -14,7 +14,7 @@ WITH F AS (
   FROM Storms2024_tpoint
   UNION ALL
   SELECT 2, substr(StormId, 3, 2)::integer, 'inst', getValue(i)
-  FROM Storms2024_tpoint, unnest(instants(Temp)) i
+  FROM Storms2024_tpoint, unnest(instants(Storm)) i
   UNION ALL
   SELECT 3, Radii * 100000 + extract(epoch FROM getTimestamp(i))::bigint / 3600, 'radii', getValue(i)::geometry
   FROM Storms2024_tgeo, unnest(instants(Storm)) i
@@ -22,7 +22,7 @@ WITH F AS (
   UNION ALL
   SELECT 4, extract(epoch FROM getTimestamp(i))::bigint / 3600, 'circle',
     ST_CurveToLine(getValue(i)::geometry, 64)
-  FROM Storms2024_tcbuffer, unnest(instants(Temp)) i
+  FROM Storms2024_tcbuffer, unnest(instants(Storm)) i
   WHERE Radii = 34 AND radius(getValue(i)) > 0 )
 SELECT json_build_object('type', 'FeatureCollection', 'features', json_agg(
   json_build_object('type', 'Feature', 'properties', json_build_object('layer', layer, 'ord', ord),

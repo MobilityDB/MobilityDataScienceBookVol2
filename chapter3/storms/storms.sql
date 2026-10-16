@@ -23,9 +23,9 @@
 --   Storms<year>_tgeo(StormId, Name, Radii, Storm)
 --                                         the wind field of a storm for a
 --                                         wind speed, as a tgeography
---   Storms<year>_tpoint(StormId, Name, Temp, Traj)
+--   Storms<year>_tpoint(StormId, Name, Storm, Traj)
 --                                         the track of a storm, as a tgeompoint
---   Storms<year>_tcbuffer(StormId, Name, Radii, Temp, Trav)
+--   Storms<year>_tcbuffer(StormId, Name, Radii, Storm, Trav)
 --                                         the wind field as a tcbuffer and the
 --                                         area it traverses
 -- -----------------------------------------------------------------------------
@@ -124,13 +124,13 @@ HAVING bool_or(r.Geom IS NOT NULL);
 
 DROP TABLE IF EXISTS :tpoint;
 CREATE TABLE :tpoint(StormId text, Name text,
-  Temp tgeompoint(SequenceSet, Point, 4326), Traj geometry);
-INSERT INTO :tpoint(StormId, Name, Temp)
+  Storm tgeompoint(SequenceSet, Point, 4326), Traj geometry);
+INSERT INTO :tpoint(StormId, Name, Storm)
 SELECT StormId, Name,
   tgeompointSeqSetGaps(array_agg(tgeompoint(Geom, T) ORDER BY T), interval '1 day')
 FROM StormPoints
 GROUP BY StormId, Name;
-UPDATE :tpoint SET Traj = trajectory(Temp);
+UPDATE :tpoint SET Traj = trajectory(Storm);
 
 -- -----------------------------------------------------------------------------
 -- The wind fields as temporal circular buffers
@@ -143,8 +143,8 @@ UPDATE :tpoint SET Traj = trajectory(Temp);
 -- value equals the previous one, an instant the linear interpolation needs
 DROP TABLE IF EXISTS :tcbuffer;
 CREATE TABLE :tcbuffer(StormId text, Name text, Radii integer,
-  Temp tcbuffer(SequenceSet), Trav geometry);
-INSERT INTO :tcbuffer(StormId, Name, Radii, Temp)
+  Storm tcbuffer(SequenceSet), Trav geometry);
+INSERT INTO :tcbuffer(StormId, Name, Radii, Storm)
 WITH Thresholds(Radii) AS (VALUES (34), (50), (64))
 SELECT p.StormId, p.Name, h.Radii,
   tcbufferSeqSetGaps(array_agg(tcbuffer(tgeometry(coalesce(r.Geom, p.Geom), p.T))
@@ -154,7 +154,7 @@ FROM StormPoints p CROSS JOIN Thresholds h
     r.T = p.T
 GROUP BY p.StormId, p.Name, h.Radii
 HAVING bool_or(r.Geom IS NOT NULL);
-UPDATE :tcbuffer SET Trav = traversedArea(Temp);
+UPDATE :tcbuffer SET Trav = traversedArea(Storm);
 
 -- -----------------------------------------------------------------------------
 -- Summary
