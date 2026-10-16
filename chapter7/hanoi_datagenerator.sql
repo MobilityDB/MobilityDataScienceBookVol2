@@ -699,11 +699,11 @@ END;
 $$ LANGUAGE plpgsql STRICT;
 
 /*
-WITH Temp(trip) AS (
+WITH TestTrip(trip) AS (
   SELECT createTrip(createPath(34125, 44979, 'Fastest Path'), '2020-05-10 08:00:00', false, 'minimal')
 )
 SELECT startTimestamp(trip), endTimestamp(trip), timespan(trip)
-FROM Temp;
+FROM TestTrip;
 */
 
 -------------------------------------------------------------------------------
@@ -735,12 +735,12 @@ $$ LANGUAGE plpgsql STRICT;
 
 /*
 -- WE DON'T COVER ALL REGIONS EVEN AFTER 1e5 attempts
-with temp(node) as (
+with SampledHomeNodes(node) as (
 select berlinmod_selectHomeNode()
 from generate_series(1, 1e5)
 )
 select region, count(*)
-from temp T, homenodes N
+from SampledHomeNodes T, homenodes N
 where t.node = id
 group by region order by region;
 -- Total query runtime: 3 min 6 secs.
@@ -770,12 +770,12 @@ $$ LANGUAGE plpgsql STRICT;
 
 /*
 -- WE DON'T COVER ALL REGIONS EVEN AFTER 1e5 attempts
-with temp(node) as (
+with SampledWorkNodes(node) as (
 select berlinmod_selectWorkNode()
 from generate_series(1, 1e5)
 )
 select region, count(*)
-from temp T, homenodes N
+from SampledWorkNodes T, homenodes N
 where t.node = id
 group by region order by region;
 -- Total query runtime: 3 min.
@@ -1300,14 +1300,14 @@ BEGIN
       (vehId, lic, vehType, model);
 
     INSERT INTO Neighbourhoods(vehicleId, seqNo, node)
-    WITH Temp(vehicle, n) AS (
+    WITH NeighbourNodes(vehicle, n) AS (
       SELECT vehId, N2.nodeid
       FROM Nodes N1, Nodes N2
       WHERE N1.id = homeN AND N1.id <> N2.id AND
         ST_DWithin(N1.geom, N2.geom, P_NEIGHBOURHOOD_RADIUS)
     )
     SELECT vehicle, ROW_NUMBER() OVER (), n
-    FROM Temp;
+    FROM NeighbourNodes;
   END LOOP;
 
   UPDATE VehicleNodes V
@@ -1324,12 +1324,12 @@ BEGIN
   CREATE TABLE Licences(licenceId int PRIMARY KEY, licence text, 
     vehicleId int REFERENCES Vehicles(VehicleId));
   INSERT INTO Licences(licenceId, licence, vehicleId)
-  WITH Temp(licenceId, vehicleId) AS (
+  WITH SampledLicences(licenceId, vehicleId) AS (
     SELECT licenceId, random_int(1, noVehicles)
     FROM generate_series(1, P_SAMPLE_SIZE) licenceId
   )
   SELECT T.licenceId, V.licence, V.vehicleId
-  FROM Temp T, Vehicles V
+  FROM SampledLicences T, Vehicles V
   WHERE T.vehicleId = V.vehicleId;
 
   CREATE INDEX Licences_VehicleId_idx ON Licences USING btree (VehicleId);
@@ -1350,12 +1350,12 @@ BEGIN
   DROP TABLE IF EXISTS Points CASCADE;
   CREATE TABLE Points(pointId int PRIMARY KEY, geom geometry(Point, 3857));
   INSERT INTO Points(pointId, geom)
-  WITH Temp(pointId, nodeId) AS (
+  WITH SampledNodes(pointId, nodeId) AS (
     SELECT pointId, random_int(1, noNodes)
     FROM generate_series(1, P_SAMPLE_SIZE) pointId
   )
   SELECT T.pointId, N.geom
-  FROM Temp T, Nodes N
+  FROM SampledNodes T, Nodes N
   WHERE T.nodeId = N.id;
 
   RAISE NOTICE 'Creating indexes on table Points';
@@ -1374,12 +1374,12 @@ BEGIN
   DROP TABLE IF EXISTS Regions CASCADE;
   CREATE TABLE Regions(regionId int PRIMARY KEY, geom geometry(Polygon, 3857));
   INSERT INTO Regions(regionId, geom)
-  WITH Temp(regionId, nodeId) AS (
+  WITH SampledNodes(regionId, nodeId) AS (
     SELECT regionId, random_int(1, noNodes)
     FROM generate_series(1, P_SAMPLE_SIZE) regionId
   )
   SELECT T.regionId, ST_Buffer(N.geom, random_int(1, 997) + 3.0, random_int(0, 25)) AS geom
-  FROM Temp T, Nodes N
+  FROM SampledNodes T, Nodes N
   WHERE T.nodeId = N.id;
 
   RAISE NOTICE 'Creating indexes on table Regions';
@@ -1576,7 +1576,7 @@ BEGIN
       END IF;
     END IF;
     INSERT INTO Paths(vehicleId, start_vid, end_vid, seqNo, node, edge, geom, speed, category)
-    WITH Temp AS (
+    WITH PathEdges AS (
       SELECT start_vid, end_vid, path_seq, node, edge
       FROM pgr_dijkstra(query1_pgr, query2_pgr, true)
       WHERE edge > 0
@@ -1588,7 +1588,7 @@ BEGIN
         ELSE ST_Reverse(S.SegmentGeo)
       END AS geom, S.MaxSpeedFwd AS speed,
       berlinmod_roadCategory(S.tag_id) AS category
-    FROM Destinations D, Temp T, RoadSegments S
+    FROM Destinations D, PathEdges T, RoadSegments S
     WHERE D.sourceNode = T.start_vid AND D.targetNode = T.end_vid AND
       S.SegmentId = T.edge;
     IF messages = 'medium' OR messages = 'verbose' THEN

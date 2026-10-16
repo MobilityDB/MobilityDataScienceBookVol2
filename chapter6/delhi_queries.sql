@@ -469,50 +469,50 @@ SELECT TripId, Pm25 FROM Trips WHERE trend(Pm25) %> 0;
 */
 
 -- Discrete version
-WITH Segment(TripId, T, NextT, Pm25, NextPm25, Temp,
-  NextTemp) AS (
+WITH Segment(TripId, T, NextT, Pm25, NextPm25, Temperature,
+  NextTemperature) AS (
   SELECT TripId, T, LEAD(T) OVER w, Pm25, LEAD(Pm25)
     OVER w, (Weather->>'Temperature')::numeric,
     ((LEAD(Weather) OVER w)->>'Temperature')::numeric
   FROM TripPoints WINDOW w AS (PARTITION BY TripId ORDER BY T) ),
-Crossing(TripId, T, NextT, Pm25, NextPm25, Temp, NextTemp,
+Crossing(TripId, T, NextT, Pm25, NextPm25, Temperature, NextTemperature,
   CrossT) AS (
   SELECT *, CASE WHEN (Pm25 < 125 AND 125 < nextPm25)
     THEN T + (NextT - T) * (125 - Pm25) / (nextPm25 - Pm25)
     WHEN (Pm25 > 125 AND 125 > nextPm25)
       THEN T + (NextT - T) * (Pm25 - 125) / (Pm25 - nextPm25) END
   FROM Segment WHERE NextT IS NOT NULL ),
-ClippedSegment(TripId, T, NextT, Pm25, NextPm25, Temp,
-  NextTemp) AS (
+ClippedSegment(TripId, T, NextT, Pm25, NextPm25, Temperature,
+  NextTemperature) AS (
   SELECT TripId, CASE WHEN Pm25 > 125 THEN T ELSE CrossT END,
     CASE WHEN NextPm25 > 125 THEN NextT ELSE CrossT
       END, GREATEST(Pm25, 125),
-    GREATEST(NextPm25, 125), Temp, NextTemp FROM Crossing
+    GREATEST(NextPm25, 125), Temperature, NextTemperature FROM Crossing
       WHERE GREATEST(Pm25, nextPm25) > 125 ),
-TrendPm25(TripId, T, NextT, Pm25, NextPm25, Temp, NextTemp,
+TrendPm25(TripId, T, NextT, Pm25, NextPm25, Temperature, NextTemperature,
   Trend) AS (
-  SELECT TripId, T, NextT, Pm25, NextPm25, Temp, NextTemp,
+  SELECT TripId, T, NextT, Pm25, NextPm25, Temperature, NextTemperature,
     SIGN(nextPm25 - Pm25)
   FROM ClippedSegment WINDOW w AS (PARTITION BY TripId
     ORDER BY T) ),
-EpisodeStart(TripId, T, NextT, Pm25, NextPm25, Temp, NextTemp,
+EpisodeStart(TripId, T, NextT, Pm25, NextPm25, Temperature, NextTemperature,
   Trend, NewEpisode) AS (
   SELECT *, CASE WHEN Trend = LAG(Trend) OVER (PARTITION BY TripId
     ORDER BY T) THEN 0 ELSE 1 END
   FROM TrendPm25 ),
-Episode(TripId, EpisodeId, T, NextT, Pm25, NextPm25, Temp,
-  NextTemp, Trend) AS (
+Episode(TripId, EpisodeId, T, NextT, Pm25, NextPm25, Temperature,
+  NextTemperature, Trend) AS (
   SELECT TripId, SUM(NewEpisode) OVER (PARTITION BY TripId
     ORDER BY T), T, NextT, Pm25, NextPm25,
-    Temp, NextTemp, Trend FROM EpisodeStart ),
+    Temperature, NextTemperature, Trend FROM EpisodeStart ),
 EpisodeTime(TripId, EpisodeId, Trend, StartTime, EndTime,
-  StartPm25, EndPm25, StartTemp, EndTemp, Duration) AS (
+  StartPm25, EndPm25, StartTemperature, EndTemperature, Duration) AS (
   SELECT TripId, EpisodeId, Trend, MIN(T), MAX(NextT), MIN(Pm25),
-    MAX(NextPm25), MIN(Temp), MAX(NextTemp),
+    MAX(NextPm25), MIN(Temperature), MAX(NextTemperature),
     MAX(NextT) - MIN(T) FROM Episode
       GROUP BY TripId, EpisodeId, Trend
   HAVING MAX(NextT) - MIN(T) >= '1.5 minutes'
-    AND BOOL_AND(LEAST(NextTemp, Temp) > 20) ),
+    AND BOOL_AND(LEAST(NextTemperature, Temperature) > 20) ),
 Pattern(TripId, IncrEpisode, DecrEpisode) AS (
   SELECT r1.TripId, r1.EpisodeId AS IncrEpisode,
     r2.EpisodeId AS DecrEpisode FROM EpisodeTime r1,
@@ -520,7 +520,7 @@ Pattern(TripId, IncrEpisode, DecrEpisode) AS (
   WHERE r1.TripId = r2.TripId AND r1.Trend = 1 AND r2.Trend = -1
     AND r1.EndTime = r2.StartTime )
 SELECT e.TripId, e.EpisodeId, e.Trend, e.StartTime, e.EndTime,
-  e.Duration, e.StartPm25, e.EndPm25, e.StartTemp, e.EndTemp
+  e.Duration, e.StartPm25, e.EndPm25, e.StartTemperature, e.EndTemperature
 FROM EpisodeTime e, Pattern s
 WHERE s.TripId = e.TripId AND e.EpisodeId IN (s.IncrEpisode,
   s.DecrEpisode) ORDER BY e.TripId, e.EpisodeId;
