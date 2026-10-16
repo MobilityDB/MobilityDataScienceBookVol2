@@ -142,8 +142,22 @@ tampa = [
                "outline_width": "0.05", "size": "1.0"}},
 ]
 tampa_base = dict(base, water_min_area=2e7)
+# The extent holds the wind fields of the map with a margin of 15 km, and the height of the map
+# follows from its width and the extent, so that the map is not distorted
+MARGIN = 15000
+out = subprocess.run(PSQL + ["-F", " ", "-c",
+                     f"SELECT ST_XMin(e), ST_XMax(e), ST_YMin(e), ST_YMax(e) FROM ("
+                     f"SELECT ST_Extent(ST_Transform(g, {UTM})) e FROM ("
+                     f"SELECT valueAtTimestamp(Storm, {T})::geometry g FROM Storms2024_tgeo "
+                     "WHERE Name = 'Milton' AND Radii >= 50 UNION ALL "
+                     "SELECT valueAtTimestamp(Storm, '2024-10-10 06:00+00')::geometry "
+                     "FROM Storms2024_tgeo WHERE Name = 'Milton' AND Radii = 64) q) x"],
+                     check=True, capture_output=True, text=True).stdout
+xmin, xmax, ymin, ymax = [float(v) for v in out.split()]
+extent = [xmin - MARGIN, xmax + MARGIN, ymin - MARGIN, ymax + MARGIN]
+tampa_size = [1243, round(1243 * (extent[3] - extent[2]) / (extent[1] - extent[0]))]
 spec = {"output": "storms_tampa.pdf", "crs": f"EPSG:{UTM}",
-        "extent": [175000, 525000, 2880000, 3185000], "size": [1243, 1083], "dpi": DPI,
+        "extent": extent, "size": tampa_size, "dpi": DPI,
         "land": LAND, "basemap_oversample": 4, "layers": [tampa_base] + tampa, "texts": texts}
 json.dump(spec, open(os.path.join(OUT, "storms_tampa.json"), "w"), indent=1)
 print("wrote", OUT, SIZE)
