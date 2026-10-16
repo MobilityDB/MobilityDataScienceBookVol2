@@ -154,7 +154,9 @@ FROM StormPoints p CROSS JOIN Thresholds h
     r.T = p.T
 GROUP BY p.StormId, p.Name, h.Radii
 HAVING bool_or(r.Geom IS NOT NULL);
-UPDATE :tcbuffer SET Trav = traversedArea(Storm);
+-- The traversed area is the union of the regions swept between consecutive
+-- instants, one geometry per wind field
+UPDATE :tcbuffer SET Trav = traversedArea(Storm, true);
 
 -- -----------------------------------------------------------------------------
 -- Summary

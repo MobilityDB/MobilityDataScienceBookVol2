@@ -9,9 +9,9 @@
 #   chapter 4 in the AIS database of the book, AIS_DB (default: ais);
 #   hybrid_pdf.py draws each job job_<map>.json as a vector PDF with QGIS over
 #   the OpenStreetMap vector tiles, with render_map.py of chapter5/figures;
-# - storms_export.sql writes the layers of the three maps of the Atlantic
-#   storms from STORMS_DB (default: storms, built by storms/storms.sql with
-#   year=2024), and render_storms.py draws each spec storms_<map>.json;
+# - storms_jobs.py writes the layers and the jobs of the three maps of the
+#   Atlantic storms from STORMS_DB (default: storms, built by storms/storms.sql
+#   with year=2024), and storms_qgis_map.py draws each job storms_<map>.json;
 # - fig_dist_tcbuffer_point.py draws the turning point of the temporal distance
 #   between a temporal circular buffer and a point, at the circle MobilityDB
 #   answers.
@@ -31,10 +31,9 @@ for f in noise_region exposure_w encounter_sea uwn_layers uwn_noise; do
   psql -X -v ON_ERROR_STOP=1 -d "$NOISE_DB" -v out="$OUT" -f "$HERE/$f.sql"
 done
 psql -X -v ON_ERROR_STOP=1 -d "$AIS_DB" -v out="$OUT" -f "$HERE/hull.sql"
-psql -X -At -v ON_ERROR_STOP=1 -d "$STORMS_DB" -f "$HERE/storms_export.sql" \
-  > "$OUT/storms.geojson"
-cp "$HERE/hybrid_pdf.py" "$CH5/render_map.py" "$HERE/render_storms.py" \
-  "$HERE"/job_*.json "$HERE"/storms_*.json "$OUT/"
+python3 "$HERE/storms_jobs.py" "$STORMS_DB" "$OUT"
+cp "$HERE/hybrid_pdf.py" "$CH5/render_map.py" "$HERE/storms_qgis_map.py" \
+  "$HERE"/job_*.json "$OUT/"
 
 if [ -n "$QGIS_PY" ]; then
   RUN=($QGIS_PY)
@@ -50,7 +49,7 @@ for m in noise_region:ais_noise_region hull:ais_hull_turn exposure_w:ais_exposur
     grep -E 'wrote|Error|Traceback' || true
 done
 for m in tpoint tgeo tcbuffer; do
-  timeout 900 "${RUN[@]}" render_storms.py "storms_$m.json" 2>&1 |
+  timeout 900 "${RUN[@]}" storms_qgis_map.py "storms_$m.json" "storms_$m.pdf" 2>&1 |
     grep -E 'wrote|Error|Traceback' || true
 done
 
