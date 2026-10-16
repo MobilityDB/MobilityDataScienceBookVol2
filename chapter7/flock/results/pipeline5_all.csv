@@ -1,0 +1,4 @@
+Id1,Id2,Description1,Description2,similarity
+1,2,"Vehicles in the Sachsenring category: Characteristics of Sachsenring vehicles - They are high-performance sports cars, designed for speed and agility. They often have sleek designs, advanced aerodynamics, and powerful engines, making them ideal for track days and competitive racing.","Category: Vehicle, Type: Mercedes-Benz, Characteristics: Luxury Car",0.9004954546612973
+1,3,"Vehicles in the Sachsenring category: Characteristics of Sachsenring vehicles - They are high-performance sports cars, designed for speed and agility. They often have sleek designs, advanced aerodynamics, and powerful engines, making them ideal for track days and competitive racing.",Multicar: type A - Category: Vehicles - Characteristics: Modern,0.8383292683913396
+2,3,"Category: Vehicle, Type: Mercedes-Benz, Characteristics: Luxury Car",Multicar: type A - Category: Vehicles - Characteristics: Modern,0.8457488288383423

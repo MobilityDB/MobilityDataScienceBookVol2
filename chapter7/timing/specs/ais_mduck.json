@@ -1,0 +1,63 @@
+{
+ "rounds": 3,
+ "duck": {
+  "database": "${CH7_DB_DIR}/ships.duckdb",
+  "read_only": true,
+  "extensions": [
+   "spatial",
+   "${MOBILITYDUCK_EXTENSION}"
+  ],
+  "setup": [
+   "SET threads=1",
+   "SET memory_limit='7000MB'"
+  ]
+ },
+ "pg": {
+  "conninfo": "${PG_AIS}",
+  "setup": []
+ },
+ "queries": [
+  {
+   "id": "hours",
+   "line": 1216,
+   "duck": "WITH Hours AS (\n  SELECT TIMESTAMPTZ '2026-01-20 13:00:00+00' AS hour_start\n  UNION ALL SELECT TIMESTAMPTZ '2026-01-20 14:00:00+00'\n  UNION ALL SELECT TIMESTAMPTZ '2026-01-20 15:00:00+00'\n  UNION ALL SELECT TIMESTAMPTZ '2026-01-20 16:00:00+00'\n  UNION ALL SELECT TIMESTAMPTZ '2026-01-20 17:00:00+00'\n  UNION ALL SELECT TIMESTAMPTZ '2026-01-20 18:00:00+00'\n  UNION ALL SELECT TIMESTAMPTZ '2026-01-20 19:00:00+00' )\nSELECT h.hour_start, COUNT(DISTINCT s.MMSI) AS num_ships\nFROM Hours h, Ships s\nWHERE atTime(s.Trip, h.hour_start) IS NOT NULL\nGROUP BY h.hour_start\nORDER BY h.hour_start",
+   "pg": "WITH Hours AS (\n  SELECT TIMESTAMPTZ '2026-01-20 13:00:00+00' AS hour_start\n  UNION ALL SELECT TIMESTAMPTZ '2026-01-20 14:00:00+00'\n  UNION ALL SELECT TIMESTAMPTZ '2026-01-20 15:00:00+00'\n  UNION ALL SELECT TIMESTAMPTZ '2026-01-20 16:00:00+00'\n  UNION ALL SELECT TIMESTAMPTZ '2026-01-20 17:00:00+00'\n  UNION ALL SELECT TIMESTAMPTZ '2026-01-20 18:00:00+00'\n  UNION ALL SELECT TIMESTAMPTZ '2026-01-20 19:00:00+00' )\nSELECT h.hour_start, COUNT(DISTINCT s.MMSI) AS num_ships\nFROM Hours h, Ships s\nWHERE atTime(s.Trip, h.hour_start) IS NOT NULL\nGROUP BY h.hour_start\nORDER BY h.hour_start"
+  },
+  {
+   "id": "goteborg",
+   "line": 1248,
+   "duck": "WITH Goteborg(GotEnv) AS (\n  SELECT ST_MakeEnvelope(666538, 6392057, 679171, 6403745))\nSELECT s.MMSI,\nST_AsText(trajectory(atGeometry(s.Trip,  g.GotEnv))) as traj, g.GotEnv\nFROM Goteborg g, Ships s\nWHERE eIntersects(s.Trip, g.GotEnv)",
+   "pg": "WITH Goteborg(GotEnv) AS (\n  SELECT ST_MakeEnvelope(666538, 6392057, 679171, 6403745, 25832))\nSELECT s.MMSI,\nST_AsText(trajectory(atGeometry(s.Trip,  g.GotEnv))) as traj, g.GotEnv\nFROM Goteborg g, Ships s\nWHERE eIntersects(s.Trip, g.GotEnv)"
+  },
+  {
+   "id": "rodby",
+   "line": 1267,
+   "duck": "WITH Ports(Rodby, Puttgarden) AS\n (SELECT ST_MakeEnvelope(651135, 6058230, 651422, 6058548),\n     ST_MakeEnvelope(644339, 6042108, 644896, 6042487))\nSELECT s.MMSI, ST_AsText(trajectory(trip)) AS Trajectory,\n Rodby, Puttgarden\nFROM Ports p, Ships s\nWHERE eintersects(trip, p.Rodby) AND eintersects(trip, p.Puttgarden)",
+   "pg": "WITH Ports(Rodby, Puttgarden) AS\n (SELECT ST_MakeEnvelope(651135, 6058230, 651422, 6058548, 25832),\n     ST_MakeEnvelope(644339, 6042108, 644896, 6042487, 25832))\nSELECT s.MMSI, ST_AsText(trajectory(trip)) AS Trajectory,\n Rodby, Puttgarden\nFROM Ports p, Ships s\nWHERE eintersects(trip, p.Rodby) AND eintersects(trip, p.Puttgarden)"
+  },
+  {
+   "id": "belt",
+   "line": 1295,
+   "duck": "WITH AlertBelt(Belt) AS (\nSELECT ST_MakeEnvelope(640730, 6058230, 654100, 6042487))\nSELECT MMSI, atGeometry(s.Trip, b.Belt),\n ST_AsText(trajectory(atGeometry(s.Trip,  b.Belt))) as traj\nFROM ships s, AlertBelt b\nWHERE eintersects(s.Trip, b.Belt)",
+   "pg": "WITH AlertBelt(Belt) AS (\nSELECT ST_MakeEnvelope(640730, 6058230, 654100, 6042487, 25832))\nSELECT MMSI, atGeometry(s.Trip, b.Belt),\n ST_AsText(trajectory(atGeometry(s.Trip,  b.Belt))) as traj\nFROM ships s, AlertBelt b\nWHERE eintersects(s.Trip, b.Belt)"
+  },
+  {
+   "id": "buffer500",
+   "line": 1420,
+   "duck": "WITH Port AS (\n  SELECT ST_Point(726765.3929300838, 6178705.65508127) AS port_geom ),\nPortBuffer AS (\n  SELECT ST_Buffer(port_geom, 500) AS buf\n  FROM Port )\nSELECT s.MMSI, ST_AsText(trajectory(s.Trip)) AS trip_wkt,\n    ST_AsWKB(pb.buf) AS buffer_wkb\nFROM Ships s, PortBuffer pb\nWHERE eIntersects(s.Trip, pb.buf)",
+   "pg": "WITH Port AS (\n  SELECT ST_Point(726765.3929300838, 6178705.65508127, 25832) AS port_geom ),\nPortBuffer AS (\n  SELECT ST_Buffer(port_geom, 500) AS buf\n  FROM Port )\nSELECT s.MMSI, ST_AsText(trajectory(s.Trip)) AS trip_wkt,\n    ST_AsBinary(pb.buf) AS buffer_wkb\nFROM Ships s, PortBuffer pb\nWHERE eIntersects(s.Trip, pb.buf)"
+  },
+  {
+   "id": "stops1000",
+   "line": 1453,
+   "duck": "WITH Port AS (\n  SELECT ST_Point(726765.3929300838, 6178705.65508127) AS port_geom ),\nPortBuffer AS (\n  SELECT ST_Buffer(port_geom, 1000) AS buf\n  FROM Port )\nSELECT s.MMSI,\n   asText(stops(atGeometry(s.trip, pb.buf),10.0, interval '20 minutes')),\n   ST_AsText(trajectory(atGeometry(s.trip, pb.buf)))\n   AS tripWkt, ST_AsWKB(pb.buf) AS bufferWkb\nFROM ships s, PortBuffer pb\nWHERE eIntersects(s.trip, pb.buf) AND\n astext(stops(atGeometry(s.trip, pb.buf),10.0, interval '20 minutes'))\n IS NOT NULL",
+   "pg": "WITH Port AS (\n  SELECT ST_Point(726765.3929300838, 6178705.65508127, 25832) AS port_geom ),\nPortBuffer AS (\n  SELECT ST_Buffer(port_geom, 1000) AS buf\n  FROM Port )\nSELECT s.MMSI,\n   asText(stops(atGeometry(s.trip, pb.buf),10.0, interval '20 minutes')),\n   ST_AsText(trajectory(atGeometry(s.trip, pb.buf)))\n   AS tripWkt, ST_AsBinary(pb.buf) AS bufferWkb\nFROM ships s, PortBuffer pb\nWHERE eIntersects(s.trip, pb.buf) AND\n astext(stops(atGeometry(s.trip, pb.buf),10.0, interval '20 minutes'))\n IS NOT NULL"
+  },
+  {
+   "id": "stops5000",
+   "line": 1478,
+   "duck": "WITH Port AS (\n  SELECT ST_Point(752775.9137447166, 6167956.005944439) AS port_geom ),\nPortBuffer AS (\n  SELECT ST_Buffer(port_geom, 5000) AS buf\n  FROM Port )\nSELECT s.MMSI,\n  asText(stops(atGeometry(s.trip, pb.buf),1000.0, interval '1 hour')),\n  ST_AsText(trajectory(atGeometry(s.trip,   pb.buf)))\n  AS tripWkt, ST_AsWKB(pb.buf) AS buffer_wkb,\n  startTimestamp(stops(atGeometry(s.trip, pb.buf),1000.0,\n  interval '1 hour')) AS start_time\nFROM Ships s, PortBuffer pb\nWHERE eIntersects(s.trip, pb.buf) AND\n  astext(stops(atGeometry(s.trip, pb.buf),1000.0, interval '1 hour'))\n  IS NOT NULL",
+   "pg": "WITH Port AS (\n  SELECT ST_Point(752775.9137447166, 6167956.005944439, 25832) AS port_geom ),\nPortBuffer AS (\n  SELECT ST_Buffer(port_geom, 5000) AS buf\n  FROM Port )\nSELECT s.MMSI,\n  asText(stops(atGeometry(s.trip, pb.buf),1000.0, interval '1 hour')),\n  ST_AsText(trajectory(atGeometry(s.trip,   pb.buf)))\n  AS tripWkt, ST_AsBinary(pb.buf) AS buffer_wkb,\n  startTimestamp(stops(atGeometry(s.trip, pb.buf),1000.0,\n  interval '1 hour')) AS start_time\nFROM Ships s, PortBuffer pb\nWHERE eIntersects(s.trip, pb.buf) AND\n  astext(stops(atGeometry(s.trip, pb.buf),1000.0, interval '1 hour'))\n  IS NOT NULL"
+  }
+ ]
+}

@@ -1,0 +1,4 @@
+# Written by export_tables.sql and flock_pipelines.sql
+*.parquet
+flock.duckdb
+flock.duckdb.wal

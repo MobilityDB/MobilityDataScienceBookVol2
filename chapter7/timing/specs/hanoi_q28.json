@@ -1,0 +1,35 @@
+{
+ "rounds": 5,
+ "duck": {
+  "database": "${CH7_DB_DIR}/hanoi.duckdb",
+  "read_only": false,
+  "extensions": [
+   "spatial",
+   "${MOBILITYDUCK_EXTENSION}"
+  ],
+  "setup": [
+   "SET threads=1",
+   "SET memory_limit='7000MB'",
+   "SET TimeZone='UTC'",
+   "CREATE OR REPLACE TABLE Bins(PId,SpanP) AS\nWITH Temp AS (\n  SELECT ROW_NUMBER() OVER() AS pid, h AS startt,\n    h + INTERVAL '30 minutes' AS endt\n  FROM (\n    SELECT generate_series AS h\n    FROM generate_series(TIMESTAMPTZ '2020-06-01 00:00:00',\n      TIMESTAMPTZ '2020-06-02 23:30:00', INTERVAL '30 minutes') ) AS t )\nSELECT Pid, span(startt::timestamptz,endt::timestamptz) as SpanP\nFROM Temp",
+   "DROP VIEW IF EXISTS Trips200",
+   "CREATE VIEW Trips200 AS SELECT * FROM Trips ORDER BY TripId LIMIT 200"
+  ]
+ },
+ "pg": {
+  "conninfo": "${PG_HANOI}",
+  "setup": [
+   "SET TimeZone='UTC'",
+   "CREATE TEMP TABLE Bins(PId,SpanP) AS\nWITH Temp AS (\n  SELECT ROW_NUMBER() OVER() AS pid, h AS startt,\n    h + INTERVAL '30 minutes' AS endt\n  FROM (\n    SELECT generate_series AS h\n    FROM generate_series(TIMESTAMPTZ '2020-06-01 00:00:00',\n      TIMESTAMPTZ '2020-06-02 23:30:00', INTERVAL '30 minutes') ) AS t )\nSELECT Pid, span(startt::timestamptz,endt::timestamptz) as SpanP\nFROM Temp",
+   "CREATE TEMP VIEW Trips200 AS SELECT * FROM Trips ORDER BY TripId LIMIT 200"
+  ]
+ },
+ "queries": [
+  {
+   "id": "q28_tdwithin",
+   "line": 1741,
+   "duck": "WITH Temp AS (\n  SELECT l1.Licence AS Licence1,\n    t2.VehicleId AS Car2Id,\n    whenTrue(tDwithin(t1.Trip, t2.Trip, 3.0)) AS Periods\n  FROM Trips t1, Licences1 l1, Trips t2, Vehicles v\n  WHERE t1.VehicleId = l1.VehicleId AND\n    t2.VehicleId = v.VehicleId AND\n    t1.VehicleId <> t2.VehicleId AND\n    t2.Trip && expandSpace(t1.trip::STBOX, 3.0) )\nSELECT Licence1, Car2Id, Periods\nFROM Temp\nWHERE Periods IS NOT NULL",
+   "pg": "WITH Temp AS (\n  SELECT l1.Licence AS Licence1,\n    t2.VehicleId AS Car2Id,\n    whenTrue(tDwithin(t1.Trip, t2.Trip, 3.0)) AS Periods\n  FROM Trips t1, Licences1 l1, Trips t2, Vehicles v\n  WHERE t1.VehicleId = l1.VehicleId AND\n    t2.VehicleId = v.VehicleId AND\n    t1.VehicleId <> t2.VehicleId AND\n    t2.Trip && expandSpace(t1.trip::STBOX, 3.0) )\nSELECT Licence1, Car2Id, Periods\nFROM Temp\nWHERE Periods IS NOT NULL"
+  }
+ ]
+}

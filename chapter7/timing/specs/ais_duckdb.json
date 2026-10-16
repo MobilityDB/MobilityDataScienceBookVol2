@@ -1,0 +1,69 @@
+{
+ "rounds": 3,
+ "duck": {
+  "database": "${CH7_DB_DIR}/ais.duckdb",
+  "read_only": true,
+  "extensions": [
+   "spatial"
+  ],
+  "setup": [
+   "SET geometry_always_xy = true"
+  ]
+ },
+ "pg": {
+  "conninfo": "${PG_AIS}",
+  "setup": []
+ },
+ "queries": [
+  {
+   "id": "q1_count",
+   "duck": "SELECT COUNT(*) FROM AISInput",
+   "pg": "SELECT COUNT(*) FROM AISInput"
+  },
+  {
+   "id": "q2_messages",
+   "duck": "SELECT MMSI, COUNT(*) AS MessageCount FROM AISInput GROUP BY MMSI ORDER BY MessageCount DESC",
+   "pg": "SELECT MMSI, COUNT(*) AS MessageCount FROM AISInput GROUP BY MMSI ORDER BY MessageCount DESC"
+  },
+  {
+   "id": "q3_firstlast",
+   "duck": "SELECT MMSI, MIN(t) AS FirstSeen, MAX(t) AS LastSeen FROM AISInput GROUP BY MMSI ORDER BY LastSeen",
+   "pg": "SELECT MMSI, MIN(t) AS FirstSeen, MAX(t) AS LastSeen FROM AISInput GROUP BY MMSI ORDER BY LastSeen"
+  },
+  {
+   "id": "q4_speed",
+   "duck": "SELECT MMSI, AVG(SOG) AS AvgSpeed, MAX(SOG) AS MaxSpeed FROM AISInput GROUP BY MMSI ORDER BY AvgSpeed DESC",
+   "pg": "SELECT MMSI, AVG(SOG) AS AvgSpeed, MAX(SOG) AS MaxSpeed FROM AISInput GROUP BY MMSI ORDER BY AvgSpeed DESC"
+  },
+  {
+   "id": "q5_hours",
+   "duck": "SELECT MMSI, COUNT(DISTINCT DATE_TRUNC('hour', t)) AS ActiveHours FROM AISInput GROUP BY MMSI ORDER BY ActiveHours DESC",
+   "pg": "SELECT MMSI, COUNT(DISTINCT DATE_TRUNC('hour', t)) AS ActiveHours FROM AISInput GROUP BY MMSI ORDER BY ActiveHours DESC"
+  },
+  {
+   "id": "q6_centroid",
+   "duck": "SELECT MMSI, DATE_TRUNC('hour', t) AS Hour, ST_Centroid(ST_Collect(ARRAY_AGG(geom))) AS Centroid FROM AISInput GROUP BY MMSI, hour ORDER BY MMSI, hour",
+   "pg": "SELECT MMSI, DATE_TRUNC('hour', t) AS Hour, ST_Centroid(ST_Collect(ARRAY_AGG(geom))) AS Centroid FROM AISInput GROUP BY MMSI, hour ORDER BY MMSI, hour"
+  },
+  {
+   "id": "q7_bbox",
+   "duck": "SELECT MIN(Latitude) AS MinLat, MAX(Latitude) AS MaxLat, MIN(Longitude) AS MinLon, MAX(Longitude) AS MaxLon FROM AISInput",
+   "pg": "SELECT MIN(Latitude) AS MinLat, MAX(Latitude) AS MaxLat, MIN(Longitude) AS MinLon, MAX(Longitude) AS MaxLon FROM AISInput"
+  },
+  {
+   "id": "q8_within1000",
+   "duck": "WITH Target AS (SELECT Geom, t FROM AISInput WHERE MMSI = 219015442 ORDER BY t DESC LIMIT 1) SELECT other.MMSI, other.t, ST_AsText(other.Geom) AS Geom FROM AISInput other, Target t WHERE other.MMSI <> 219015442 AND ST_Distance_Sphere(other.Geom, t.Geom) <= 1000 AND ABS(EXTRACT(EPOCH FROM (other.t - t.t))) <= 60",
+   "pg": "WITH Target AS (SELECT Geom, t FROM AISInput WHERE MMSI = 219015442 ORDER BY t DESC LIMIT 1) SELECT other.MMSI, other.t, ST_AsText(other.Geom) AS Geom FROM AISInput other, Target t WHERE other.MMSI <> 219015442 AND ST_DistanceSphere(other.Geom, t.Geom) <= 1000 AND ABS(EXTRACT(EPOCH FROM (other.t - t.t))) <= 60"
+  },
+  {
+   "id": "q9_neighbors",
+   "duck": "WITH Latest AS (SELECT MMSI, geom, t FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY MMSI ORDER BY t DESC) AS RowNo FROM AISInput) WHERE RowNo = 1), Neighbors AS (SELECT l1.MMSI AS MMSI1, l2.MMSI AS MMSI2 FROM Latest l1, Latest l2 WHERE l1.MMSI <> l2.MMSI AND ST_Distance_Sphere(l1.Geom, l2.Geom) <= 1000 AND ABS(EXTRACT(EPOCH FROM (l1.t - l2.t))) <= 60) SELECT l.MMSI, ST_AsText(l.Geom) AS Geom, COUNT(n.MMSI2) AS NeighborCount FROM Latest l LEFT JOIN Neighbors n ON l.MMSI = n.MMSI1 GROUP BY l.MMSI, l.Geom ORDER BY NeighborCount DESC",
+   "pg": "WITH Latest AS (SELECT MMSI, geom, t FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY MMSI ORDER BY t DESC) AS RowNo FROM AISInput) AS a WHERE RowNo = 1), Neighbors AS (SELECT l1.MMSI AS MMSI1, l2.MMSI AS MMSI2 FROM Latest l1, Latest l2 WHERE l1.MMSI <> l2.MMSI AND ST_DistanceSphere(l1.Geom, l2.Geom) <= 1000 AND ABS(EXTRACT(EPOCH FROM (l1.t - l2.t))) <= 60) SELECT l.MMSI, ST_AsText(l.Geom) AS Geom, COUNT(n.MMSI2) AS NeighborCount FROM Latest l LEFT JOIN Neighbors n ON l.MMSI = n.MMSI1 GROUP BY l.MMSI, l.Geom ORDER BY NeighborCount DESC"
+  },
+  {
+   "id": "q10_knn",
+   "duck": "WITH Latest AS (SELECT MMSI, geom, t FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY MMSI ORDER BY t DESC) AS RowNo FROM AISInput) WHERE RowNo = 1), Target AS (SELECT MMSI, geom, t FROM Latest WHERE MMSI = 219015442) SELECT o.MMSI, ST_AsText(o.geom) AS geom, ST_Distance_Sphere(o.geom, t.geom) AS Distance, ABS(EXTRACT(EPOCH FROM (o.t - t.t))) AS TimeDiff FROM Latest o JOIN Target t ON o.MMSI <> t.MMSI WHERE ST_Distance_Sphere(o.geom, t.geom) <= 1000 AND ABS(EXTRACT(EPOCH FROM (o.t - t.t))) <= 60 ORDER BY Distance LIMIT 5",
+   "pg": "WITH Latest AS (SELECT MMSI, geom, t FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY MMSI ORDER BY t DESC) AS RowNo FROM AISInput) AS a WHERE RowNo = 1), Target AS (SELECT MMSI, geom, t FROM Latest WHERE MMSI = 219015442) SELECT o.MMSI, ST_AsText(o.geom) AS geom, ST_DistanceSphere(o.geom, t.geom) AS Distance, ABS(EXTRACT(EPOCH FROM (o.t - t.t))) AS TimeDiff FROM Latest o JOIN Target t ON o.MMSI <> t.MMSI WHERE ST_DistanceSphere(o.geom, t.geom) <= 1000 AND ABS(EXTRACT(EPOCH FROM (o.t - t.t))) <= 60 ORDER BY Distance LIMIT 5"
+  }
+ ]
+}
