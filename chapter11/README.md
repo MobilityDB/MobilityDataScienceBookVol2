@@ -143,12 +143,16 @@ it reads and writes lives in the AIS database of the book, built by `../ais/`.
 - The AIS database of `../ais/`, with the tables of chapter 5 loaded into it.
 - GDAL with `ogr2ogr`, to load the reference layers.
 - Python 3.10 or later with the packages of `usecase/requirements.txt`.
-- The code of the thesis at commit `8fc3ca2`, which `run_usecase.sh` clones. It
-  is the commit that publishes the checkpoint `models/checkpoints/best.pt`, a
-  model with a mixture of experts and 3,708,394 parameters whose semantic
-  channel is fused by cross-attention after the encoder; the model code of later
-  commits fuses the semantics at the input, with weights the checkpoint does not
-  hold, so `run_model.py` loads it strictly with the code of `8fc3ca2`.
+- The code of the thesis at commit `2490c45`, which `run_usecase.sh` clones, and
+  the checkpoint of its main model, `ablation_ffn_0710_best.pt` of the Hugging
+  Face model repository [nhungoc1508/tfm](https://huggingface.co/nhungoc1508/tfm),
+  which `run_model.py` downloads with `hf_hub_download` (or reads from the path
+  in `CHECKPOINT`). The model has a single shared feed-forward network, adds the
+  semantic channel to the token at the input, and has 1,355,018 parameters; its
+  configuration is the one of the table above. `run_model.py` loads it strictly
+  with the code of `2490c45`. The checkpoint `models/checkpoints/best.pt` of the
+  code repository, at commit `8fc3ca2`, is a variant with a mixture of experts,
+  which the chapter describes under *specialization* but does not use.
 - For the embeddings, a Hugging Face account that has accepted the license of
   [EmbeddingGemma](https://huggingface.co/google/embeddinggemma-300m), and its
   token stored with `hf auth login`.
@@ -200,7 +204,7 @@ vessels moving at 3 knots or more, the central 5 to 120 minutes are hidden and
 reconstructed from the positions around them, and the script prints, for each
 length, the median and the mean error of each method and the share of the
 stretches in which the curve is more accurate than the segment. It reads the
-table `Ships` of the AIS database and runs the checkpoint of the thesis without
+table `Ships` of the AIS database and runs the main model of the thesis without
 descriptions, so it does not need the embeddings; it runs on the GPU when there
 is one. From `usecase/`, after `run_usecase.sh` has cloned the thesis:
 

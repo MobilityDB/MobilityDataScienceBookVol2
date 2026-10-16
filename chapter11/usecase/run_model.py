@@ -1,13 +1,13 @@
 """Run the pretrained model on the sequences of the view ModelInput and write its
 reconstructions into ReconstructedLonLat(Model, Task, GapId, PointIdx, Lon, Lat).
 
-The model is the class TrajectoryMaskedAutoEncoder of the thesis (models/model.py), loaded from the
-checkpoint the thesis publishes (models/checkpoints/best.pt) as load_model of
-models/checkpoints/utils.py loads it, but strictly, so that every weight of the model comes from the
-checkpoint. The checkpoint is the mixture-of-experts model with the semantic cross-attention of
-commit 8fc3ca2 of the thesis repository, the commit that adds it; the model code of later commits
-fuses the semantics at the input, with weights the checkpoint does not hold, so THESIS is a
-checkout of commit 8fc3ca2. Each sequence is turned into the channels of the model as
+The model is the class TrajectoryMaskedAutoEncoder of the thesis (models/model.py of THESIS, a
+checkout of commit 2490c45 of MobilityDB/FoundationModel), loaded strictly, so that every weight of
+the model comes from the checkpoint and every weight of the checkpoint is used. The checkpoint is
+the main model of the thesis, ablation_ffn_0710_best.pt of the Hugging Face model repository
+nhungoc1508/tfm, which hf_hub_download fetches once and keeps in the cache of huggingface_hub; the
+environment variable CHECKPOINT names a local copy instead. The model has a single shared
+feed-forward network and adds the semantic channel to the token at the input. Each sequence is turned into the channels of the model as
 the data pipeline of the thesis does (normalize_trajectory of models/resampling.py and
 _kinematics_raw of models/data.py), padded by _pad of models/data.py to the maximum length of 256,
 with one difference: the origin and the scale of the spatial offsets are computed from the
@@ -24,7 +24,7 @@ The domain is maritime (1). Two models are run: 'crossdomain' uses every channel
 learned tokens [KIN_UNK] and [NO_SEM], so that it reconstructs from positions and times only.
 When PointEmbedding is empty, since embed.py has not been run, only 'coordinates' is run.
 
-    THESIS=<checkout of MobilityDB/FoundationModel at 8fc3ca2> python run_model.py
+    THESIS=<checkout of MobilityDB/FoundationModel at 2490c45> python run_model.py
 """
 import math
 import os
@@ -35,6 +35,7 @@ from pathlib import Path
 import numpy as np
 import psycopg
 import torch
+from huggingface_hub import hf_hub_download
 from psycopg.rows import namedtuple_row
 
 THESIS = Path(os.environ['THESIS'])
@@ -46,8 +47,9 @@ from model import TrajectoryMaskedAutoEncoder  # noqa: E402
 MAX_LEN = 256
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-ckpt = torch.load(THESIS / 'models' / 'checkpoints' / 'best.pt', map_location=DEVICE,
-                  weights_only=False)
+CHECKPOINT = os.environ.get('CHECKPOINT') or hf_hub_download('nhungoc1508/tfm',
+                                                             'ablation_ffn_0710_best.pt')
+ckpt = torch.load(CHECKPOINT, map_location=DEVICE, weights_only=False)
 cfg = ckpt['cfg'] if not isinstance(ckpt['cfg'], dict) else ModelConfig(**ckpt['cfg'])
 model = TrajectoryMaskedAutoEncoder(cfg).to(DEVICE)
 model.load_state_dict(ckpt['model'], strict=True)

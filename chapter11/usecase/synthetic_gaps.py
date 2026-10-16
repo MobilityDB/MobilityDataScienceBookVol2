@@ -11,10 +11,11 @@ stretches, the median and the mean over the stretches of the mean haversine erro
 the hidden minutes, in meters, and the share of stretches in which the curve is more accurate than
 the segment.
 
-    THESIS=<checkout of MobilityDB/FoundationModel at 8fc3ca2> python3 synthetic_gaps.py
+    THESIS=<checkout of MobilityDB/FoundationModel at 2490c45> python3 synthetic_gaps.py
 
 The database is the one named by the PostgreSQL environment variables (PGDATABASE, PGHOST, ...), and
-the model is the checkpoint models/checkpoints/best.pt of THESIS, loaded as run_model.py loads it.
+the model is the main model of the thesis, ablation_ffn_0710_best.pt of the Hugging Face model
+repository nhungoc1508/tfm (or the local copy named by CHECKPOINT), loaded as run_model.py loads it.
 """
 import math, os, sys, statistics as st
 from collections import defaultdict
@@ -22,6 +23,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import numpy as np
 import psycopg, torch
+from huggingface_hub import hf_hub_download
 
 THESIS = Path(os.environ['THESIS'])
 sys.path.insert(0, str(THESIS / 'models'))
@@ -30,7 +32,8 @@ from data import _pad  # noqa: E402
 from model import TrajectoryMaskedAutoEncoder  # noqa: E402
 
 MAX_LEN, DEV, SPAN = 256, torch.device('cuda' if torch.cuda.is_available() else 'cpu'), 181
-ckpt = torch.load(THESIS / 'models' / 'checkpoints' / 'best.pt', map_location=DEV, weights_only=False)
+CHECKPOINT = os.environ.get('CHECKPOINT') or hf_hub_download('nhungoc1508/tfm', 'ablation_ffn_0710_best.pt')
+ckpt = torch.load(CHECKPOINT, map_location=DEV, weights_only=False)
 cfg = ckpt['cfg'] if not isinstance(ckpt['cfg'], dict) else ModelConfig(**ckpt['cfg'])
 model = TrajectoryMaskedAutoEncoder(cfg).to(DEV)
 model.load_state_dict(ckpt['model'], strict=True)
