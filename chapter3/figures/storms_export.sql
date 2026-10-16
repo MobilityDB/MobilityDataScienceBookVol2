@@ -21,7 +21,7 @@ WITH F AS (
   WHERE ST_Dimension(getValue(i)::geometry) = 2
   UNION ALL
   SELECT 4, extract(epoch FROM getTimestamp(i))::bigint / 3600, 'circle',
-    ST_CurveToLine(getValue(i)::geometry, 64)
+    ST_CurveToLine(getValue(i)::geometry, 16)
   FROM Storms2024_tcbuffer, unnest(instants(Storm)) i
   WHERE Radii = 34 AND radius(getValue(i)) > 0 )
 SELECT json_build_object('type', 'FeatureCollection', 'features', json_agg(

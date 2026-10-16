@@ -8,8 +8,8 @@
 # colour, its alpha a Flate soft mask).
 # <python of QGIS> render_storms.py <spec.json> [info]
 # The spec names the GeoJSON written by storms_export.sql, the output PDF, both relative to the
-# directory of the spec, the extent (bbox [lon1, lat1, lon2, lat2], widened to the aspect of the
-# page), the page size in pixels at 300 dpi, the data layers from top to bottom with their colours,
+# directory of the spec, the CRS of the map, the extent (bbox [x1, y1, x2, y2] in the units of that
+# CRS, widened to the aspect of the page), the page size in pixels at 300 dpi, the data layers from top to bottom with their colours,
 # and the tile zoom of each basemap layer. With "info", it prints the extent, scale and zooms only.
 import sys, os, json, time
 from qgis.core import (QgsApplication, QgsVectorLayer, QgsMapSettings, QgsCoordinateReferenceSystem,
@@ -24,7 +24,13 @@ spec = json.load(open(sys.argv[1])); mode = sys.argv[2] if len(sys.argv) > 2 els
 base = os.path.dirname(os.path.abspath(sys.argv[1]))
 src = os.path.join(base, spec['geojson'])
 app = QgsApplication([], False); app.initQgis()
-crs = QgsCoordinateReferenceSystem(spec.get('crs', 'EPSG:4326'))
+# The CRS is an authority code, such as EPSG:4326, or a PROJ string, such as the Lambert azimuthal
+# equal-area projection centred on the basin that the maps use
+crs_def = spec.get('crs', 'EPSG:4326')
+crs = (QgsCoordinateReferenceSystem.fromProj(crs_def) if crs_def.startswith('+proj')
+       else QgsCoordinateReferenceSystem(crs_def))
+if not crs.isValid():
+    raise RuntimeError('invalid CRS ' + crs_def)
 
 LAND, WATER, BORDER = '#f2efe9', '#aad3df', '#a29cb4'
 # The water outline (0.3 mm in the water colour) hides the tile edges; a "base_gpkg" whose water is
