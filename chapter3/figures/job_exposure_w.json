@@ -1,0 +1,72 @@
+{
+ "crs": "EPSG:3857",
+ "extent": [
+  1351409.1065482702,
+  7466264.238526232,
+  1476105.959600878,
+  7590961.09157884
+ ],
+ "size": [
+  1800,
+  1800
+ ],
+ "dpi": 300,
+ "land": "#f2efe9",
+ "layers": [
+  {
+   "type": "shortbread",
+   "water": "#aad3df",
+   "streets": "#ffffff",
+   "buildings": "#d9d0c9"
+  },
+  {
+   "type": "vector",
+   "name": "areafill",
+   "path": "exposure_w.geojson",
+   "filter": "\"layer\" = 'area'",
+   "kind": "fill",
+   "style": {
+    "color": "214,168,112,110",
+    "outline_style": "no"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "fast",
+   "path": "exposure_w.geojson",
+   "filter": "\"layer\" = 'fast'",
+   "kind": "fill",
+   "style": {
+    "color": "30,110,60,0",
+    "outline_color": "#1e6e3c",
+    "outline_width": "0.35",
+    "style": "no"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "area",
+   "path": "exposure_w.geojson",
+   "filter": "\"layer\" = 'area'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#6b3a10",
+    "outline_width": "0.6"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "slow",
+   "path": "exposure_w_pts.geojson",
+   "kind": "marker",
+   "style": {
+    "name": "circle",
+    "color": "#b8f05a",
+    "outline_color": "#14532d",
+    "outline_width": "0.3",
+    "size": "1.8"
+   }
+  }
+ ]
+}

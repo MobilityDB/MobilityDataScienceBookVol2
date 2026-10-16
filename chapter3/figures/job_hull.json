@@ -1,0 +1,108 @@
+{
+ "crs": "EPSG:3857",
+ "extent": [
+  1316330.5429797755,
+  7900694.2195336325,
+  1319173.9862796874,
+  7902471.371596078
+ ],
+ "size": [
+  1800,
+  1125
+ ],
+ "dpi": 300,
+ "land": "#f2efe9",
+ "layers": [
+  {
+   "type": "shortbread",
+   "water": "#aad3df",
+   "streets": "#ffffff",
+   "buildings": "#d9d0c9"
+  },
+  {
+   "type": "vector",
+   "name": "p0",
+   "path": "hull.geojson",
+   "filter": "\"layer\" = 'p0'",
+   "kind": "fill",
+   "style": {
+    "color": "246,220,174,235",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.25"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "p1",
+   "path": "hull.geojson",
+   "filter": "\"layer\" = 'p1'",
+   "kind": "fill",
+   "style": {
+    "color": "238,196,140,235",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.25"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "p2",
+   "path": "hull.geojson",
+   "filter": "\"layer\" = 'p2'",
+   "kind": "fill",
+   "style": {
+    "color": "229,170,108,235",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.25"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "p3",
+   "path": "hull.geojson",
+   "filter": "\"layer\" = 'p3'",
+   "kind": "fill",
+   "style": {
+    "color": "220,145,79,235",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.25"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "p4",
+   "path": "hull.geojson",
+   "filter": "\"layer\" = 'p4'",
+   "kind": "fill",
+   "style": {
+    "color": "208,120,54,235",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.25"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "p5",
+   "path": "hull.geojson",
+   "filter": "\"layer\" = 'p5'",
+   "kind": "fill",
+   "style": {
+    "color": "194,95,30,235",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.25"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "antenna",
+   "path": "hull.geojson",
+   "filter": "\"layer\" = 'antenna'",
+   "kind": "line",
+   "style": {
+    "line_color": "#0000ff",
+    "line_width": "0.5",
+    "line_style": "solid",
+    "capstyle": "round"
+   }
+  }
+ ]
+}

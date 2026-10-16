@@ -1,15 +1,14 @@
 {
- "output": "C:\\Windows\\Temp\\tessfig\\chap3\\shortest_line_uwn.png",
  "crs": "EPSG:25832",
  "extent": [
-  578919,
-  6339993,
-  636120,
-  6386567
+  582755,
+  6340658,
+  656758,
+  6377260
  ],
  "size": [
   2400,
-  1954
+  1187
  ],
  "dpi": 300,
  "land": "#efeae2",
@@ -20,20 +19,18 @@
   },
   {
    "type": "vector",
-   "path": "C:\\Windows\\Temp\\tessfig\\chap3\\noise.gpkg",
-   "layer": "noise",
+   "path": "uwn_noise.geojson",
    "kind": "fill",
    "style": {
     "color": "228,26,28,100",
     "outline_color": "176,20,22,255",
     "outline_width": "0.3"
    },
-   "filter": "\"mmsi\" = '219013538'"
+   "filter": "\"mmsi\" = '220323000'"
   },
   {
    "type": "vector",
-   "path": "C:\\Windows\\Temp\\tessfig\\chap3\\noise.gpkg",
-   "layer": "noise",
+   "path": "uwn_noise.geojson",
    "kind": "fill",
    "style": {
     "color": "128,128,128,100",
@@ -44,40 +41,34 @@
   },
   {
    "type": "vector",
-   "path": "C:\\Windows\\Temp\\tessfig\\chap3\\traj.gpkg",
-   "layer": "traj",
+   "path": "uwn_layers.geojson",
    "kind": "line",
    "style": {
     "line_color": "0,0,0,255",
     "line_width": "0.7"
-   }
+   },
+   "filter": "\"layer\" = 'traj'"
   },
   {
    "type": "vector",
-   "path": "C:\\Windows\\Temp\\tessfig\\chap3\\samples.gpkg",
-   "layer": "samples",
+   "path": "uwn_layers.geojson",
    "kind": "line",
    "style": {
     "line_color": "40,40,40,255",
     "line_width": "0.6",
     "line_style": "dash"
    },
-   "label": {
-    "field": "label",
-    "size": 11,
-    "color": "#1a1a1a",
-    "display_all": true
-   }
+   "filter": "\"layer\" = 'samples'"
   },
   {
    "type": "vector",
-   "path": "C:\\Windows\\Temp\\tessfig\\chap3\\shortest.gpkg",
-   "layer": "shortest",
+   "path": "uwn_layers.geojson",
    "kind": "line",
    "style": {
     "line_color": "0,0,0,255",
     "line_width": "1.4"
-   }
+   },
+   "filter": "\"layer\" = 'shortest'"
   }
  ]
 }

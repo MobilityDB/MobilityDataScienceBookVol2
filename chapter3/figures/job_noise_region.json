@@ -1,0 +1,96 @@
+{
+ "crs": "EPSG:3857",
+ "extent": [
+  1236329.358065325,
+  7822295.964558844,
+  1257080.2939761558,
+  7835265.299503113
+ ],
+ "size": [
+  1800,
+  1125
+ ],
+ "dpi": 300,
+ "land": "#f2efe9",
+ "layers": [
+  {
+   "type": "shortbread",
+   "water": "#aad3df",
+   "streets": "#ffffff",
+   "buildings": "#d9d0c9"
+  },
+  {
+   "type": "vector",
+   "name": "c0",
+   "path": "noise_region.geojson",
+   "filter": "\"layer\" = 'c0'",
+   "kind": "fill",
+   "style": {
+    "color": "160,210,180,100",
+    "outline_color": "#5f9e62",
+    "outline_width": "0.35"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "c1",
+   "path": "noise_region.geojson",
+   "filter": "\"layer\" = 'c1'",
+   "kind": "fill",
+   "style": {
+    "color": "125,185,150,110",
+    "outline_color": "#468a4c",
+    "outline_width": "0.35"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "c2",
+   "path": "noise_region.geojson",
+   "filter": "\"layer\" = 'c2'",
+   "kind": "fill",
+   "style": {
+    "color": "90,160,120,120",
+    "outline_color": "#2f6f35",
+    "outline_width": "0.35"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "c3",
+   "path": "noise_region.geojson",
+   "filter": "\"layer\" = 'c3'",
+   "kind": "fill",
+   "style": {
+    "color": "61,135,95,130",
+    "outline_color": "#1d5a2a",
+    "outline_width": "0.35"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "c4",
+   "path": "noise_region.geojson",
+   "filter": "\"layer\" = 'c4'",
+   "kind": "fill",
+   "style": {
+    "color": "39,110,70,140",
+    "outline_color": "#0b3d1a",
+    "outline_width": "0.35"
+   }
+  },
+  {
+   "type": "vector",
+   "name": "trajectory",
+   "path": "noise_region.geojson",
+   "filter": "\"layer\" = 'trajectory'",
+   "kind": "line",
+   "style": {
+    "line_color": "#000000",
+    "line_width": "0.5",
+    "line_style": "solid",
+    "capstyle": "round"
+   }
+  }
+ ]
+}

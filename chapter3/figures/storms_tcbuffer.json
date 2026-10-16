@@ -1,0 +1,42 @@
+{
+ "geojson": "storms.geojson",
+ "crs": "EPSG:4326",
+ "bbox": [
+  -109.0,
+  -9.0,
+  22.5,
+  73.5
+ ],
+ "width": 1243,
+ "height": 780,
+ "out": "storms_tcbuffer.pdf",
+ "layers": [
+  {
+   "name": "inst",
+   "type": "point",
+   "color": "#c43c39",
+   "outline": "#3a0d0c",
+   "outline_width": 0.08,
+   "size": 0.8
+  },
+  {
+   "name": "track",
+   "type": "line",
+   "color": "#db1e2a",
+   "width": 0.35
+  },
+  {
+   "name": "circle",
+   "type": "fill",
+   "color": "#becf50",
+   "outline": "#232323",
+   "outline_width": 0.08
+  }
+ ],
+ "min_lake_m2": 2000000000.0,
+ "zoom": {
+  "ocean": 4,
+  "boundaries": 4,
+  "water_polygons": 5
+ }
+}
