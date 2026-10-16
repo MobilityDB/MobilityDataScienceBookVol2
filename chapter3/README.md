@@ -56,7 +56,7 @@ builds:
 | `StormPoints` | One row per observation, with the storm identifier, its final name, the timestamp and the position |
 | `StormRadii` | One row per wind radii polygon, with its wind speed and timestamp |
 | `StormSwath` | One row per wind swath |
-| `Storms<year>_tgeo` | The wind field of a storm for a wind speed, as a `tgeometry(SequenceSet, Geometry, 4326)` |
+| `Storms<year>_tgeo` | The wind field of a storm for a wind speed, as a `tgeography(SequenceSet, Geometry, 4326)` |
 | `Storms<year>_tpoint` | The track of a storm, as a `tgeompoint` |
 | `Storms<year>_tcbuffer` | The wind field as a `tcbuffer`, the minimum bounding circle of each value, and the area it traverses |
 

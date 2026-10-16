@@ -25,23 +25,23 @@ SELECT
 -- 0.0500 | 3521.9
 
 -- The SRID of a wind field before and after each conversion
-SELECT srid(Temp), srid(Temp::tgeography), srid(transform(Temp, 32617))
+SELECT srid(Temp), srid(Temp::tgeometry), srid(transform(Temp::tgeometry, 32617))
 FROM Storms2024_tgeo
 WHERE Name = 'Milton' AND Radii = 64;
 -- 4326 | 4326 | 32617
 
 -- What was the extent of the hurricane-force winds of Milton on October 10,
 -- 2024, at 2:30?
-SELECT round((ST_Area(valueAtTimestamp(Temp::tgeography, '2024-10-10 02:30'))
+SELECT round((ST_Area(valueAtTimestamp(Temp, '2024-10-10 02:30'))
   / 1e6)::numeric) AS AreaKm2
 FROM Storms2024_tgeo
 WHERE Name = 'Milton' AND Radii = 64;
 -- 9660
 
 -- Which storms brought winds of at least 34 knots to Tampa, and when?
-SELECT Name, Radii, whenTrue(tIntersects(Temp, ST_Point(-82.46, 27.95, 4326)))
+SELECT Name, Radii, whenTrue(tIntersects(Temp, geography 'Point(-82.46 27.95)'))
 FROM Storms2024_tgeo
-WHERE eIntersects(Temp, ST_Point(-82.46, 27.95, 4326))
+WHERE eIntersects(Temp, geography 'Point(-82.46 27.95)')
 ORDER BY Name, Radii;
 /* Debby  | 34 | {[2024-08-04 18:00:00+00, 2024-08-05 12:00:00+00)}
    Helene | 34 | {[2024-09-26 06:00:00+00, 2024-09-27 12:00:00+00)}
@@ -51,20 +51,22 @@ ORDER BY Name, Radii;
 
 -- How close to Tampa did the hurricane-force winds of Milton come, and when?
 SELECT
-  round((nearestApproachDistance(Temp::tgeography,
+  round((nearestApproachDistance(Temp,
     geography 'Point(-82.46 27.95)') / 1000)::numeric, 1) AS GeodeticKm,
-  round((nearestApproachDistance(transform(Temp, 32617),
+  round((nearestApproachDistance(transform(Temp::tgeometry, 32617),
     ST_Transform(ST_Point(-82.46, 27.95, 4326), 32617)) / 1000)::numeric, 1)
     AS UtmKm,
-  getTimestamp(nearestApproachInstant(Temp::tgeography,
+  getTimestamp(nearestApproachInstant(Temp,
     geography 'Point(-82.46 27.95)')) AS Instant
 FROM Storms2024_tgeo
 WHERE Name = 'Milton' AND Radii = 64;
 -- 20.5 | 20.5 | 2024-10-10 00:00:00+00
 
--- Which three storms swept the largest area with hurricane-force winds?
+-- Which three storms swept the largest area with hurricane-force winds? MEOS has
+-- no union on the ellipsoid, so the union is computed on the temporal geometry
 SELECT Name,
-  round((ST_Area(traversedArea(Temp, true)::geography) / 1e6)::numeric) AS AreaKm2
+  round((ST_Area(traversedArea(Temp::tgeometry, true)::geography) / 1e6)::numeric)
+    AS AreaKm2
 FROM Storms2024_tgeo
 WHERE Radii = 64
 ORDER BY AreaKm2 DESC

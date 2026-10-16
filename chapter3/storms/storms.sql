@@ -22,7 +22,7 @@
 --   StormSwath(StormId, Radii, Geom)      one row per wind swath
 --   Storms<year>_tgeo(StormId, Name, Radii, Temp)
 --                                         the wind field of a storm for a
---                                         wind speed, as a tgeometry
+--                                         wind speed, as a tgeography
 --   Storms<year>_tpoint(StormId, Name, Temp, Traj)
 --                                         the track of a storm, as a tgeompoint
 --   Storms<year>_tcbuffer(StormId, Name, Radii, Temp, Trav)
@@ -92,8 +92,12 @@ WHERE NOT EXISTS (
   SELECT 1 FROM StormPoints p WHERE p.StormId = r.StormId AND p.T = r.T );
 
 -- -----------------------------------------------------------------------------
--- The wind fields as temporal geometries
+-- The wind fields as temporal geographies
 -- -----------------------------------------------------------------------------
+
+-- The coordinates are longitudes and latitudes, so the wind fields are temporal
+-- geographies, whose relationships, distances and areas are computed on the
+-- WGS 84 ellipsoid
 
 -- The wind field of a storm for a wind speed holds, at each observation of
 -- the track, the area reached by this speed, and the position of the storm, a
@@ -102,12 +106,12 @@ WHERE NOT EXISTS (
 -- than one day apart, and a wind speed the storm never reaches gives no row
 DROP TABLE IF EXISTS :tgeo;
 CREATE TABLE :tgeo(StormId text, Name text, Radii integer,
-  Temp tgeometry(SequenceSet, Geometry, 4326));
+  Temp tgeography(SequenceSet, Geometry, 4326));
 INSERT INTO :tgeo
 WITH Thresholds(Radii) AS (VALUES (34), (50), (64))
 SELECT p.StormId, p.Name, h.Radii,
-  tgeometrySeqSetGaps(array_agg(tgeometry(coalesce(r.Geom, p.Geom), p.T)
-    ORDER BY p.T), interval '1 day')
+  tgeographySeqSetGaps(array_agg(tgeography(coalesce(r.Geom, p.Geom)::geography,
+    p.T) ORDER BY p.T), interval '1 day')
 FROM StormPoints p CROSS JOIN Thresholds h
   LEFT JOIN StormRadii r ON r.StormId = p.StormId AND r.Radii = h.Radii AND
     r.T = p.T
