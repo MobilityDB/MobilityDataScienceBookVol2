@@ -13,8 +13,9 @@ SET TimeZone = 'UTC';
 SELECT tgeometry 'Interp=Linear;[Point(0 0)@2001-01-01, Point(1 1)@2001-01-02]';
 -- ERROR:  The temporal type cannot have linear interpolation
 
--- The nearest approach distance of the same values as a temporal geometry, in
--- degrees, and as a temporal geography, in meters
+-- The nearest approach distance of the same values as a temporal geometry, a
+-- Cartesian distance in the plane of longitudes and latitudes that corresponds
+-- to no true angular difference, and as a temporal geography, in meters
 SELECT
   round(nearestApproachDistance(tgeometry 'SRID=4326;[Polygon((4.35 50.84,
     4.40 50.84,4.40 50.88,4.35 50.84))@2001-01-01, Point(4.37 50.85)@2001-01-02]',
