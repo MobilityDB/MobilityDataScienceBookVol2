@@ -20,7 +20,7 @@
 --   StormPoints(StormId, Name, T, Geom)   one row per observation
 --   StormRadii(StormId, Radii, T, Geom)   one row per wind radii polygon
 --   StormSwath(StormId, Radii, Geom)      one row per wind swath
---   Storms<year>_tgeo(StormId, Name, Radii, Temp)
+--   Storms<year>_tgeo(StormId, Name, Radii, Storm)
 --                                         the wind field of a storm for a
 --                                         wind speed, as a tgeography
 --   Storms<year>_tpoint(StormId, Name, Temp, Traj)
@@ -106,7 +106,7 @@ WHERE NOT EXISTS (
 -- than one day apart, and a wind speed the storm never reaches gives no row
 DROP TABLE IF EXISTS :tgeo;
 CREATE TABLE :tgeo(StormId text, Name text, Radii integer,
-  Temp tgeography(SequenceSet, Geometry, 4326));
+  Storm tgeography(SequenceSet, Geometry, 4326));
 INSERT INTO :tgeo
 WITH Thresholds(Radii) AS (VALUES (34), (50), (64))
 SELECT p.StormId, p.Name, h.Radii,
@@ -164,4 +164,4 @@ SELECT (SELECT count(*) FROM StormPoints) AS observations,
   (SELECT count(*) FROM StormRadii) AS radii,
   (SELECT count(DISTINCT StormId) FROM :tgeo) AS storms,
   (SELECT count(*) FROM :tgeo) AS wind_fields,
-  (SELECT sum(numInstants(Temp)) FROM :tgeo) AS instants;
+  (SELECT sum(numInstants(Storm)) FROM :tgeo) AS instants;

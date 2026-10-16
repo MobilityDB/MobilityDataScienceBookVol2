@@ -17,7 +17,7 @@ WITH F AS (
   FROM Storms2024_tpoint, unnest(instants(Temp)) i
   UNION ALL
   SELECT 3, Radii * 100000 + extract(epoch FROM getTimestamp(i))::bigint / 3600, 'radii', getValue(i)::geometry
-  FROM Storms2024_tgeo, unnest(instants(Temp)) i
+  FROM Storms2024_tgeo, unnest(instants(Storm)) i
   WHERE ST_Dimension(getValue(i)::geometry) = 2
   UNION ALL
   SELECT 4, extract(epoch FROM getTimestamp(i))::bigint / 3600, 'circle',
