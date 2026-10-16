@@ -100,6 +100,27 @@ where MobilityDB requires another one. Run from `timing/`:
 parts that the figures show (`queryduckdbproc_a`, `queryduckdbproc_b`, `queryprocplan8`,
 `mduckq14plan`, `index_plan`, `mobduckq24plan`) with `figures/renderplan.py`.
 
+#### Map figures
+
+The maps of the chapter are drawn with the Folium code of the notebooks, over the OpenMapTiles
+vector tiles of OpenFreeMap drawn by Leaflet.VectorGrid (`figures/vtiles.py`, styles in
+`figures/omtstyle.py`), printed to vector PDF by headless Chromium (`figures/vgprint.py`;
+`figures/vghybrid.py` embeds a dense marker layer as one lossless image). A map PDF carries no
+text: its labels and legends are TikZ overlays (`<figure>_overlay.tex`) set in the font of the
+captions.
+
+1. Install the Python packages (the figures of the book are drawn with these versions) and the
+   Chromium of Playwright, and, for the hybrid maps, `pdftocairo` of Poppler:
+   `pip install folium==0.20.0 branca==0.8.2 pandas==2.3.3 shapely==2.2.0 matplotlib==3.11.2 pillow==12.3.0 pikepdf==10.16.0 playwright==1.63.0`
+   and `playwright install chromium`. Set `CHROME` to use another Chromium executable.
+2. In `figures/`, create `data/ais`, `data/hanoi` and `out`, and write the data of the maps,
+   which the scripts read and write relative to that folder:
+   - `md_figdata.sql` and `duck_figdata.sql` in the DuckDB database of `mobilityDuckAIS.ipynb`;
+   - `hanoi_figdata.sql` in `$CH7_DB_DIR/hanoi.duckdb`, or `hanoi_figdata_pg.sql` with `psql`
+     in `PG_HANOI`.
+3. Draw the maps into `out`: `python3 fig_md.py`, `python3 fig_duck.py` and
+   `python3 fig_hanoi.py`; each takes the names of the figures to draw, by default all of them.
+
 #### Flock
 
 The five Flock pipelines run on DuckDB v1.5.5 with Flock from the community repository and two
