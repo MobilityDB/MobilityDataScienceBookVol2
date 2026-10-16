@@ -67,6 +67,13 @@ def paired_rows(a, b):
 # one figure, two axes sharing the row labels: against linear (left), against coordinates (right)
 r1 = paired_rows("crossdomain", "linear")
 r2 = paired_rows("crossdomain", "coordinates")
+# the values the chapter quotes beside the figure: per task and speed class, the number of windows,
+# the mean paired difference with its 95% bootstrap interval, and the share of windows in which
+# crossdomain has the smaller error
+for b, rows in (("linear", r1), ("coordinates", r2)):
+    for task, lab, n, m, lo, hi, better in rows:
+        print(f"crossdomain - {b:11s} {task:10s} {lab:12s} windows {n:5d} mean {m:7.1f} "
+              f"[{lo:7.1f}, {hi:7.1f}] better {better:.3f}")
 fig = plt.figure(figsize=(TW, 2.3))
 axes = (fig.add_axes([0.345, 0.17, 0.27, 0.78]), fig.add_axes([0.70, 0.17, 0.21, 0.78]))
 ys = [k + (0.6 if r[0] == "prediction" else 0) for k, r in enumerate(r1)]

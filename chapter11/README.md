@@ -222,8 +222,18 @@ files the book includes. From `figures/`:
 
     psql -d ais -f export_gap3584.sql && python3 fig_gap3584.py
     psql -d ais -f export_errors.sql && python3 curves.py && python3 fig_errors.py
-    PGDATABASE=ais OUT=out python3 export_hermite.py
-    for j in out/job_*.json; do OUT=out bash ../../chapter5/figures/render.sh $j; done
+    PGDATABASE=ais OUT=/mnt/c/<folder> bash make_hermite.sh
+
+`export_gap3584.sql` also prints the values the chapter quotes for the gap 3584:
+the rows of `Reconstructed` of its table, the errors of the positions 12 to 15,
+the median recovery error before and after the gap, and how far the positions
+of each model inside the gap lie from the segment that bounds it.
+`fig_errors.py` prints, for each task and speed class, the number of windows,
+the mean paired difference with its 95% bootstrap interval, and the share of
+windows in which `crossdomain` is the more accurate, which the chapter quotes
+beside the figure of the paired differences; `curves.py` writes the medians the
+chapter quotes for the isolation and the horizon to `isolation_curve.csv` and
+`horizon_curve.csv`.
 
 | Figure | Scripts | Files |
 |---|---|---|
@@ -231,11 +241,14 @@ files the book includes. From `figures/`:
 | The paired differences of the error per window, by speed class | `export_errors.sql`, `fig_errors.py` | `errors_paired.pdf` |
 | The median error against the isolation and the horizon | `export_errors.sql`, `curves.py`, `fig_errors.py` | `errors_isolation.pdf`, `errors_horizon.pdf` |
 | The reachable region, the reconstructed path, and the protected areas of the gap 5452 | `export_errors.sql`, `fig_errors.py` | `errors_q14_gap5452.pdf` |
-| The straight segment and the Hermite curve on two gaps and two hidden turns | `export_hermite.py`, then `render.sh` of chapter 5 | `gap4907`, `gap7902`, `turn209276000`, `turn210620000` |
+| The straight segment and the Hermite curve on two gaps and two hidden turns | `make_hermite.sh`, with `export_hermite.py` | `hermite_gap4907.pdf`, `hermite_gap7902.pdf`, `hermite_turn209276000.pdf`, `hermite_turn210620000.pdf` |
 
-`export_hermite.py` writes the layers of each map into a GeoPackage, the job of
-`render_map.py` of chapter 5 that draws it, and `summary.json`, which gives for
-each map the errors or the separation of the straight segment and the curve that
-the chapter quotes. The labels of the maps, their scale bar, and their legend are
-set by the chapter in LaTeX over the images. `render.sh` runs the Python of
-QGIS named by `QGIS_PY`, as in the section "Figures" of `../chapter5/README.md`.
+`make_hermite.sh` runs `export_hermite.py`, which writes the layers of each map
+into a GeoPackage, the job of `render_map.py` of chapter 5 that draws it, and
+`summary.json`, which gives for each map the errors or the separation of the
+straight segment and the curve that the chapter quotes; it then draws each job
+as a vector PDF with `hybrid_pdf.py` of chapter 3, over the OpenStreetMap vector
+tiles. The labels of the maps, their scale bar, and their legend are set by the
+chapter in LaTeX over the images. The script runs the Python of QGIS named by
+`QGIS_PY`, as in the section "Figures" of `../chapter5/README.md`; with the QGIS
+of Windows called from WSL, `OUT` is a folder on a Windows drive.
