@@ -142,7 +142,7 @@ PDFs over the OpenStreetMap vector tiles:
 | `exposure_w.sql` | The protected area W and the noise regions of the vessels heard in it at the instant of the largest number of them, split by speed | `ais_exposure_w.pdf` |
 | `encounter_sea.sql` | The trajectories of TRIUMF and PUMA and their noise regions at 4:00, 12:00 and 20:00 | `ais_encounter_sea.pdf` |
 | `uwn_layers.sql`, `uwn_noise.sql` | The trajectories and the traversed areas of the noise of the fishing vessel and of the passenger vessel, the protected areas around Læsø, and the shortest lines between the two noise regions | `traversed_area_uwn.pdf`, `shortest_line_uwn.pdf` |
-| `storms_jobs.py` | The tracks of the Atlantic storms of 2024 and their observations, their wind radii polygons of 34, 50 and 64 knots, and the areas that their temporal circular buffers traverse | `storms_tpoint.pdf`, `storms_tgeo.pdf`, `storms_tcbuffer.pdf` |
+| `storms_jobs.py` | The tracks of the Atlantic storms of 2024 and their observations, their wind radii polygons of 34, 50 and 64 knots, and the areas that their temporal circular buffers traverse; the wind fields of Milton around Tampa at 2:30 on October 10, the instant of Query 3.1 | `storms_tpoint.pdf`, `storms_tgeo.pdf`, `storms_tcbuffer.pdf`, `storms_tampa.pdf` |
 
 Each SQL script writes GeoJSON layers in longitude and latitude. The job
 `job_<map>.json` of each AIS map states its extent, its size, and the style of

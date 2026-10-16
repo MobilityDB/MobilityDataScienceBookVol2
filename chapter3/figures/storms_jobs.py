@@ -70,4 +70,80 @@ for name, layers in (("storms_tpoint", tracks), ("storms_tgeo", tracks + [radii]
     spec = {"output": f"{name}.pdf", "crs": "EPSG:4326", "extent": EXTENT, "size": SIZE,
             "dpi": DPI, "land": LAND, "basemap_oversample": 8, "layers": [base] + layers}
     json.dump(spec, open(os.path.join(OUT, f"{name}.json"), "w"), indent=1)
+
+# The map of Query 3.1, around Tampa in the UTM zone 17N (EPSG:32617), its layers in longitude
+# and latitude as GeoJSON requires and its texts in the coordinates of the map: the wind fields of 50 and
+# 64 knots of Milton at 2:30 on October 10, the values observed at 0:00, dotted the field of 64
+# knots observed next, at 6:00, the track of Milton from 6:00 on October 9 to 18:00 on October 10
+# with its observations, and Tampa
+UTM = 32617
+T = "'2024-10-10 02:30+00'"
+SPAN = "tstzspan '[2024-10-09 06:00+00, 2024-10-10 18:00+00]'"
+collection(os.path.join(OUT, "tampa_fields.geojson"),
+           f"SELECT valueAtTimestamp(Storm, {T})::geometry, Radii "
+           "FROM Storms2024_tgeo WHERE Name = 'Milton' AND Radii >= 50")
+collection(os.path.join(OUT, "tampa_next.geojson"),
+           "SELECT valueAtTimestamp(Storm, '2024-10-10 06:00+00')::geometry, 1 "
+           "FROM Storms2024_tgeo WHERE Name = 'Milton' AND Radii = 64")
+collection(os.path.join(OUT, "tampa_track.geojson"),
+           f"SELECT trajectory(atTime(Storm, {SPAN})), 1 "
+           "FROM Storms2024_tpoint WHERE Name = 'Milton'")
+collection(os.path.join(OUT, "tampa_points.geojson"),
+           "SELECT getValue(i), getTimestamp(i) "
+           f"FROM Storms2024_tpoint, unnest(instants(atTime(Storm, {SPAN}))) i "
+           "WHERE Name = 'Milton'")
+collection(os.path.join(OUT, "tampa_city.geojson"),
+           "SELECT ST_Point(-82.46, 27.95, 4326), 1")
+
+
+def utm(lon, lat):
+    """The coordinates in the UTM zone 17N of a point given in longitude and latitude."""
+    out = subprocess.run(PSQL + ["-F", " ", "-c",
+                         f"SELECT ST_X(g), ST_Y(g) FROM ST_Transform(ST_Point({lon}, {lat}, 4326), "
+                         f"{UTM}) g"], check=True, capture_output=True, text=True).stdout
+    return [float(v) for v in out.split()]
+
+
+def observation(t):
+    """The position of Milton at the observation t, in longitude and latitude."""
+    out = subprocess.run(PSQL + ["-F", " ", "-c",
+                         f"SELECT ST_X(g), ST_Y(g) FROM (SELECT valueAtTimestamp(Storm, '{t}') g "
+                         "FROM Storms2024_tpoint WHERE Name = 'Milton') q"],
+                         check=True, capture_output=True, text=True).stdout
+    return [float(v) for v in out.split()]
+
+
+# The texts are of 9.5 points on the map of 1243 pixels, which the book prints at 0.8\textwidth, so
+# that they are of the size of the caption
+TEXT = 9.5
+texts = []
+for label, where, anchor in (("Tampa", (-82.46, 27.95), "right"),
+                             ("Oct 9, 18:00", observation("2024-10-09 18:00+00"), "right"),
+                             ("Oct 10, 0:00", observation("2024-10-10 00:00+00"), "left"),
+                             ("6:00", observation("2024-10-10 06:00+00"), "right"),
+                             ("64 kt", (-82.45, 26.98), "above"),
+                             ("50 kt", (-83.95, 27.55), "above")):
+    x, y = utm(*where)
+    texts.append({"text": label, "x": x, "y": y, "anchor": anchor, "gap": 3, "size": TEXT})
+tampa = [
+    {"path": "tampa_fields.geojson", "kind": "fill",
+     "style": {"color": "255,60,60,60", "outline_color": "255,0,0,255", "outline_width": "0.15"}},
+    {"path": "tampa_next.geojson", "kind": "fill",
+     "style": {"color": "0,0,0,0", "outline_color": "255,0,0,255", "outline_width": "0.3",
+               "outline_style": "dot"}},
+    {"path": "tampa_track.geojson", "kind": "line",
+     "style": {"line_color": "#ff0000", "line_width": "0.5", "capstyle": "round",
+               "joinstyle": "round"}},
+    {"path": "tampa_points.geojson", "kind": "marker",
+     "style": {"name": "circle", "color": "#ff0000", "outline_color": "#ff0000",
+               "outline_width": "0.11", "size": "1.3"}},
+    {"path": "tampa_city.geojson", "kind": "marker",
+     "style": {"name": "circle", "color": "#000000", "outline_color": "#000000",
+               "outline_width": "0.05", "size": "1.0"}},
+]
+tampa_base = dict(base, water_min_area=2e7)
+spec = {"output": "storms_tampa.pdf", "crs": f"EPSG:{UTM}",
+        "extent": [175000, 525000, 2880000, 3185000], "size": [1243, 1083], "dpi": DPI,
+        "land": LAND, "basemap_oversample": 4, "layers": [tampa_base] + tampa, "texts": texts}
+json.dump(spec, open(os.path.join(OUT, "storms_tampa.json"), "w"), indent=1)
 print("wrote", OUT, SIZE)

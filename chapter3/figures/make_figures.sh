@@ -48,7 +48,7 @@ for m in noise_region:ais_noise_region hull:ais_hull_turn exposure_w:ais_exposur
   timeout 900 "${RUN[@]}" hybrid_pdf.py "job_${m%%:*}.json" "${m##*:}.pdf" 2>&1 |
     grep -E 'wrote|Error|Traceback' || true
 done
-for m in tpoint tgeo tcbuffer; do
+for m in tpoint tgeo tcbuffer tampa; do
   timeout 900 "${RUN[@]}" storms_qgis_map.py "storms_$m.json" "storms_$m.pdf" 2>&1 |
     grep -E 'wrote|Error|Traceback' || true
 done
