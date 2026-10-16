@@ -26,21 +26,20 @@
    "filter": "\"layer\" = 'area'",
    "kind": "fill",
    "style": {
-    "color": "214,168,112,110",
+    "color": "40,170,80,110",
     "outline_style": "no"
    }
   },
   {
    "type": "vector",
-   "name": "fast",
+   "name": "noise",
    "path": "exposure_w.geojson",
-   "filter": "\"layer\" = 'fast'",
+   "filter": "\"layer\" = 'noise'",
    "kind": "fill",
    "style": {
-    "color": "30,110,60,0",
-    "outline_color": "#1e6e3c",
-    "outline_width": "0.35",
-    "style": "no"
+    "color": "60,90,255,40",
+    "outline_color": "0,0,200,255",
+    "outline_width": "0.35"
    }
   },
   {
@@ -51,21 +50,8 @@
    "kind": "fill",
    "style": {
     "color": "0,0,0,0",
-    "outline_color": "#6b3a10",
+    "outline_color": "0,110,40,255",
     "outline_width": "0.6"
-   }
-  },
-  {
-   "type": "vector",
-   "name": "slow",
-   "path": "exposure_w_pts.geojson",
-   "kind": "marker",
-   "style": {
-    "name": "circle",
-    "color": "#b8f05a",
-    "outline_color": "#14532d",
-    "outline_width": "0.3",
-    "size": "1.8"
    }
   }
  ]

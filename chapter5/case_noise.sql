@@ -6,7 +6,7 @@
 -- tables AISNoJump, Ships, Port, NaturalAreas, Bathymetry, and WindSpeed of
 -- load_all.sh, and PortAreas of case_clearance.sql. The source level of a vessel
 -- is computed at 63 Hz with the functions ComputeVc and ComputeSL of chapter 3
--- (chapter3/tcbuffer_load.sql), at the reports whose speed exceeds 3 knots,
+-- (chapter3/ships_noise.sql), at the reports whose speed exceeds 3 knots,
 -- outside the port areas. Each listing of the chapter is preceded by its printed
 -- answer; the other queries give the numbers stated in the text.
 \pset footer off

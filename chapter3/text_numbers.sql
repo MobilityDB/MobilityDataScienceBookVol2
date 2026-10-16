@@ -6,25 +6,25 @@
 -- The numbers the text of the underwater-noise case study quotes and no
 -- listing prints
 --
--- Reads the database built by tcbuffer_load_ais.sh and the tables Exposure,
--- Encounter and SeaEncounter built by tcbuffer_case_study.sql. Run after that
--- script:
---   psql -d noise -f text_numbers.sql
+-- Reads the AIS database of the book after ships_noise.sql, and the tables
+-- Exposure and Encounter built by tcbuffer_case_study.sql. Run
+-- after that script:
+--   psql -d ais -f text_numbers.sql
 -------------------------------------------------------------------------------
 
 \timing on
 SET TimeZone = 'UTC';
 
 -------------------------------------------------------------------------------
--- The trips of the day, and the length and the period of the trip of the
--- fishing vessel
+-- The vessels of the day whose noise is computed, and the length and the
+-- period under way of the fishing vessel
 -------------------------------------------------------------------------------
 
-SELECT count(*) AS Trips FROM VesselTrip;
+SELECT count(*) AS Ships, count(Noise) AS Noisy FROM Ships;
 
-SELECT round((length(Trip) / 1000)::numeric, 1) AS Km, startTimestamp(Trip),
-  endTimestamp(Trip)
-FROM VesselTrip WHERE MMSI = 220323000 AND TripId = 1;
+SELECT round((length(atTime(Trip, getTime(Noise))) / 1000)::numeric, 1) AS Km,
+  startTimestamp(Noise), endTimestamp(Noise)
+FROM Ships WHERE MMSI = 220323000;
 
 -------------------------------------------------------------------------------
 -- The periods during which the noise of the fishing vessel reaches the
@@ -33,41 +33,41 @@ FROM VesselTrip WHERE MMSI = 220323000 AND TripId = 1;
 -------------------------------------------------------------------------------
 
 SELECT whenTrue(tIntersects(v.Noise, n.Geom)) AS NoisePeriods
-FROM VesselTrip v, NaturalAreas n
-WHERE v.MMSI = 220323000 AND v.TripId = 1 AND n.Id = 14;
+FROM Ships v, NaturalAreas n
+WHERE v.MMSI = 220323000 AND n.Id = 14;
 
 SELECT round(nearestApproachDistance(a.Trip, b.Trip)::numeric, 2) AS TripDist
-FROM VesselTrip a, VesselTrip b
-WHERE (a.MMSI, a.TripId) = (220323000, 1) AND (b.MMSI, b.TripId) = (219000407, 1);
+FROM Ships a, Ships b
+WHERE a.MMSI = 220323000 AND b.MMSI = 219000407;
 
 -------------------------------------------------------------------------------
--- How many trips the noise of reaches how many protected areas that their
+-- How many vessels the noise of reaches how many protected areas that their
 -- trajectories do not enter, over every realm
 -------------------------------------------------------------------------------
 
 DROP TABLE IF EXISTS ExposureAll;
 CREATE TABLE ExposureAll AS
-SELECT v.MMSI, v.TripId, n.Id AS AreaId
-FROM VesselTrip v, NaturalAreas n
+SELECT v.MMSI, n.Id AS AreaId
+FROM Ships v, NaturalAreas n
 WHERE stbox(n.Geom) && stbox(v.Noise) AND eIntersects(n.Geom, v.Noise)
   AND NOT eIntersects(n.Geom, v.Trip);
 
-SELECT count(DISTINCT (MMSI, TripId)) AS Trips, count(DISTINCT AreaId) AS Areas
+SELECT count(DISTINCT MMSI) AS Vessels, count(DISTINCT AreaId) AS Areas
 FROM ExposureAll;
 
 -------------------------------------------------------------------------------
--- The trips whose noise reaches a marine or coastal protected area, the areas
+-- The vessels whose noise reaches a marine or coastal protected area, the areas
 -- it reaches among all the marine and coastal ones, and, over these areas, the
--- trips whose noise reaches an area their trajectories do not enter
+-- vessels whose noise reaches an area their trajectories do not enter
 -------------------------------------------------------------------------------
 
-SELECT count(DISTINCT (MMSI, TripId)) AS TripsHeard,
+SELECT count(DISTINCT MMSI) AS VesselsHeard,
   count(DISTINCT AreaId) AS AreasReached
 FROM Exposure;
 SELECT count(*) AS MarineCoastalAreas FROM NaturalAreas WHERE Realm <> 'Terrestrial';
 
-SELECT count(DISTINCT (e.MMSI, e.TripId)) AS Trips, count(DISTINCT e.AreaId) AS Areas
-FROM Exposure e JOIN VesselTrip v USING (MMSI, TripId)
+SELECT count(DISTINCT e.MMSI) AS Vessels, count(DISTINCT e.AreaId) AS Areas
+FROM Exposure e JOIN Ships v USING (MMSI)
   JOIN NaturalAreas n ON n.Id = e.AreaId
 WHERE NOT eIntersects(v.Trip, n.Geom);
 
@@ -91,21 +91,20 @@ SELECT count(*) AS Areas,
 FROM Q;
 
 -------------------------------------------------------------------------------
--- The pairs of trips whose noise regions overlap, and those whose trajectories
--- never come closer than 5 kilometers
+-- The pairs of vessels whose noise regions overlap, and those whose
+-- trajectories never come closer than 5 kilometers
 -------------------------------------------------------------------------------
 
 SELECT count(*) AS Pairs, count(*) FILTER (WHERE TripDist > 5000) AS Far
 FROM Encounter;
 
 -------------------------------------------------------------------------------
--- The encounters at sea of two vessels under way: how many pairs, how many
--- vessels, the median length of an encounter and the farthest apart that two
--- encountering trips stay
+-- The encounters at sea, whose trajectories never come closer than 5
+-- kilometers: how many pairs, and the median length of an encounter
 -------------------------------------------------------------------------------
 
-SELECT count(*) AS Pairs, count(DISTINCT MMSI1) + count(DISTINCT MMSI2) AS Vessels,
+SELECT count(*) AS Pairs,
   round(percentile_cont(0.5) WITHIN GROUP
-    (ORDER BY extract(epoch FROM duration(Overlap)) / 60)::numeric, 1) AS MedianMinutes,
-  round(max(TripDist)) AS MaxTripDist
-FROM SeaEncounter;
+    (ORDER BY extract(epoch FROM duration(Overlap)) / 60)::numeric, 1) AS MedianMinutes
+FROM Encounter
+WHERE TripDist > 5000;

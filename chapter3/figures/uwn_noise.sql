@@ -7,8 +7,8 @@
 \timing on
 SET TimeZone = 'UTC';
 CREATE TEMP TABLE Layer AS
-SELECT MMSI::text AS mmsi, traversedArea(Noise, true) AS G
-FROM VesselTrip WHERE (MMSI, TripId) IN ((220323000, 1), (219000407, 1));
+SELECT MMSI::text AS mmsi, ST_UnaryUnion(ST_CurveToLine(traversedArea(Noise), 64)) AS G
+FROM Ships WHERE MMSI IN (220323000, 219000407);
 SELECT mmsi, GeometryType(G), round((ST_Area(G) / 1e6)::numeric, 2) FROM Layer;
 \o :out/uwn_noise.geojson
 SELECT json_build_object('type','FeatureCollection','features', json_agg(json_build_object(

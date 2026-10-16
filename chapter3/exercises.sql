@@ -1,47 +1,45 @@
 -- Exercises of the chapter Temporal Geometries and Temporal Circular Buffers on
--- the database of the underwater-noise case study, built by tcbuffer_load_ais.sh
--- and completed with the table Exposure by tcbuffer_case_study.sql, which also
--- holds the table Vessels of the AIS database of the book.
+-- the AIS database of the book, after ships_noise.sql has added the column Noise
+-- to the table Ships and tcbuffer_case_study.sql has built the table Exposure.
 -- The comment under each query is the answer it gives.
---   psql -d noise -f exercises.sql
+--   psql -d ais -f exercises.sql
 \pset footer off
 SET TimeZone = 'UTC';
 
 -- Exercise 1: the database of the case study
 
 \echo == 1.1 largest radius of the noise of the fishing vessel, and when
-SELECT round(maxValue(Radius)::numeric) AS MaxRadius,
-  startTimestamp(atMax(Radius)) AS AtTime
-FROM VesselTrip
-WHERE MMSI = 220323000 AND TripId = 1;
+SELECT round(maxValue(Noise::tfloat)::numeric) AS MaxRadius,
+  startTimestamp(atMax(Noise::tfloat)) AS AtTime
+FROM Ships
+WHERE MMSI = 220323000;
 -- 3891 | 2026-01-20 16:48:13+00
 
 \echo == 1.2 protected areas reached for the longest time by the noise of the passenger vessel
 SELECT n.Id, n.NameEng,
   duration(whenTrue(tIntersects(v.Noise, n.Geom))) AS Duration
-FROM VesselTrip v, NaturalAreas n
-WHERE v.MMSI = 219000407 AND v.TripId = 1 AND v.Noise && stbox(n.Geom)
+FROM Ships v, NaturalAreas n
+WHERE v.MMSI = 219000407 AND v.Noise && stbox(n.Geom)
   AND eIntersects(n.Geom, v.Noise)
 ORDER BY 3 DESC
 LIMIT 3;
--- 14  | Havet omkring Nordre Rønner | 07:42:31.053657
--- 129 | N                           | 07:40:57.78243
 -- 70  | U                           | 07:21:02.112344
+-- 14  | Havet omkring Nordre Rønner | 07:07:23.342239
+-- 129 | N                           | 07:05:57.769052
 
-\echo == 1.3 trips whose noise reaches area 14 while their trajectory does not enter it
-SELECT count(*) AS Trips
-FROM VesselTrip v, NaturalAreas n
+\echo == 1.3 vessels whose noise reaches area 14 while their trajectory does not enter it
+SELECT count(*) AS Vessels
+FROM Ships v, NaturalAreas n
 WHERE n.Id = 14 AND v.Noise && stbox(n.Geom)
   AND eIntersects(n.Geom, v.Noise) AND NOT eIntersects(n.Geom, v.Trip);
--- 21
+-- 22
 
-\echo == 1.4 periods in which the two vessels of the case study are within 7 km
-SELECT numSpans(whenTrue(tDwithin(a.Noise, b.Noise, 7000))) AS Periods,
-  duration(whenTrue(tDwithin(a.Noise, b.Noise, 7000))) AS Duration
-FROM VesselTrip a, VesselTrip b
-WHERE (a.MMSI, a.TripId) = (220323000, 1) AND
-  (b.MMSI, b.TripId) = (219000407, 1);
--- 5 | 00:02:17.633503
+\echo == 1.4 periods in which the two vessels of the case study are within 10 km
+SELECT numSpans(whenTrue(tDwithin(a.Noise, b.Noise, 10000))) AS Periods,
+  duration(whenTrue(tDwithin(a.Noise, b.Noise, 10000))) AS Duration
+FROM Ships a, Ships b
+WHERE a.MMSI = 220323000 AND b.MMSI = 219000407;
+-- 2 | 00:10:52.414055
 
 \echo == 1.5 area swept by a circular buffer of radius 1 moving 10 units
 SELECT round(ST_Area(traversedArea(tcbuffer(
@@ -86,18 +84,18 @@ FROM T;
 
 -- Exercise 4: the table Exposure and the table Vessels
 
-\echo == 4.1 average radius of the noise of the fishing vessel, sailing and stopped
+\echo == 4.1 average radius of the noise of the fishing vessel, in transit and fishing
 SELECT
-  round(twAvg(atTime(Radius, whenTrue(Speed #> 2.0)))::numeric) AS Sailing,
-  round(twAvg(atTime(Radius, whenTrue(Speed #<= 2.0)))::numeric) AS Stopped
-FROM VesselTrip
-WHERE MMSI = 220323000 AND TripId = 1;
--- 653 | 108
+  round(twAvg(atTime(Noise::tfloat, whenTrue(SOG #> 6.0)))::numeric) AS Transit,
+  round(twAvg(atTime(Noise::tfloat, whenTrue(SOG #<= 6.0)))::numeric) AS Fishing
+FROM Ships
+WHERE MMSI = 220323000;
+-- 1923 | 187
 
-\echo == 4.2 trips whose noise reaches the most marine and coastal protected areas
+\echo == 4.2 vessels whose noise reaches the most marine and coastal protected areas
 SELECT e.MMSI, s.Name, s.ShipType, count(*) AS Areas
 FROM Exposure e JOIN Vessels s USING (MMSI)
-GROUP BY e.MMSI, e.TripId, s.Name, s.ShipType
+GROUP BY e.MMSI, s.Name, s.ShipType
 ORDER BY Areas DESC, e.MMSI LIMIT 3;
 -- 636025443 | CAPRI  | Tanker  | 29
 -- 219030383 | TOR-ON | Fishing | 28

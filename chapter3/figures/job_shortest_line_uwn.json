@@ -22,8 +22,8 @@
    "path": "uwn_noise.geojson",
    "kind": "fill",
    "style": {
-    "color": "228,26,28,100",
-    "outline_color": "176,20,22,255",
+    "color": "255,60,60,60",
+    "outline_color": "255,0,0,255",
     "outline_width": "0.3"
    },
    "filter": "\"mmsi\" = '220323000'"
@@ -33,8 +33,8 @@
    "path": "uwn_noise.geojson",
    "kind": "fill",
    "style": {
-    "color": "128,128,128,100",
-    "outline_color": "80,80,80,255",
+    "color": "60,90,255,60",
+    "outline_color": "0,0,255,255",
     "outline_width": "0.3"
    },
    "filter": "\"mmsi\" = '219000407'"
@@ -44,10 +44,20 @@
    "path": "uwn_layers.geojson",
    "kind": "line",
    "style": {
-    "line_color": "0,0,0,255",
+    "line_color": "255,0,0,255",
     "line_width": "0.7"
    },
-   "filter": "\"layer\" = 'traj'"
+   "filter": "\"layer\" = 'traj' AND \"id\" = '220323000'"
+  },
+  {
+   "type": "vector",
+   "path": "uwn_layers.geojson",
+   "kind": "line",
+   "style": {
+    "line_color": "0,0,255,255",
+    "line_width": "0.7"
+   },
+   "filter": "\"layer\" = 'traj' AND \"id\" = '219000407'"
   },
   {
    "type": "vector",

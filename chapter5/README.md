@@ -134,7 +134,7 @@ port areas.
 
 `case_noise.sql` computes the noise of the vessels of the day under way outside
 the ports with the source level of chapter 3 (the functions `ComputeVc` and
-`ComputeSL` of `chapter3/tcbuffer_load.sql`, at 63 Hz), and the function
+`ComputeSL` of `chapter3/ships_noise.sql`, at 63 Hz), and the function
 `noiseRadius` of the chapter, which turns the excess level and the depth along
 a trip into the radius of its noise. It builds, for each vessel, the moving
 regions of its noise under spherical spreading with an ambient noise of 80 dB,
