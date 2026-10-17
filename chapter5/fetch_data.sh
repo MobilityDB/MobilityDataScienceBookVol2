@@ -44,22 +44,30 @@ for part in $PARTS; do
   aux)
     # Ports: GISCO ports 2013 of Eurostat. Protected areas: the World Database on
     # Protected Areas of Denmark from Protected Planet, in its current monthly
-    # release (WDPA_RELEASE, e.g. Sep2026, defaults to the current month).
+    # release (WDPA_RELEASE, e.g. Sep2026, defaults to the release served).
     # build_aux_data.sh turns both into data/port.csv and data/natural_areas.csv.gz.
     mkdir -p "$DATA/aux"
     fetch https://ec.europa.eu/eurostat/cache/GISCO/geodatafiles/PORT_2013_SH.zip \
       "$DATA/aux/PORT_2013_SH.zip"
     # A release is published as shapefiles (..._DNK_shp.zip) or as a file
-    # geodatabase (..._DNK.zip); the first name served is kept.
-    R=${WDPA_RELEASE:-$(LC_ALL=C date +%b%Y)}
-    U=https://d1gam3xoknrgr2.cloudfront.net/current/WDPA_WDOECM_${R}_Public_DNK
-    if [ -s "$DATA/aux/WDPA_${R}_DNK_shp.zip" ] || [ -s "$DATA/aux/WDPA_${R}_DNK_gdb.zip" ]; then
-      echo "present: WDPA $R"
-    elif curl -fsI "${U}_shp.zip" > /dev/null; then
-      fetch "${U}_shp.zip" "$DATA/aux/WDPA_${R}_DNK_shp.zip"
-    else
-      fetch "${U}.zip" "$DATA/aux/WDPA_${R}_DNK_gdb.zip"
-    fi
+    # geodatabase (..._DNK.zip); the first name served is kept. The release of a
+    # month appears some days into the month, so the release of the previous
+    # month is the current one until then. The archive ..._DNK_csv.zip holds
+    # the attributes without the geometries and is never used.
+    if [ -n "$WDPA_RELEASE" ]; then RS=$WDPA_RELEASE; else
+      RS="$(LC_ALL=C date +%b%Y) $(LC_ALL=C date -d "$(date +%Y-%m-15) -1 month" +%b%Y)"; fi
+    got=
+    for R in $RS; do
+      U=https://d1gam3xoknrgr2.cloudfront.net/current/WDPA_WDOECM_${R}_Public_DNK
+      if [ -s "$DATA/aux/WDPA_${R}_DNK_shp.zip" ] || [ -s "$DATA/aux/WDPA_${R}_DNK_gdb.zip" ]; then
+        echo "present: WDPA $R"; got=$R; break
+      elif curl -fsI "${U}_shp.zip" > /dev/null; then
+        fetch "${U}_shp.zip" "$DATA/aux/WDPA_${R}_DNK_shp.zip"; got=$R; break
+      elif curl -fsI "${U}.zip" > /dev/null; then
+        fetch "${U}.zip" "$DATA/aux/WDPA_${R}_DNK_gdb.zip"; got=$R; break
+      fi
+    done
+    [ -n "$got" ] || { echo "no WDPA release $RS is served by Protected Planet" >&2; exit 1; }
     ;;
   cmems)
     # Hourly products of the Copernicus Marine Service for January 20, 2026. The
