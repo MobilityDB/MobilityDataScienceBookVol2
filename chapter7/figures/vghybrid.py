@@ -26,6 +26,15 @@ import zlib
 
 from vgprint import CHROME, _INIT, _MEASURE
 
+TEXTWIDTH_MM = 117  # \textwidth of svmono, the class of the book
+
+
+def print_dpi(css_w, width):
+    """The dpi of #print_map_hybrid at which the data image has the pixels of the map as the book prints it
+    at 300 dpi, so that no viewer resamples it: width is the fraction of \\textwidth of the
+    \\includegraphics of the map, css_w the CSS width of the page."""
+    return 300 * width * TEXTWIDTH_MM / 25.4 / (css_w / 96)
+
 PIKEPDF_PY = os.environ.get('PIKEPDF_PY', sys.executable)
 
 

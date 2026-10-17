@@ -109,7 +109,8 @@ parts that the figures show (`queryduckdbproc_a`, `queryduckdbproc_b`, `querypro
 The maps of the chapter are drawn with the Folium code of the notebooks, over the OpenMapTiles
 vector tiles of OpenFreeMap drawn by Leaflet.VectorGrid (`figures/vtiles.py`, styles in
 `figures/omtstyle.py`), printed to vector PDF by headless Chromium (`figures/vgprint.py`;
-`figures/vghybrid.py` embeds a dense marker layer as one lossless image). A map PDF carries no
+`figures/vghybrid.py` embeds a dense marker or trip layer as one lossless image of the pixels of
+the map as the book prints it at 300 dpi, so that no viewer resamples it). A map PDF carries no
 text: its labels and legends are TikZ overlays (`<figure>_overlay.tex`) set in the font of the
 captions.
 
