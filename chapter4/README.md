@@ -181,3 +181,8 @@ and need the LaTeX source of the chapter, `chapter4.tex`:
       psql -X -d <database> -f listings.sql > listings.out 2>&1
       python3 check/book_listings.py compare chapter4.tex listings.out pose_examples.sql
 
+- `check/ais_poses_from_book.py` writes `ais_poses.sql` from the AIS listings of the chapter,
+  in its order, so that the script runs the listings as the book prints them:
+
+      python3 check/ais_poses_from_book.py chapter4.tex ais_poses.sql
+
