@@ -24,6 +24,13 @@ The extension loads only into the DuckDB version of its build.
    `mobilityDuckAIS.ipynb` holds every listing of the chapter that reads the AIS data, in the
    order of the chapter, and reads from the environment `MOBILITYDUCK_EXTENSION`, `AIS_DIR` and
    `PG_AIS`, the variables of the section on reproducing the chapter below.
+   The folder `notebook` writes it from the chapter and runs it: `ais_listings.py` reads the
+   listings of `chapter7.tex` that read the AIS tables, `build_notebook.py` makes one cell of
+   each, and `run_notebook.py` executes the notebook in place, with the variables above set:
+
+       python3 notebook/ais_listings.py chapter7.tex ais_listings.json
+       python3 notebook/build_notebook.py ais_listings.json mobilityDuckAIS.ipynb
+       python notebook/run_notebook.py mobilityDuckAIS.ipynb mobilityDuckAIS.ipynb
 3. The extension is not signed by DuckDB, so the notebooks open DuckDB with
    `allow_unsigned_extensions` (in the DuckDB shell, start it with `duckdb -unsigned`).
 4. The notebooks install the spatial extension from the `core_nightly` repository
