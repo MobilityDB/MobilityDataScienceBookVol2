@@ -1,10 +1,14 @@
 #!/bin/bash
 # Draw every map figure of the chapter into $OUT (default: out/ below the
 # working directory) from the database loaded by load_all.sh after run_all.sh:
-# each export script writes the layers of its figure, render.sh draws the
-# figure with QGIS, and cellgrids.py lays out the figure of the three cell grids
-# from the image of the MobilityDB manual. With the default QGIS of Windows
-# called from WSL, $OUT must be on a Windows drive (/mnt/c/...).
+# each export script writes the layers of its figure, hybrid_pdf.py of
+# chapter3/figures draws each job job_<figure>.json with QGIS and render_map.py
+# as the vector PDF <figure>.pdf the book includes (the basemap, cells, tracks
+# and outlines as vectors, a raster data layer as an embedded image), and
+# export_cellgrids.sql, cellgrids_panels.py, and cellgrids_compose.tex draw the
+# figure of the three cell grids as cellgrids.pdf. QGIS_PY is the Python of QGIS, for instance python3 on a
+# Linux installation of QGIS; by default it is the QGIS 3.40 installation of
+# Windows called from WSL, which needs $OUT on a Windows drive (/mnt/c/...).
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
 export DATA=${DATA:-$PWD/data}
@@ -13,14 +17,24 @@ mkdir -p "$OUT"
 for f in bathymetry_laeso depth_under_vessel traffic_h3 seabed; do
   bash "$HERE/export_$f.sh"
 done
+cp "$HERE/../../chapter3/figures/hybrid_pdf.py" "$HERE/render_map.py" "$HERE"/job_*.json "$OUT/"
+if [ -n "$QGIS_PY" ]; then
+  RUN=($QGIS_PY)
+else
+  QGIS=$(ls -d "/mnt/c/Program Files/QGIS 3.40"* | sort -V | tail -1)
+  RUN=(cmd.exe /c "C:\\Program Files\\$(basename "$QGIS")\\bin\\python-qgis-ltr.bat")
+fi
 for j in bathymetry_laeso depth_under_vessel traffic_h3 seabed_slope seabed_tpi; do
-  bash "$HERE/render.sh" "$HERE/job_$j.json"
+  (cd "$OUT" && timeout 900 "${RUN[@]}" hybrid_pdf.py "job_$j.json" "$j.pdf" 2>&1 |
+    grep -E 'wrote|Error|Traceback' || true)
 done
-curl -fsSL -o "$OUT/cellindex.png" \
-  https://raw.githubusercontent.com/MobilityDB/MobilityDB/688ef3e12bcff88de44c42ca6e71a554c1800c60/doc/images/cellindex.png
-python3 "$HERE/cellgrids.py" "$OUT/cellindex.png" "$OUT/cellgrids.png"
+psql -X -v out="$OUT" -f "$HERE/export_cellgrids.sql"
+cp "$HERE/cellgrids_panels.py" "$HERE/cellgrids_compose.tex" "$OUT/"
+(cd "$OUT" && timeout 900 "${RUN[@]}" cellgrids_panels.py . 2>&1 | grep -E 'wrote|Error|Traceback' || true)
+(cd "$OUT" && pdflatex -interaction=nonstopmode cellgrids_compose.tex > /dev/null &&
+  mv cellgrids_compose.pdf cellgrids.pdf)
 # The labels and the legend of the depth under the vessel are LaTeX, in the style
 # of the captions, drawn over the image by depth_under_vessel_overlay.tex.
 python3 "$HERE/overlay_depth_under_vessel.py" "$HERE/job_depth_under_vessel.json" \
-  "$OUT/vessel_reports.gpkg" figs/tessellations/depth_under_vessel '0.85\textwidth' \
+  "$OUT/vessel_reports.gpkg" figs/chap5/depth_under_vessel '0.85\textwidth' \
   "$OUT/depth_under_vessel_overlay.tex"

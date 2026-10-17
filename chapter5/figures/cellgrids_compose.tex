@@ -1,0 +1,20 @@
+% The figure of the three cell grids (fig:tess_cellgrids), composed from the six panels of
+% cellgrids_panels.py: one row per grid, the whole track on the left and the excerpt one resolution
+% finer on the right, at the width of the text of the book. pdflatex writes cellgrids.pdf.
+\documentclass{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\newcommand{\panel}[2]{\begin{minipage}[t]{0.49\linewidth}\centering
+  {\sffamily\bfseries\scriptsize #1}\\[2pt]
+  \includegraphics[width=\linewidth]{panel_#2.pdf}\end{minipage}}
+\begin{document}
+\begin{minipage}{332.89723pt}
+\panel{Uber H3, resolution 8 (0.57 km\textsuperscript{2})}{h3_8}\hfill
+\panel{Uber H3, resolution 9 (0.081 km\textsuperscript{2})}{h3_9}\\[6pt]
+\panel{CARTO QUADBIN, resolution 15 (0.43 km\textsuperscript{2})}{quadbin_15}\hfill
+\panel{CARTO QUADBIN, resolution 16 (0.108 km\textsuperscript{2})}{quadbin_16}\\[6pt]
+\panel{Google S2, level 14 (0.32 km\textsuperscript{2})}{s2_14}\hfill
+\panel{Google S2, level 15 (0.079 km\textsuperscript{2})}{s2_15}
+\end{minipage}
+\end{document}

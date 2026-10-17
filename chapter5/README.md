@@ -73,7 +73,6 @@ ERA5 dataset accepted on its page).
 | Protected areas | [World Database on Protected Areas](https://www.protectedplanet.net), Denmark | UNEP-WCMC and IUCN, Protected Planet; no redistribution, no commercial use |
 | Waves, temperature, salinity | Copernicus Marine Service, `BALTICSEA_ANALYSISFORECAST_PHY_003_006`, `BALTICSEA_ANALYSISFORECAST_WAV_003_010`, `NWSHELF_ANALYSISFORECAST_PHY_004_013`, `NWSHELF_ANALYSISFORECAST_WAV_004_014` | "Generated using E.U. Copernicus Marine Service Information" |
 | Wind | ERA5 hourly data on single levels, 10 m wind, day 2026-01-20 | CC-BY-4.0 |
-| Cell grids figure | `doc/images/cellindex.png` of the MobilityDB manual | as the manual |
 
 `build_aux_data.sh` builds `data/port.csv` and `data/natural_areas.csv.gz`,
 the files that `load_aux_tables.sql` and the loader of chapter 3 read. The
@@ -168,19 +167,23 @@ Building the three moving regions of every vessel and the pairs takes
 
 ### Figures
 
-`figures/make_figures.sh` draws the map figures of the chapter into `$OUT`:
-for each figure, `export_<figure>.sh` writes its layers from the database, and
-`render.sh` draws `job_<figure>.json` (the layers, their styles, the extent,
-and the size) with `render_map.py` in the Python of QGIS. `QGIS_PY` names that
-Python, for instance `python3` on a Linux installation of QGIS; by default it is
-the QGIS 3.40 installation of Windows called from WSL, which needs `$OUT` on a
-Windows drive. `cellgrids.py` lays out the image of the three cell grids of the
-MobilityDB manual as the figure of the chapter.
+`figures/make_figures.sh` draws the map figures of the chapter into `$OUT` as
+the PDF files the book includes: for each figure, `export_<figure>.sh` writes
+its layers from the database, and `hybrid_pdf.py` of `chapter3/figures` draws
+`job_<figure>.json` (the layers, their styles, the extent, and the size) with
+`render_map.py` in the Python of QGIS as a vector PDF, the OpenStreetMap
+Shortbread basemap, the cells, the tracks and the outlines as vectors and a
+raster data layer as an embedded image. `QGIS_PY` names that Python, for
+instance `python3` on a Linux installation of QGIS; by default it is the QGIS
+3.40 installation of Windows called from WSL, which needs `$OUT` on a Windows
+drive. `render.sh` draws a job as a PNG image instead. The track and the
+protected area follow the colours of the ship figures of the book: one vessel
+in blue, protected areas in green.
 
 | Figure | Scripts |
 |---|---|
 | Bathymetry around the island of Læsø | `export_bathymetry_laeso.sh`, `job_bathymetry_laeso.json` |
 | The seabed of a reef area north-east of Læsø | `export_seabed.sh`, `job_seabed_slope.json`, `job_seabed_tpi.json` |
 | The depth under a vessel between two reports | `export_depth_under_vessel.sh`, `job_depth_under_vessel.json`, and `overlay_depth_under_vessel.py`, which writes `depth_under_vessel_overlay.tex`, the image with its labels and legend in the style of the captions, which the book inputs |
-| An AIS track on the H3, QUADBIN, and S2 grids | `cellgrids.py` |
+| An AIS track on the H3, QUADBIN, and S2 grids | `export_cellgrids.sql`, which writes the track of the pilot boat 219002732 leaving Frederikshavn from `Ships`, the protected area 17 of `NaturalAreas`, and the cells of the six panels; `cellgrids_panels.py`, which draws each panel; and `cellgrids_compose.tex`, which sets them in `cellgrids.pdf` |
 | Vessel-hours per H3 cell | `export_traffic_h3.sh`, `job_traffic_h3.json` |

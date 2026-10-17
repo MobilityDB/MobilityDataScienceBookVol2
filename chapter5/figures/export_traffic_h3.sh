@@ -6,10 +6,15 @@
 set -e
 cd "${OUT:-$PWD}"
 PG="PG:dbname=${PGDATABASE:-$USER}${PGHOST:+ host=$PGHOST}${PGPORT:+ port=$PGPORT}${PGUSER:+ user=$PGUSER}"
-ogr2ogr -f GPKG -a_srs EPSG:4326 -nlt POLYGON traffic_cells.gpkg "$PG" -nln cells -overwrite -sql \
-  "SELECT Cell::text AS cell, Vessels AS vessels,
-     EXTRACT(EPOCH FROM VesselTime) / 3600 AS hours, cellToBoundary(Cell) AS geom
-   FROM CellTraffic"
+# The cells of each class of the legend are merged into one polygon whose hours
+# are the lower bound of the class, so that the map draws the outline of each
+# class instead of the edges the hexagons share.
+ogr2ogr -f GPKG -a_srs EPSG:4326 -nlt MULTIPOLYGON traffic_cells.gpkg "$PG" -nln cells -overwrite -sql \
+  "SELECT Hours AS hours, ST_Multi(ST_Union(cellToBoundary(Cell))) AS geom
+   FROM (SELECT Cell, CASE WHEN h < 1 THEN 0 WHEN h < 5 THEN 1 WHEN h < 20 THEN 5
+       WHEN h < 100 THEN 20 ELSE 100 END AS Hours
+     FROM (SELECT Cell, EXTRACT(EPOCH FROM VesselTime) / 3600 AS h FROM CellTraffic) c) t
+   GROUP BY Hours"
 ogr2ogr -f GPKG -a_srs EPSG:4326 -nlt POINT traffic_busiest.gpkg "$PG" -nln busiest -overwrite -sql \
   "SELECT 'Skagen' AS label, cellToPoint(Cell) AS geom
    FROM CellTraffic ORDER BY VesselTime DESC LIMIT 1"
