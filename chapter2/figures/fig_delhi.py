@@ -7,6 +7,8 @@ from delhi_common import *  # noqa: F401,F403  (tc, my_trajs, my_traj, my_traj_s
 import folium
 from vtiles import VectorTiles
 from vgprint import print_map, categorical_legend, colorbar_of, write_overlay
+sys.path.append(str(Path(__file__).resolve().parents[2] / 'chapter7' / 'figures'))
+from pdf_simplify import simplify_printed  # noqa: E402
 
 OUT = Path(__file__).resolve().parent / 'out'
 OUT.mkdir(exist_ok=True)
@@ -205,6 +207,12 @@ OVERLAY = {
     'mpandas2-smooth-speed_a': (('colorbar', 'Speed (m/s)', 2.6), 'height=7.4cm'),
     'mpandas2-smooth-speed_b': (('colorbar', 'Speed (m/s)', 2.6), 'height=7.4cm'),
 }
+# name -> the side and the length in mm at which the book prints the map, for the maps whose paths
+# #simplify_printed of chapter7/figures/pdf_simplify.py simplifies below half a printed pixel
+PRINTED = {
+    'mpandas2-smooth_a': ('height', 60), 'mpandas2-smooth_b': ('height', 60),
+    'mpandas2-smooth-speed_a': ('height', 74), 'mpandas2-smooth-speed_b': ('height', 74),
+}
 FONT_8PT = {'mpandas2-delhitrips', 'mpandas2-delhispeeds', 'mpandas2-splits-detail',
             'mpandas2-stops-collect'}
 
@@ -218,6 +226,9 @@ for name in names:
     dd = dpi
     info = print_map(html, f'{OUT}/{name}.pdf', (w + 1) // 2, (h + 1) // 2, round(w / dd, 4),
                      round(h / dd, 4), **kw)
+    if name in PRINTED:
+        side, mm = PRINTED[name]
+        simplify_printed(f'{OUT}/{name}.pdf', mm if side == 'width' else mm * w / h)
     print(name, 'zoom', round(info['zoom'], 3), 'tiles', info['tiles'])
     if name in OVERLAY:
         (kind, *a), incl = OVERLAY[name]
