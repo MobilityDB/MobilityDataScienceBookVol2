@@ -111,6 +111,8 @@ ORDER BY t.VesselTime DESC
 LIMIT 3;
 
 \echo == Listing: the cells crossed by most vessels and the depth in them
+-- Ties are broken by the text of the cell, whose order is that of the identifiers: the btree
+-- operator class of h3index of h3-pg 4.2.3 sorts the identifiers in descending order.
 /* Cell            | Vessels | MeanDepth | MinDepth
    871f22252ffffff |      78 |      36.3 |     17.7
    871f2226dffffff |      78 |      36.9 |     19.9
@@ -121,5 +123,5 @@ SELECT t.Cell, t.Vessels, round((d.Depth).mean::numeric, 1) AS MeanDepth,
   round((d.Depth).min::numeric, 1) AS MinDepth
 FROM CellTraffic t JOIN CellDepth d USING (Cell) JOIN CellZones z USING (Cell)
 WHERE (d.Depth).count * 2500 >= 0.95 * ST_Area(z.Geom)
-ORDER BY t.Vessels DESC, t.Cell
+ORDER BY t.Vessels DESC, t.Cell::text
 LIMIT 5;
