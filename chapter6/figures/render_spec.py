@@ -18,13 +18,16 @@
 # and "label_obstacle" the weight of its features as obstacles to the other labels (0: none).
 # "label_font" names a font file (fonts/lmroman9-regular.otf, the face of \captionstyle at 8.5 pt) in which
 # the labels are placed, so that the engine measures them as LaTeX sets them.
+# A layer with "image" true is drawn in a PDF as one lossless image of the pixels of the figure as the book
+# prints it at 300 dpi, "print_width_mm" wide, between the vector layers below and above it, so that a dense
+# layer costs a viewer one image and no viewer resamples it.
 import sys, os, json, math
 from qgis.core import (QgsRenderContext, QgsMapRendererCustomPainterJob, Qgis, QgsPalLayerSettings, QgsVectorLayerSimpleLabeling, QgsApplication, QgsVectorLayer, QgsMapSettings, QgsMapRendererParallelJob,
     QgsCoordinateReferenceSystem, QgsRectangle, QgsProject, QgsCoordinateTransform, QgsPointXY,
     QgsSingleSymbolRenderer, QgsWkbTypes, QgsGeometry, QgsMarkerSymbol, QgsLineSymbol, QgsFillSymbol,
     QgsVectorTileLayer, QgsVectorTileBasicRenderer, QgsVectorTileBasicRendererStyle, QgsProperty)
-from qgis.PyQt.QtCore import QSize, QSizeF, QMarginsF, QEventLoop
-from qgis.PyQt.QtGui import QColor, QPainter, QPdfWriter, QPageSize, QFontDatabase
+from qgis.PyQt.QtCore import QSize, QSizeF, QMarginsF, QEventLoop, QRectF
+from qgis.PyQt.QtGui import QColor, QPainter, QPdfWriter, QPageSize, QFontDatabase, QImage
 
 spec = json.load(open(sys.argv[1]))
 base = os.path.dirname(os.path.abspath(sys.argv[1]))
@@ -91,6 +94,7 @@ for l in spec['layers']:
             sym.setOpacity(sym.opacity() * lyr.opacity())
         lyr.setOpacity(1)
     lyr.setCustomProperty('label_unplaced', bool(l.get('label_unplaced')))
+    lyr.setCustomProperty('image', bool(l.get('image')))
     if 'label_pt' in spec and lyr.labelsEnabled() and lyr.labeling() is not None:
         pal = lyr.labeling().settings()  # the labels are placed at the size they are printed in the overlay
         if pal.drawLabels:
@@ -245,7 +249,34 @@ if out.endswith('.pdf'):
     # The frame of the page, from which the tile edges of the basemap are found
     print('frame', merc.authid(), rect.xMinimum(), rect.yMinimum(), rect.xMaximum(), rect.yMaximum(),
           w, h, 'scale', ms.scale(), 'zoom', osm.tileMatrixSet().scaleToZoomLevel(ms.scale()))
-    QgsMapRendererCustomPainterJob(ms, p).renderSynchronously()
+    if 'print_width_mm' not in spec or not any(l.customProperty('image') for l in layers):
+        QgsMapRendererCustomPainterJob(ms, p).renderSynchronously()
+    else:
+        # The runs of layers from the bottom up: a run of vector layers drawn as vectors, a run of image layers
+        # as one image of the printed pixels; the land is the background of the bottom run only
+        iw = round(spec['print_width_mm'] / 25.4 * 300); ih = round(iw * h / w)
+        runs = []
+        for lyr in reversed(layers):
+            if runs and bool(lyr.customProperty('image')) == bool(runs[-1][0].customProperty('image')):
+                runs[-1].append(lyr)
+            else:
+                runs.append([lyr])
+        for i, run in enumerate(runs):
+            image = bool(run[0].customProperty('image'))
+            s = settings(list(reversed(run)), iw if image else w, ih if image else h, dpi * iw / w if image else dpi)
+            if i > 0:
+                s.setBackgroundColor(QColor(0, 0, 0, 0))
+            if image:
+                img = QImage(iw, ih, QImage.Format_ARGB32); img.fill(s.backgroundColor())
+                ip = QPainter(img)
+                QgsMapRendererCustomPainterJob(s, ip).renderSynchronously()
+                ip.end()
+                p.save(); p.setRenderHint(QPainter.LosslessImageRendering)
+                p.drawImage(QRectF(0, 0, w, h), img)
+                p.restore()
+            else:
+                s.setFlag(QgsMapSettings.ForceVectorOutput, True)
+                QgsMapRendererCustomPainterJob(s, p).renderSynchronously()
     p.end()
 else:
     img = render(settings(layers, w, h, dpi))

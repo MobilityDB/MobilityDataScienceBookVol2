@@ -79,7 +79,9 @@ Paris Data (ODbL), downloaded as GeoJSON. Each figure has a spec (`<figure>.json
 its GeoJSON, its output, its size, its extent in the map CRS, and its layers from
 top to bottom with their QML styles), which `render_spec.py` draws in the Python
 of QGIS over the OpenStreetMap Shortbread vector tiles as a vector PDF, without
-the labels, which it writes to `<figure>_labels.json`. `overlay_labels.py` then
+the labels, which it writes to `<figure>_labels.json`; a layer with `"image": true`,
+such as the trips of `griddistricts.json`, is one image of the pixels of the figure as
+the book prints it at 300 dpi, `print_width_mm` wide. `overlay_labels.py` then
 writes the LaTeX overlay of the figure, a TikZ picture setting the labels over
 the PDF in the font of the captions.
 

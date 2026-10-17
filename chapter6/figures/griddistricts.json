@@ -4,6 +4,7 @@
  "width": 812,
  "height": 828,
  "dpi": 144,
+ "print_width_mm": 71.6,
  "crs": "EPSG:7760",
  "extent": [
   991598.0,
@@ -15,6 +16,7 @@
   {
    "name": "alltrips",
    "type": "line",
+   "image": true,
    "color": "#1a1aff",
    "width": 0.45
   },
