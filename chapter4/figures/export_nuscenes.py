@@ -101,8 +101,14 @@ for gname, cond, fill, stroke in GROUPS:
     layers.append({'type': 'polygon', 'file': save(f'swept_{gname}', fc),
                    'fill': fill.rsplit(',', 1)[0] + ',120', 'stroke': stroke,
                    'width': 0.2})
-ego_swept = collection(cur, f"SELECT {G.format(f'traversedArea({EGO}, true)')} "
-                       "FROM EgoTrip e WHERE e.SceneId = %s", (sid,), xf)
+# The ground swept by the ego vehicle is the union of the ground it sweeps over the pieces of its
+# trip of 64 instants each; on its 3,136 poses, the single dissolve of the whole trip takes more
+# than ten minutes, the pieces three seconds (on the objects of the scene, the two agree to the
+# hundredth of a square meter)
+ego_swept = collection(cur, f"""SELECT {G.format(
+  'ST_Union(ST_CurveToLine(traversedArea(atTime(e.Trip, sp), true), 64))')}
+  FROM (SELECT {EGO} AS Trip FROM EgoTrip e WHERE e.SceneId = %s) e,
+  unnest(splitEachNSpans(e.Trip, 64)) sp""", (sid,), xf)
 layers.append({'type': 'polygon', 'file': save('swept_ego', ego_swept),
                'fill': '0,120,0,110', 'stroke': '0,60,0,255', 'width': 0.25})
 figure('nus_swept.pdf', bbox(ego_swept, *fcs, pad=0.05, aspect=1.6), layers)
