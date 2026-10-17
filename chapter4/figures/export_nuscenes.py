@@ -84,7 +84,7 @@ layers = [{'type': 'polygon', 'file': save('scene_ego', ego_body),
 layers += [{'type': 'line', 'file': save('scene_paths', paths),
             'stroke': '90,90,90,255', 'width': 0.25},
            dict(TRACK, file=save('scene_egopath', ego_path), width=0.5)]
-figure('nus_scene.png', bbox(ego_path, *fcs, pad=0.05, aspect=1.3), layers)
+figure('nus_scene.pdf', bbox(ego_path, *fcs, pad=0.05, aspect=1.3), layers)
 
 # He ground swept by every object of a parking-lot scene
 print('nus_swept')
@@ -105,7 +105,7 @@ ego_swept = collection(cur, f"SELECT {G.format(f'traversedArea({EGO}, true)')} "
                        "FROM EgoTrip e WHERE e.SceneId = %s", (sid,), xf)
 layers.append({'type': 'polygon', 'file': save('swept_ego', ego_swept),
                'fill': '0,120,0,110', 'stroke': '0,60,0,255', 'width': 0.25})
-figure('nus_swept.png', bbox(ego_swept, *fcs, pad=0.05, aspect=1.6), layers)
+figure('nus_swept.pdf', bbox(ego_swept, *fcs, pad=0.05, aspect=1.6), layers)
 
 # He sensor rig in the body frame of the vehicle
 print('nus_rig')

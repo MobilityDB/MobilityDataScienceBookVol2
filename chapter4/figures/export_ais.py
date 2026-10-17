@@ -41,13 +41,12 @@ stern = collection(cur, f"""SELECT {geo('ST_MakeLine(p ORDER BY t)')} FROM (SELE
 ext = bbox(swept, hulls, pad=0.06, aspect=0.8)
 f_h, f_s, f_t = save('turn_hulls', hulls), save('turn_swept', swept), save('turn_track', track)
 f_b, f_st = save('turn_bow', bow), save('turn_stern', stern)
-figure('ais_turn_swept.png', ext, [dict(TRACK, file=f_t), dict(HULL, file=f_h),
+figure('ais_turn_swept.pdf', ext, [dict(TRACK, file=f_t), dict(HULL, file=f_h),
        dict(SWEPT, file=f_s)])
-figure('ais_turn_paths.png', ext, [
+figure('ais_turn_paths.pdf', ext, [
     dict(TRACK, file=f_t, width=0.7),
     {'type': 'line', 'file': f_b, 'stroke': '220,0,0,255', 'width': 0.7},
-    {'type': 'line', 'file': f_st, 'stroke': '0,150,0,255', 'width': 0.7},
-    dict(HULL, file=f_h, fill='255,140,0,40', stroke='120,60,0,160')])
+    {'type': 'line', 'file': f_st, 'stroke': '0,150,0,255', 'width': 0.7}])
 
 # The heading of a double-ended ferry flips at the berth: TYCHO BRAHE in Helsingor, at the flip
 # of the figure, between the records of 1:33:57 and 1:34:27
@@ -69,7 +68,7 @@ hulls = collection(cur, f"""SELECT {geo(f'valueAtTimestamp({W}, t)')}
   interval '{step} seconds') t""")
 swept = collection(cur, f"SELECT {geo(f'traversedArea({W}, true)')}")
 ext = bbox(swept, pad=0.6, aspect=1.4)
-figure('ais_flip.png', ext, [dict(HULL, file=save('flip_hulls', hulls),
+figure('ais_flip.pdf', ext, [dict(HULL, file=save('flip_hulls', hulls),
        fill='255,140,0,90'), dict(SWEPT, file=save('flip_swept', swept))])
 
 # Two ferries crossing the Oresund: hulls against antennas
@@ -100,11 +99,11 @@ past = collection(cur, f"""SELECT {geo('valueAtTimestamp(w, t)')}
 f_ha, f_hb = save('enc_hull_a', ha), save('enc_hull_b', hb)
 f_hl, f_al = save('enc_hull_line', hull_line), save('enc_ant_line', ant_line)
 f_an, f_tr, f_pa = save('enc_ants', ants), save('enc_tracks', tracks), save('enc_past', past)
-figure('ais_encounter_context.png', bbox(tracks, pad=0.08, aspect=1.5), [
+figure('ais_encounter_context.pdf', bbox(tracks, pad=0.08, aspect=1.5), [
     dict(HULL, file=f_ha), dict(HULL, file=f_hb),
     dict(HULL, file=f_pa, fill='255,140,0,60', stroke='120,60,0,120'),
     dict(TRACK, file=f_tr)])
-figure('ais_encounter_zoom.png', bbox(ha, hb, pad=0.25, aspect=1.5), [
+figure('ais_encounter_zoom.pdf', bbox(ha, hb, pad=0.25, aspect=1.5), [
     {'type': 'point', 'file': f_an, 'fill': '0,0,0,255', 'size': 1.6},
     {'type': 'line', 'file': f_al, 'stroke': '0,0,255,255', 'width': 0.6,
      'style': 'dash'},
@@ -125,7 +124,7 @@ course = collection(cur, f"""SELECT {geo('''ST_MakeLine(p, ST_Translate(p,
   60 * sin(a), 60 * cos(a)))''')} FROM (SELECT valueAtTimestamp(tgeompoint({W}), t) p,
   valueAtTimestamp(azimuth(tgeompoint({W})), t) a FROM {T}) x""")
 track = collection(cur, f"SELECT {geo(f'trajectory(tgeompoint({W}))')}")
-figure('ais_crab.png', bbox(track, hulls, pad=0.15, aspect=1.4), [
+figure('ais_crab.pdf', bbox(track, hulls, pad=0.15, aspect=1.4), [
     {'type': 'line', 'file': save('crab_heading', heading), 'stroke': '220,0,0,255',
      'width': 0.7},
     {'type': 'line', 'file': save('crab_course', course), 'stroke': '0,150,0,255',
@@ -143,10 +142,10 @@ NEAR = f"WHERE ST_DWithin(valueAtTimestamp(tgeompoint(Trip), {T0}), {PORT}, 1500
 layer_points = collection(cur, f"SELECT {geo(f'valueAtTimestamp(tgeompoint(Trip), {T0})')}, MMSI FROM ShipsRigid {NEAR}")
 layer_hulls = collection(cur, f"SELECT {geo(f'valueAtTimestamp(Trip, {T0})')}, MMSI FROM ShipsRigid {NEAR}")
 lext = bbox(layer_hulls, pad=0.08, aspect=1.0)
-figure('ais_layer_points.png', lext, [
+figure('ais_layer_points.pdf', lext, [
     {'type': 'point', 'file': save('layer_points', layer_points), 'fill': '220,0,0,255',
-     'size': 1.8}])
-figure('ais_layer_hulls.png', lext, [dict(RED_HULL, file=save('layer_hulls', layer_hulls))])
+     'size': 3.5}])
+figure('ais_layer_hulls.pdf', lext, [dict(RED_HULL, file=save('layer_hulls', layer_hulls))])
 
 # ---------------------------------------------------------------------------
 # The reference geometries of the Anholt offshore wind farm, derived from its
@@ -177,7 +176,7 @@ wf_service = collection(cur, f"""SELECT {geo('trajectory(tgeompoint(Trip))')}, M
   FROM ShipsRigid WHERE {NEAR} AND {SERVICE}""")
 print('  vessels within 10 km of B', len(wf_traffic['features']) + len(wf_service['features']),
       'of which service vessels', len(wf_service['features']))
-figure('ais_windfarm.png', bbox(wf_b, pad=0.25, aspect=1.4), [
+figure('ais_windfarm.pdf', bbox(wf_b, pad=0.25, aspect=1.4), [
     {'type': 'point', 'file': save('wf_a', wf_a), 'fill': '255,230,0,255', 'size': 2.6},
     {'type': 'point', 'file': save('wf_turbines', wf_turbines), 'fill': '40,40,40,255',
      'stroke': '40,40,40,255', 'size': 0.9},
@@ -202,7 +201,7 @@ dock_hulls = collection(cur, f"""SELECT {geo(f'valueAtTimestamp({DOCK}, t)')},
   to_char(t, 'HH24:MI') FROM generate_series(timestamptz '2026-01-20 08:10:00',
   timestamptz '2026-01-20 08:37:00', interval '3 minutes') t""")
 dock_track = collection(cur, f"SELECT {geo(f'trajectory(tgeompoint({DOCK}))')}")
-figure('ais_dock.png', bbox(dock_swept, pad=0.12, aspect=1.0), [
+figure('ais_dock.pdf', bbox(dock_swept, pad=0.12, aspect=1.0), [
     dict(TRACK, file=save('dock_track', dock_track), width=0.5),
     dict(HULL, file=save('dock_hulls', dock_hulls)),
     dict(SWEPT, file=save('dock_swept', dock_swept))])

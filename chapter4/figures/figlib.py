@@ -2,15 +2,15 @@
 
 Every geometry of a map figure is the result of a MobilityDB query, written as
 GeoJSON in EPSG:4326 into the directory $OUT (default: out/ below the working
-directory), together with a spec that render_figures.py draws with QGIS over an
-OpenStreetMap basemap. The files of a spec are named relative to $OUT, where
+directory), together with a spec that render.sh draws with QGIS as vector PDFs over the
+OpenStreetMap Shortbread vector tiles. The files of a spec are named relative to $OUT, where
 render.sh runs the renderer.
 
 As the export scripts of chapter 5 do (chapter5/figures/export_traffic_h3.sh),
 the database comes from the PostgreSQL environment variables (PGHOST, PGPORT,
 PGUSER); the names of the AIS and nuScenes databases are AIS_DB and NUSCENES_DB
-(default: ais and nuscenes). The session runs in the time zone of Denmark, in
-which the timestamps of the queries are written.
+(default: ais and nuscenes). The session runs in UTC, the time of the AIS data,
+in which the timestamps of the queries are written.
 
 Chapter 5 exports its layers with ogr2ogr from one query each, and has no
 Python helpers to share (rule 4 of the sibling search): these are built beside
