@@ -20,8 +20,8 @@
 # (ROOT/stage/coverfig/layers); RUN, the run inorder_figures.py reads; OUT, where the PDF files go
 # (figs/ beside this script); BASEMAP_ZOOM (6); QGIS_PY, the Python of QGIS, for instance python3 on
 # a Linux installation of QGIS; by default it is the QGIS 3.40 installation of Windows called from
-# WSL, which needs both stages on a Windows drive (/mnt/c/...), as the benchmark's renders do. The
-# basemap is fetched over the network.
+# WSL, which needs both stages on a Windows drive (/mnt/c/...), as the benchmark's renders do;
+# PIKEPDF_PY, a Python with pikepdf and shapely (python3). The basemap is fetched over the network.
 set -euo pipefail
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -96,6 +96,12 @@ json.dump(job, open(sys.argv[2], 'w', encoding='utf-8'), indent=1)
 EOF
 render "$LAYOUTFIG_STAGE" tracks_image_pdf.py job_usefulness_month_base.json usefulness_month.pdf \
   month_tracks
+# The tracks the query reads and the streets of the month-wide map carry vertices closer together than
+# a pixel of the maps as the book prints them (0.48\textwidth, 56.16 mm): pdf_simplify.py of
+# chapter7/figures simplifies them below half a printed pixel, with the Python of PIKEPDF_PY
+for fig in usefulness_query usefulness_month; do
+  "${PIKEPDF_PY:-python3}" "$HERE/../../chapter7/figures/pdf_simplify.py" "$OUT/$fig.pdf" "$OUT/$fig.pdf" 56.16
+done
 
 for fig in trip_res8 trip_res9 region_res8 region_res9; do
   render "$COVERFIG_STAGE" hybrid_pdf.py "job_$fig.json" "h3cover_$fig.pdf"

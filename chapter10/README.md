@@ -30,7 +30,7 @@ the OSM Shortbread tile server.
 
 | Figure | Scripts |
 |---|---|
-| From one month of AIS data to the files a query reads | `tracks_image_pdf.py` draws the two maps with the month of tracks as one lossless image, the month-wide one over a basemap merged into one GeoPackage by `extract_base.py`; `usefulness_grid.py` of MobilityLakehouse draws the two grids of files |
+| From one month of AIS data to the files a query reads | `tracks_image_pdf.py` draws the two maps with the month of tracks as one lossless image, the month-wide one over a basemap merged into one GeoPackage by `extract_base.py`, and `pdf_simplify.py` of `chapter7/figures` simplifies their paths below half a printed pixel; `usefulness_grid.py` of MobilityLakehouse draws the two grids of files |
 | The H3 cell cover of a vessel track and of a protected area | `hybrid_pdf.py` |
 | Cleaning and segmentation of the track of a vessel | `hybrid_pdf.py` |
 | In-file orderings on one day of segments | `inorder_figures.py`, run with `RUN` naming the run and `EXT=pdf` |
