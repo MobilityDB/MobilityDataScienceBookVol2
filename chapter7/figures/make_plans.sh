@@ -20,7 +20,7 @@ P="$CH7_PLAN_DIR"
 python plan_q24.py ../timing/specs/hanoi_mduck.json "$P/plan_q24.txt"
 
 python renderplan.py "$P/plan_q2.txt" 68 90 1 29 "$P/queryduckdbproc_a.pdf"
-python renderplan.py "$P/plan_q3.txt" 72 96 1 29 "$P/queryduckdbproc_b.pdf"
+python renderplan.py "$P/plan_q3.txt" 72 97 1 29 "$P/queryduckdbproc_b.pdf"
 python renderplan.py "$P/plan_q8.txt" 70 121 30 88 "$P/queryprocplan8.pdf"
 python renderplan.py "$P/plan_close300.txt" 22 116 1 117 "$P/mduckq14plan.pdf"
 python renderplan.py "$P/plan_index.txt" 7 26 1 29 "$P/index_plan.pdf"

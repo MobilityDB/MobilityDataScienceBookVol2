@@ -3,13 +3,16 @@
 Usage: renderplan.py <plan.txt> <first_line> <last_line> <first_col> <last_col> <out.pdf>
 Lines and columns are 1-based and inclusive, over the plan text as the DuckDB shell prints it
 (its box-drawing characters included). The figure is the text in DejaVu Sans Mono, drawn by
-matplotlib with a tight bounding box, as the plan figures of chapter 7 are.
+matplotlib with a tight bounding box, as the plan figures of chapter 7 are. The font is embedded
+as TrueType: as a Type 3 font, the box-drawing characters of the last line, the bottom border of
+the last operator, are not drawn.
 """
 import sys
 
 import matplotlib
 
 matplotlib.use('pdf')
+matplotlib.rcParams['pdf.fonttype'] = 42
 import matplotlib.pyplot as plt  # noqa: E402
 
 path, l0, l1, c0, c1, out = sys.argv[1], *map(int, sys.argv[2:6]), sys.argv[6]
