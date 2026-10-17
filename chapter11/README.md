@@ -55,7 +55,7 @@ The original sources, for those who want to rerun the enrichment pipelines:
 | T-Drive | Beijing | [T-Drive trajectory data sample](https://www.microsoft.com/en-us/research/publication/t-drive-trajectory-data-sample/), Microsoft Research |
 | pNEUMA | Athens | [pNEUMA](https://open-traffic.epfl.ch/), EPFL; October 24, 2018, 08:30 to 11:00 |
 | GeoLife | Beijing | [GeoLife GPS trajectories](https://www.microsoft.com/en-us/research/publication/geolife-gps-trajectory-dataset-user-guide/), Microsoft Research |
-| New York City | New York City | Trajectories collected from OpenStreetMap, 2008 to 2025 |
+| New York City | New York City | GPS traces shared on OpenStreetMap by bus, car, foot, bicycle, and subway, 2009 to 2024 |
 | Cabspotting (held out) | San Francisco | [CRAWDAD epfl/mobility](https://ieee-dataport.org/open-access/crawdad-epflmobility) |
 | BerlinMOD-Brussels | Brussels | [MobilityDB-BerlinMOD](https://github.com/MobilityDB/MobilityDB-BerlinMOD), scale factor 0.2 |
 | BerlinMOD-Hanoi | Hanoi | [MobilityDB-BerlinMOD-Hanoi](https://github.com/MobilityDB/MobilityDB-BerlinMOD-Hanoi), scale factor 0.2 |
