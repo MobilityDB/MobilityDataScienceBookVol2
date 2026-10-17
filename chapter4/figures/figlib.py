@@ -28,7 +28,7 @@ SPECS = []
 def connect(db):
     """Connect to the AIS ('ais') or the nuScenes ('nuscenes') database"""
     name = os.environ.get(db.upper() + '_DB', db)
-    return psycopg2.connect(dbname=name, options='-c TimeZone=Europe/Copenhagen')
+    return psycopg2.connect(dbname=name, options='-c TimeZone=UTC')
 
 def geo(expr):
     """The SQL expression of the GeoJSON in EPSG:4326 of a geometry"""

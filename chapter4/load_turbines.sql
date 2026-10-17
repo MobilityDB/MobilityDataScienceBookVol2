@@ -14,16 +14,16 @@
 -- Last run against PostgreSQL 18.6, PostGIS 3.6.4, MobilityDB 1.4.
 -------------------------------------------------------------------------------
 
-DROP TABLE IF EXISTS WindTurbine;
-CREATE TABLE WindTurbine(OsmId bigint PRIMARY KEY, Lon float, Lat float);
-\copy WindTurbine FROM 'data/anholt_turbines.csv' CSV HEADER
-ALTER TABLE WindTurbine ADD COLUMN Geom geometry(Point, 25832);
-UPDATE WindTurbine SET Geom = ST_Transform(ST_Point(Lon, Lat, 4326), 25832);
+DROP TABLE IF EXISTS Turbines;
+CREATE TABLE Turbines(OsmId bigint PRIMARY KEY, Lon float, Lat float);
+\copy Turbines FROM 'data/anholt_turbines.csv' CSV HEADER
+ALTER TABLE Turbines ADD COLUMN Geom geometry(Point, 25832);
+UPDATE Turbines SET Geom = ST_Transform(ST_Point(Lon, Lat, 4326), 25832);
 
 -- The location of the farm and its extent, as the figure of the chapter draws
 -- them: the centroid of the turbines, and their convex and concave hulls
 SELECT count(*) AS Turbines,
   round(ST_Area(ST_ConvexHull(ST_Collect(Geom))) / 1e6, 1) AS ConvexKm2,
   round(ST_Area(ST_ConcaveHull(ST_Collect(Geom), 0.3)) / 1e6, 1) AS ConcaveKm2
-FROM WindTurbine;
+FROM Turbines;
 -- 111 | 119 | 92.1

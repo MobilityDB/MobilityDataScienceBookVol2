@@ -37,53 +37,38 @@ files, so they can be fed to `poseFromGeoPose` directly.
 
 ### Maritime Movement
 
-Prerequisite: the AIS input script of the previous volume, which builds the
-`AISInputFiltered` table. It is in the volume 1 companion repository, chapter 5,
-as `ais_input.sql`. The dataset used is the day 2024-03-01, downloadable from
-https://web.ais.dk/aisdata/aisdk-2024-03-01.zip
+The scripts run in the AIS database of the book, built by `ais/build.sh` of this
+repository for January 20, 2026, from its table `AISClean`:
 
-To run the scripts:
+    psql -d ais -f load_turbines.sql
+    psql -d ais -f ais_poses.sql
+    psql -d ais -f text_numbers.sql
 
-\i ais_poses.sql
+load_turbines.sql: the 111 turbines of the Anholt offshore wind farm, from
+OpenStreetMap, into the table `Turbines`.
 
-\i aisPoseDashboards.sql
-
-ais_poses.sql: filters the records that carry a usable heading and hull
-dimensions, draws the hull of each vessel as a polygon in its own frame from the
-four `SizeA` to `SizeD` offsets, and builds one `trgeometry` per vessel. On the
-day 2024-03-01 the volume 1 script loads 15512927 records and keeps 9637460
-after filtering; of those, 7010528 carry both a heading and consistent hull
-dimensions, giving 1626 vessels that can be represented as rigid geometries.
+ais_poses.sql: the listings of the AIS use case of the chapter, as the chapter
+prints them and in its order. They keep the reports of `AISClean` that carry a
+heading and constant hull dimensions (`AISCleanPoly`, 7,548,980 reports), draw
+the hull of each vessel as a polygon in its own frame from the four `SizeA` to
+`SizeD` offsets (`ShipShape`), and build one `trgeometry` per vessel
+(`ShipsRigid`, 1,949 vessels); then they run the analytical queries of the
+chapter: swept area, time inside a zone, path of the bow, rate of turn,
+distance of a hull to a point and to a polygon, heading against course,
+hull-to-hull distances, the load of an alert belt and the closest point of
+approach. The two listings that display every vessel for the MOVE plugin of
+QGIS send their rows to no file.
 
 Two details of the conversion are worth knowing before adapting the script. AIS
 reports a compass heading, clockwise from North, while a `pose` stores an angle
 counter-clockwise from East, so the conversion is `pi()/2 - radians(Heading)`;
 and because a `pose` requires its angle in `]-pi, pi]`, every heading of 270
 degrees or more -- a quarter of the compass, not an edge case -- needs a full
-turn added, or the constructor refuses the value. Note
-that it replaces the `Ships` table built by the volume 1 script, whose `Trip` is
-a `tgeompoint`; chapter 4 needs the rigid-geometry form, so use a dedicated
-database if you want both.
+turn added, or the constructor refuses the value. The times of the AIS data are
+in UTC, and so are the instants of the queries.
 
-aisPoseDashboards.sql: the analytical queries of the chapter, written as a
-maritime authority would ask them -- swept area, hull-to-hull clearance, time
-inside a zone, rate of turn, and the difference between where a vessel points
-and where it goes.
-
-Three queries meet limits of MobilityDB 1.4 on a full day of traffic, and the
-scripts mark each one at the point where it bites, with a workaround where one
-exists:
-
-- hull-to-hull distance raises `Temporal distance: Cycle detected` for a few
-  pairs -- 3 of 118 bounding-box neighbours on 2024-03-01, all involving one
-  vessel. The hulls concerned are valid and convex; it is a convergence failure
-  in the closest-feature tracking rather than a data problem.
-- `atGeometry` on a rigid geometry reports that exact restriction with a
-  rotating segment is not implemented. The region a rotating body sweeps has
-  curved boundaries, so this one is genuinely unimplemented.
-- distance to a `LineString` -- a quay, a fairway centreline -- reports an
-  unsupported geometry type, because the sequence path accepts only points and
-  polygons. Buffering the line into a thin polygon is the workaround.
+text_numbers.sql: the numbers the text quotes and no listing prints, on the
+tables of ais_poses.sql and load_turbines.sql.
 
 ### Autonomous Driving
 
@@ -134,7 +119,7 @@ environment variables, and by `AIS_DB` and `NUSCENES_DB` (default: `ais` and
 Linux installation of QGIS; by default it is the QGIS 3.40 installation of
 Windows called from WSL, which needs `$OUT` on a Windows drive.
 
-The wind farm figure also reads the table `WindTurbine`, which
+The wind farm figure also reads the table `Turbines`, which
 `load_turbines.sql` loads into the AIS database from `data/anholt_turbines.csv`:
 the positions of the 111 turbines of the Anholt offshore wind farm as mapped in
 OpenStreetMap, © OpenStreetMap contributors, available under the Open Database
@@ -193,9 +178,3 @@ and need the LaTeX source of the chapter, `chapter4.tex`:
       psql -X -d <database> -f listings.sql > listings.out 2>&1
       python3 check/book_listings.py compare chapter4.tex listings.out pose_examples.sql
 
-- `check/ais_listings_run.py` runs every listing of the AIS use case on the AIS
-  database (named by the PostgreSQL environment variables and `AIS_DB`), and
-  reports, per statement, its row count, its time and its error. It reads every
-  row of a query, so that each column is computed, and needs `psycopg2`:
-
-      python3 check/ais_listings_run.py chapter4.tex

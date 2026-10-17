@@ -24,7 +24,7 @@ import re
 import sys
 
 MARK = "@@ statement "
-TABLES = re.compile(r"\b(Ships|ShipShape|AISInput\w*|ego_pose|sample_annotation)\b", re.I)
+TABLES = re.compile(r"\b(ShipsRigid|ShipShape|AISInput\w*|ego_pose|sample_annotation)\b", re.I)
 
 def statements(tex):
     """Return the (section, sql, book result) of every listing statement, in order"""
