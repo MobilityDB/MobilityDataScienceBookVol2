@@ -131,7 +131,8 @@ License (https://www.openstreetmap.org/copyright).
 |---|---|
 | The vessels as temporal points and as temporal rigid geometries, in the port of Frederikshavn | `export_ais.py`, `ais_layer_points.pdf`, `ais_layer_hulls.pdf` |
 | A ferry turning in the port of Gedser | `export_ais.py`, `ais_turn_swept.pdf`, `ais_turn_paths.pdf` |
-| A vessel entering its berth backwards, in the port of Køge | `export_ais.py`, `ais_dock.pdf` |
+| A vessel entering its berth backwards, in the port of Aarhus | `export_ais.py`, `ais_dock.pdf` |
+| Closest approach of vessels to the breakwater of the port of Helsingborg | `export_ais.py`, `helsingborg_1.pdf`, `helsingborg_2.pdf` |
 | Heading flip of a double-ended ferry | `export_ais.py`, `ais_flip.pdf` |
 | Two ferries crossing the Øresund | `export_ais.py`, `ais_encounter_context.pdf`, `ais_encounter_zoom.pdf` |
 | Heading and course of a trawler | `export_ais.py`, `ais_crab.pdf` |

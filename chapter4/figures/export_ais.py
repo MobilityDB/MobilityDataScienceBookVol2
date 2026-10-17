@@ -206,5 +206,46 @@ figure('ais_dock.pdf', bbox(dock_swept, pad=0.12, aspect=1.0), [
     dict(HULL, file=save('dock_hulls', dock_hulls)),
     dict(SWEPT, file=save('dock_swept', dock_swept))])
 
+# ---------------------------------------------------------------------------
+# The end of the breakwater at the entrance of the port of Helsingborg: (a) the
+# trajectories of the vessels whose antenna passed within 600 m of it, and (b)
+# the vessel that came closest to it according to the antennas and according
+# to the hulls, each at its closest approach, with its trajectory
+# ---------------------------------------------------------------------------
+print('helsingborg')
+BW = "geometry 'SRID=25832;Point(729493 6216766)'"
+cur.execute(f"SELECT MMSI, Trip |=| {BW} FROM ShipsRigid ORDER BY 2 LIMIT 1")
+hull_mmsi, hull_dist = cur.fetchone()
+cur.execute(f"SELECT MMSI, tgeompoint(Trip) |=| {BW} FROM ShipsRigid ORDER BY 2 LIMIT 1")
+ant_mmsi, ant_dist = cur.fetchone()
+print('  closest hull', hull_mmsi, hull_dist, ' closest antenna', ant_mmsi, ant_dist)
+HULL_T = f"getTimestamp(nearestApproachInstant(Trip, {BW}))"
+ANT_T = f"getTimestamp(nearestApproachInstant(tgeompoint(Trip), {BW}))"
+bw = collection(cur, f"SELECT {geo(BW)}")
+bw_tracks = collection(cur, f"""SELECT {geo('trajectory(tgeompoint(Trip))')}, MMSI
+  FROM ShipsRigid WHERE eDwithin(tgeompoint(Trip), {BW}, 600)""")
+hull_win = collection(cur, f"""SELECT {geo(f'valueAtTimestamp(Trip, {HULL_T})')}, {HULL_T}
+  FROM ShipsRigid WHERE MMSI = %s""", (hull_mmsi,))
+hull_track = collection(cur, f"""SELECT {geo('trajectory(tgeompoint(Trip))')}
+  FROM ShipsRigid WHERE MMSI = %s""", (hull_mmsi,))
+ant_win = collection(cur, f"""SELECT {geo(f'valueAtTimestamp(tgeompoint(Trip), {ANT_T})')},
+  {ANT_T} FROM ShipsRigid WHERE MMSI = %s""", (ant_mmsi,))
+ant_track = collection(cur, f"""SELECT {geo('trajectory(tgeompoint(Trip))')}
+  FROM ShipsRigid WHERE MMSI = %s""", (ant_mmsi,))
+# Panel (a) spans 700 m around the breakwater, panel (b) the breakwater and the
+# two vessels at their closest approach
+ext_a = collection(cur, f"SELECT {geo(f'ST_Expand({BW}, 350, 270)')}")
+BW_POINT = {'type': 'point', 'file': save('bw', bw), 'fill': '227,26,28,255', 'size': 2.2}
+figure('helsingborg_1.pdf', bbox(ext_a, pad=0, aspect=1400 / 1080), [
+    BW_POINT, dict(TRACK, file=save('bw_tracks', bw_tracks), width=0.25)], width=1400)
+figure('helsingborg_2.pdf', bbox(bw, ant_win, hull_win, pad=0.2, aspect=1400 / 1080), [
+    BW_POINT,
+    {'type': 'point', 'file': save('bw_ant_win', ant_win), 'fill': '0,0,255,255', 'size': 2.2},
+    {'type': 'polygon', 'file': save('bw_hull_win', hull_win), 'fill': '51,160,44,255',
+     'stroke': '0,0,0,255', 'width': 0.2},
+    dict(TRACK, file=save('bw_ant_track', ant_track), width=0.3),
+    dict(TRACK, file=save('bw_hull_track', hull_track), width=0.3, stroke='51,160,44,255')],
+    width=1400)
+
 ais.close()
 write_spec('spec_ais.json')
