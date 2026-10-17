@@ -53,11 +53,17 @@ the working directory.
 
 ### Datasets
 
-None of the datasets is redistributed here; `fetch_data.sh` downloads each of
-them from its publisher. Its parts `cmems` and `era5` need free accounts: the
-Copernicus Marine Service (`copernicusmarine login`, whose username is the
-e-mail of the account) and the Copernicus Climate Data Store (an API key in
-`~/.cdsapirc` and the terms of the ERA5 dataset accepted on its page).
+`fetch_data.sh` puts every dataset into `$DATA` without any account. The AIS
+day, the depth model, the ports, and the protected areas are downloaded from
+their publishers, whose terms do not allow them to be redistributed or which
+publish them openly. The subsets of the Copernicus Marine Service and of ERA5
+for the day, whose licences allow their redistribution with the attribution
+below, are in `datasets/cmems` and `datasets/era5` of this repository, and
+`fetch_data.sh` copies them. With `FROM_PUBLISHER=1` it downloads them again
+from their publishers, which needs free accounts: the Copernicus Marine Service
+(`copernicusmarine login`, whose username is the e-mail of the account) and the
+Copernicus Climate Data Store (an API key in `~/.cdsapirc` and the terms of the
+ERA5 dataset accepted on its page).
 
 | Data | Source | Terms |
 |---|---|---|
