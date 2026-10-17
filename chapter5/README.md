@@ -174,7 +174,8 @@ its layers from the database, and `hybrid_pdf.py` of `chapter3/figures` draws
 `job_<figure>.json` (the layers, their styles, the extent, and the size) with
 `render_map.py` in the Python of QGIS as a vector PDF, the OpenStreetMap
 Shortbread basemap, the cells, the tracks and the outlines as vectors and a
-raster data layer as an embedded image. `QGIS_PY` names that Python, for
+raster data layer as one embedded image of the pixels of the figure as the book
+prints it at 300 dpi (`print_width_mm` of the job), which no viewer resamples. `QGIS_PY` names that Python, for
 instance `python3` on a Linux installation of QGIS; by default it is the QGIS
 3.40 installation of Windows called from WSL, which needs `$OUT` on a Windows
 drive. `render.sh` draws a job as a PNG image instead. The track and the

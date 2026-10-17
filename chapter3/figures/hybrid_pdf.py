@@ -3,15 +3,17 @@
 # stay sharp at any zoom; only a raster data layer (a bathymetry, a slope) is an embedded image.
 # <python of QGIS> hybrid_pdf.py <job.json> <out.pdf>
 # The job is a job of chapter5/figures/render_map.py (crs, extent, size, dpi, land, layers,
-# optional colorbar, legend and fonts), its layers bottom to top; render_map.py is imported from
-# the directory of this script, where make_figures.sh copies both.
+# optional colorbar, legend, fonts and print_width_mm, the width at which the book prints the figure,
+# which makes each raster layer an image of the printed pixels), its layers bottom to top;
+# render_map.py is imported from the directory of this script, where make_figures.sh copies both.
 import json, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
 import render_map as rm
 from qgis.core import (QgsApplication, QgsMapSettings, QgsMapRendererCustomPainterJob,
-    QgsCoordinateReferenceSystem, QgsRectangle, QgsProject, QgsCoordinateTransform, QgsVectorTileLayer)
-from qgis.PyQt.QtCore import QSize, QSizeF, QMarginsF
-from qgis.PyQt.QtGui import QColor, QPainter, QPdfWriter, QPageSize, QFontDatabase
+    QgsCoordinateReferenceSystem, QgsRectangle, QgsProject, QgsCoordinateTransform, QgsVectorTileLayer,
+    QgsRasterLayer)
+from qgis.PyQt.QtCore import QSize, QSizeF, QMarginsF, QRectF
+from qgis.PyQt.QtGui import QColor, QPainter, QPdfWriter, QPageSize, QFontDatabase, QImage
 
 job = json.load(open(sys.argv[1], encoding='utf-8')); out = sys.argv[2]
 app = QgsApplication([], False); app.initQgis()
@@ -73,7 +75,34 @@ pdf = QPdfWriter(out); pdf.setResolution(dpi)
 pdf.setPageSize(QPageSize(QSizeF(w / dpi * 25.4, h / dpi * 25.4), QPageSize.Millimeter))
 pdf.setPageMargins(QMarginsF(0, 0, 0, 0))
 p = QPainter(pdf)
-QgsMapRendererCustomPainterJob(ms, p).renderSynchronously()
+if 'print_width_mm' not in job:
+    QgsMapRendererCustomPainterJob(ms, p).renderSynchronously()
+else:
+    # The job names the width at which the book prints the figure: each raster layer is then one
+    # image of the pixels of the printed figure at the job's dpi, so that a viewer or a printer draws
+    # it without resampling, and the layers between the rasters are drawn as vectors above and below
+    iw = round(job['print_width_mm'] / 25.4 * dpi); ih = round(iw * h / w)
+    runs = []
+    for l in layers:
+        if runs and isinstance(l, QgsRasterLayer) == isinstance(runs[-1][0], QgsRasterLayer):
+            runs[-1].append(l)
+        else:
+            runs.append([l])
+    for i, run in enumerate(runs):
+        s = QgsMapSettings(ms); s.setLayers(list(reversed(run)))
+        if i > 0:
+            s.setBackgroundColor(QColor(0, 0, 0, 0))
+        if isinstance(run[0], QgsRasterLayer):
+            s.setOutputSize(QSize(iw, ih)); s.setOutputDpi(dpi * iw / w)
+            img = QImage(iw, ih, QImage.Format_ARGB32); img.fill(s.backgroundColor())
+            ip = QPainter(img)
+            QgsMapRendererCustomPainterJob(s, ip).renderSynchronously()
+            ip.end()
+            p.save(); p.setRenderHint(QPainter.LosslessImageRendering)
+            p.drawImage(QRectF(0, 0, w, h), img)
+            p.restore()
+        else:
+            QgsMapRendererCustomPainterJob(s, p).renderSynchronously()
 p.setRenderHint(QPainter.Antialiasing)
 if 'colorbar' in job:
     rm.draw_colorbar(p, job['colorbar'], w, h)
