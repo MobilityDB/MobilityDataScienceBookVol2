@@ -3,205 +3,42 @@
 -- spreading depending on the depth of the bathymetry, and under spreading
 -- depending on the depth with the ambient noise raised by the wind of ERA5, and
 -- the protected areas the noise reaches under the three models. It reads the
--- tables AISNoJump, Ships, Port, NaturalAreas, Bathymetry, and WindSpeed of
--- load_all.sh, and PortAreas of case_clearance.sql. The source level of a vessel
--- is computed at 63 Hz with the functions ComputeVc and ComputeSL of chapter 3
--- (chapter3/ships_noise.sql), at the reports whose speed exceeds 3 knots,
--- outside the port areas. Each listing of the chapter is preceded by its printed
--- answer; the other queries give the numbers stated in the text.
+-- tables AISClean and Ships of the AIS database of the book, Port, NaturalAreas,
+-- Bathymetry, and WindSpeed of load_all.sh, and the functions ComputeVc and
+-- ComputeSL and the tables VesselClass and PortAreas of chapter 3, which
+-- chapter3/ships_noise.sql creates and which must run first. The source level of
+-- a vessel is computed at 63 Hz at the reports whose speed exceeds 3 knots, over
+-- the periods in which the column Noise of Ships, the noise of chapter 3, is
+-- defined: under way, outside the port areas. Each listing of the chapter is
+-- preceded by its printed answer; the other queries give the numbers stated in
+-- the text.
 \pset footer off
 SET TimeZone = 'UTC';
 SET client_min_messages = warning;
 
--- -----------------------------------------------------------------------------
--- Return the reference class speed (Vc) based on vessel macro-category and
--- cargo classification.
--- -----------------------------------------------------------------------------
-DROP FUNCTION IF EXISTS ComputeVc;
-CREATE FUNCTION ComputeVc(
-  VesselClassCode  integer,
-  ShipTypeCode     integer,
-  SpeedKnots       double precision, 
-  LOA              double precision
-)
-RETURNS double precision
-LANGUAGE sql
-IMMUTABLE
-AS $$
-  SELECT
-  CASE
-    WHEN VesselClassCode = 1  THEN 10.6
-    WHEN VesselClassCode = 2  THEN 6.4
-    WHEN VesselClassCode = 3  THEN 3.7
-    WHEN VesselClassCode = 4  THEN 9.5
-    WHEN VesselClassCode = 5  THEN 11.1
-    WHEN VesselClassCode = 6  THEN 8.0
-    WHEN VesselClassCode = 7  THEN       
-      CASE WHEN (LOA > 100) THEN 17.1 ELSE 9.7 END
-    WHEN VesselClassCode = 9  THEN
-      CASE
-        WHEN (ShipTypeCode = 70 OR ShipTypeCode BETWEEN 75 AND 79) AND
-          SpeedKnots <= 16 THEN 13.9   -- Bulker
-        ELSE 18.0   -- Containership
-      END
-    WHEN VesselClassCode = 10 THEN 12.4
-    WHEN VesselClassCode = 11 THEN 7.4
-    ELSE NULL
-  END;
-$$;
-
-
--- -----------------------------------------------------------------------------
--- Compute the Source Level (SL) following the model of
--- MacGillivray & de Jong for vessel underwater radiated noise.
---
--- Inputs:
---   VesselClassCode   : vessel macro-category
---   f                 : frequency (Hz)
---   Vref              : vessel speed (knots)
---   Vc                : reference class speed (knots)
---   LOAref            : vessel length overall (metres)
---   InPort            : whether the vessel is located inside a port
---
--- Output:
---   SL (dB re 1 µPa @ 1 m)
--- -----------------------------------------------------------------------------
-DROP FUNCTION IF EXISTS ComputeSL;
-CREATE FUNCTION ComputeSL(
-  VesselClassCode  integer,           -- 9 = cargo, 10 = tanker, 7 = cruise
-  f                real,              -- frequency (Hz)
-  Vref             double precision,  -- vessel speed (knots)
-  Vc               double precision,  -- class reference speed (knots)
-  LOAref           double precision,  -- vessel length (metres)
-  InPort           boolean            -- whether the vessel is located inside a port
-)
-RETURNS DOUBLE PRECISION
-LANGUAGE plpgsql
-AS $$
-DECLARE
-  -- Vessel class flags
-  isRecreational boolean :=        (VesselClassCode = 1);
-  isFishing boolean :=             (VesselClassCode = 2);
-  isTug boolean :=                 (VesselClassCode = 3);
-  isDredger boolean :=             (VesselClassCode = 4);
-  isNaval boolean :=               (VesselClassCode = 5);
-  isGovernmentResearch boolean :=  (VesselClassCode = 6);
-  isCruise boolean :=              (VesselClassCode = 7);
-  isCargo boolean :=               (VesselClassCode = 9);
-  isTanker boolean :=              (VesselClassCode = 10);
-  isOther boolean :=               (VesselClassCode = 11);
-
-  -- Model parameters
-  K  DOUBLE PRECISION;
-  B  DOUBLE PRECISION;
-  f1 DOUBLE PRECISION;
-  D  DOUBLE PRECISION;
-
-  -- Intermediate terms of the analytical formulation
-  term1 DOUBLE PRECISION;
-  term2 DOUBLE PRECISION;
-  term3 DOUBLE PRECISION;
-  term4 DOUBLE PRECISION;
-  term5 DOUBLE PRECISION;
-  term6 DOUBLE PRECISION;
-
-  SL DOUBLE PRECISION;
-
-  -- Preserve the original speed for low-speed port correction
-  Speed DOUBLE PRECISION := Vref;
-
-BEGIN
-  -- Parameter K
-  IF f < 100 AND (isCargo OR isTanker) THEN K := 208;
-  ELSE K := 191;
-  END IF;
-
-  -- Parameter B
-  IF f < 100 AND (isCargo OR isTanker) THEN B := 2;
-  ELSE B := 0;
-  END IF;
-
-  -- Characteristic frequency f1
-  IF f < 100 AND (isCargo OR isTanker) THEN f1 := 600.0/Vc;
-  ELSE f1 := 480.0/Vc;
-  END IF;
-
-  -- Parameter D
-  IF f < 100 AND isCargo THEN D := 0.8;
-  ELSIF f < 100 AND isTanker THEN D := 1.0;
-  ELSIF isCruise THEN D := 4.0;
-  ELSE D := 3.0;
-  END IF;
-
-  -- MacGillivray & de Jong source level formulation
-  term1 := K - 10.0 * (B + 2.0) * LOG10(f1); 
-  term2 :=  5.0 * B * LOG10(f);
-  term3 := -10.0 * LOG10(POWER(1.0 - POWER(f/f1, 0.5*(B+2)), 2) + POWER(D,2));
-
-  -- Enforce minimum modelling speed of 3 knots
-  IF Vref < 3 THEN Vref:=3;
-  END IF;
-
-  term4 := 60.0 * LOG10(Vref / Vc);
-  term5 := 20.0 * LOG10(LOAref / 91.44);  -- 91.44 m = reference LOA
-  term6 := 10.0 * LOG10(0.231 * f);
-
-  SL := term1 + term2 + term3 + term4 + term5 + term6;
-
-  -- Empirical correction for vessels idling inside ports
-  IF isCruise OR isCargo OR isTanker THEN
-    IF InPort AND Speed < 0.5 THEN 
-      SL := SL - 15;   -- subtract 15 dB
-    END IF;
-  END IF;
-
-  RETURN SL;
-END;
-$$;
-
-\echo == vessels of the day with a known class and length
-DROP TABLE IF EXISTS Vessel;
-CREATE TABLE Vessel AS
-WITH T AS (
-  SELECT MMSI, ShipType, count(*) AS n FROM AISNoJump
-  WHERE ShipType NOT IN ('Undefined','Spare 1','Spare 2','Reserved','WIG','Not party to conflict')
-  GROUP BY MMSI, ShipType ),
-Typ AS (SELECT DISTINCT ON (MMSI) MMSI, ShipType FROM T ORDER BY MMSI, n DESC, ShipType),
-Len AS (SELECT MMSI, max(Length) AS Length FROM AISNoJump WHERE Length > 0 GROUP BY MMSI),
-Code AS (
-  SELECT MMSI, ShipType, Length, CASE ShipType
-    WHEN 'Pilot' THEN 50 WHEN 'SAR' THEN 51 WHEN 'Tug' THEN 52 WHEN 'Port tender' THEN 53
-    WHEN 'Anti-pollution' THEN 54 WHEN 'Law enforcement' THEN 55 WHEN 'Fishing' THEN 30
-    WHEN 'Towing' THEN 31 WHEN 'Towing long/wide' THEN 32 WHEN 'Dredging' THEN 33
-    WHEN 'Diving' THEN 34 WHEN 'Military' THEN 35 WHEN 'Sailing' THEN 36 WHEN 'Pleasure' THEN 37
-    WHEN 'HSC' THEN 40 WHEN 'Passenger' THEN 60 WHEN 'Cargo' THEN 70 WHEN 'Tanker' THEN 80
-    WHEN 'Other' THEN 90 END AS ShipTypeCode
-  FROM Typ JOIN Len USING (MMSI) )
-SELECT *, CASE ShipTypeCode
-    WHEN 50 THEN 3 WHEN 51 THEN 6 WHEN 52 THEN 3 WHEN 53 THEN 3 WHEN 54 THEN 11 WHEN 55 THEN 6
-    WHEN 30 THEN 2 WHEN 31 THEN 3 WHEN 32 THEN 3 WHEN 33 THEN 4 WHEN 34 THEN 11 WHEN 35 THEN 5
-    WHEN 36 THEN 1 WHEN 37 THEN 1 WHEN 40 THEN 7 WHEN 60 THEN 7 WHEN 70 THEN 9 WHEN 80 THEN 10
-    WHEN 90 THEN 11 END AS VesselClassCode
-FROM Code WHERE ShipTypeCode IS NOT NULL;
-SELECT count(*) AS vessels FROM Vessel;
-
-\echo == vessels under way outside the ports, and the range of their source level (1555 | 106.4 | 195.4)
+\echo == vessels under way outside the ports, and the range of their source level (1499 | 106.4 | 191.7)
 DROP TABLE IF EXISTS ShipNoise;
 CREATE TABLE ShipNoise AS
 WITH SL AS (
   SELECT a.MMSI, tfloatSeqSetGaps(array_agg(tfloat(
       ComputeSL(v.VesselClassCode, 63.0, a.SOG,
         ComputeVc(v.VesselClassCode, v.ShipTypeCode, a.SOG, v.Length), v.Length, false),
-      a.T) ORDER BY a.T), interval '3 minutes') AS SL
-  FROM AISNoJump a JOIN Vessel v USING (MMSI)
+      a.T) ORDER BY a.T), interval '600 s') AS SL
+  FROM AISClean a JOIN VesselClass v USING (MMSI)
   WHERE a.SOG > 3 AND a.SOG <= 40
-  GROUP BY a.MMSI ),
-Tr AS (
-  SELECT s.MMSI, minusGeometry(atTime(h.Trip, getTime(s.SL)), p.Geom) AS Trip, s.SL
-  FROM SL s JOIN Ships h USING (MMSI), PortAreas p )
-SELECT MMSI, Trip, atTime(SL, getTime(Trip)) AS SL FROM Tr WHERE Trip IS NOT NULL;
-DELETE FROM ShipNoise WHERE SL IS NULL;
-SELECT count(*) AS noisy, round(min(minValue(SL))::numeric,1), round(max(maxValue(SL))::numeric,1) FROM ShipNoise;
+  GROUP BY a.MMSI )
+SELECT s.MMSI, tgeompoint(s.Noise) AS Trip, atTime(l.SL, getTime(s.Noise)) AS SL
+FROM Ships s JOIN SL l USING (MMSI)
+WHERE s.Noise IS NOT NULL;
+SELECT count(*) AS Noisy, round(min(minValue(SL))::numeric, 1) AS MinSL,
+  round(max(maxValue(SL))::numeric, 1) AS MaxSL
+FROM ShipNoise;
+\echo == the vessels with the smallest and the largest source level: type and length (Pleasure | 7 | 106.4, Pilot | 12 | 191.7)
+(SELECT v.ShipType, v.Length, round(minValue(s.SL)::numeric, 1) AS SL
+ FROM ShipNoise s JOIN VesselClass v USING (MMSI) ORDER BY minValue(s.SL) LIMIT 1)
+UNION ALL
+(SELECT v.ShipType, v.Length, round(maxValue(s.SL)::numeric, 1)
+ FROM ShipNoise s JOIN VesselClass v USING (MMSI) ORDER BY maxValue(s.SL) DESC LIMIT 1);
 
 \echo == Listing: the radius of the noise from the excess level and the depth
 -- Radius of the noise of a vessel from the excess level DL = SL - NL and the depth H,
@@ -311,29 +148,30 @@ FROM NoiseModels x, NaturalAreas n
 WHERE x.Spherical && stbox(n.Geom) OR x.DepthAware && stbox(n.Geom)
   OR x.DepthWind && stbox(n.Geom);
 
-\echo == vessels, vessels over the bathymetry, and vessels for which the depth law applies at some instant (1555 | 974 | 946)
+\echo == vessels, vessels over the bathymetry, and vessels for which the depth law applies at some instant (1499 | 972 | 944)
 SELECT count(*) AS Vessels, count(Depth) AS OverBathy,
   count(*) FILTER (WHERE ((SL80 #> 20 * log10(10 * Depth)) & (Depth #>= 10)) ?= true) AS DepthMatters
 FROM (SELECT n.*, s.SL - 80 AS SL80 FROM NoiseModels n JOIN ShipNoise s USING (MMSI)) t;
 
-\echo == Table: pairs reached under the three models, the pairs and areas the depth adds, and the pairs gained and lost with both fields (6628 | 6992 | 6985 | 364 | 146 | 359 | 2)
+\echo == Table: pairs reached under the three models, the pairs and areas the depth adds, the pairs gained and lost with both fields, and the pairs reached with the depth that the wind loses (6628 | 6991 | 6984 | 363 | 146 | 358 | 2 | 7)
 SELECT count(*) FILTER (WHERE Spherical) AS Spherical,
   count(*) FILTER (WHERE DepthAware) AS DepthAware,
   count(*) FILTER (WHERE DepthWind) AS DepthWind,
   count(*) FILTER (WHERE DepthAware AND NOT Spherical) AS DepthGained,
   count(DISTINCT AreaId) FILTER (WHERE DepthAware AND NOT Spherical) AS DepthGainedAreas,
   count(*) FILTER (WHERE DepthWind AND NOT Spherical) AS EnvGained,
-  count(*) FILTER (WHERE Spherical AND NOT DepthWind) AS EnvLost
+  count(*) FILTER (WHERE Spherical AND NOT DepthWind) AS EnvLost,
+  count(*) FILTER (WHERE DepthAware AND NOT DepthWind) AS WindLost
 FROM NoisePairs;
 
-\echo == the fishing vessel: type, length, period under way, sequences, km, source level, time over the bathymetry, depth (Fishing | 15 | 05:29:12 | 17:16:58 | 7 | 44.6 | 121.0 | 148.5 | 03:09:05.740078 | 0.3 | 60.7)
+\echo == the fishing vessel: type, length, period under way, sequences, km, source level, time over the bathymetry, depth (Fishing | 15 | 05:29:12 | 17:16:58 | 5 | 45.2 | 121.0 | 148.5 | 03:14:05.740078 | 0.3 | 60.7)
 \set m 220334000
 SELECT v.ShipType, v.Length, startTimestamp(x.Trip) AS StartT, endTimestamp(x.Trip) AS EndT,
   numSequences(x.Trip) AS Seqs, round((length(x.Trip) / 1000)::numeric, 1) AS Km,
   round(minValue(s.SL)::numeric, 1) AS MinSL, round(maxValue(s.SL)::numeric, 1) AS MaxSL,
   duration(getTime(x.Depth)) AS DepthKnown,
   round(minValue(x.Depth)::numeric, 1) AS MinDepth, round(maxValue(x.Depth)::numeric, 1) AS MaxDepth
-FROM NoiseModels x JOIN Vessel v USING (MMSI) JOIN ShipNoise s USING (MMSI) WHERE x.MMSI = :m;
+FROM NoiseModels x JOIN VesselClass v USING (MMSI) JOIN ShipNoise s USING (MMSI) WHERE x.MMSI = :m;
 
 \echo == nearest port to the start and to the end of its trip (Vesterø Havn, Læsø, 11719 m and 11723 m)
 SELECT 'start' AS k, p.PortName, round(ST_Distance(p.Geom, startValue(x.Trip))::numeric) AS d
@@ -362,3 +200,20 @@ SELECT n.Id, n.NameEng, n.DesigEng,
 FROM NoiseModels x, NaturalAreas n
 WHERE x.MMSI = :m AND eIntersects(n.Geom, x.DepthAware)
 ORDER BY 5 DESC;
+
+\echo == the fishing vessel: time under way, and time its trajectory spends in the reef area 22 (03:33:01 | 00:17:12.959115)
+SELECT duration(getTime(x.Trip)) AS Underway,
+  duration(whenTrue(tIntersects(x.Trip, n.Geom))) AS InReef
+FROM NoiseModels x, NaturalAreas n
+WHERE x.MMSI = :m AND n.Id = 22;
+
+\echo == the wind of the day over the area: mean and highest wind speed (5.5 | 16.5)
+SELECT round((ST_SummaryStatsAgg(Rast, 1, true)).mean::numeric, 1) AS MeanWind,
+  round((ST_SummaryStatsAgg(Rast, 1, true)).max::numeric, 1) AS MaxWind
+FROM WindSpeed;
+
+\echo == along the trips: highest wind and ambient noise, and vessels whose ambient noise exceeds 81 dB (14.1 | 82.6 | 181)
+SELECT round(max(maxValue(Wind))::numeric, 1) AS MaxWind,
+  round(max(maxValue(NL))::numeric, 1) AS MaxNL,
+  count(*) FILTER (WHERE maxValue(NL) > 81) AS Over81
+FROM WindNoise;

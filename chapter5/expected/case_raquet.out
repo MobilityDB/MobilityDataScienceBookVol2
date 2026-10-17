@@ -8,15 +8,15 @@ SET
 == Query: when did the vessel sail over water less than 20 m deep, according to the RaQuet tiles
  numtiles |     under20     | periods 
 ----------+-----------------+---------
-       60 | 00:11:04.259428 |      10
+       60 | 00:11:04.256184 |      10
 
 == a collection of tiles that changes over time
 DROP TABLE
 CREATE TABLE
 INSERT 0 3526
 INSERT 0 3526
-== Listing: the tiles joined on the cells of the trip and on their period (10 | 00:11:04.259428)
+== Listing: the tiles joined on the cells of the trip and on their period (10 | 00:11:04.256184)
  periods |     under20     
 ---------+-----------------
-      10 | 00:11:04.259428
+      10 | 00:11:04.256184
 

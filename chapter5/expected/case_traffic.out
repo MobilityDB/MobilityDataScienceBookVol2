@@ -2,34 +2,34 @@ SET
 SET
 == Query: vessels and vessel-hours per H3 cell of resolution 7
 DROP TABLE
-SELECT 26602
+SELECT 25990
       cell       | vessels | vesselhours 
 -----------------+---------+-------------
- 871f24a59ffffff |      64 |       910.5
- 871f3562cffffff |      42 |       624.0
- 871f2414cffffff |      42 |       547.9
+ 871f24a59ffffff |      64 |      1022.5
+ 871f3562cffffff |      42 |       730.3
+ 871f2414cffffff |      42 |       572.4
 
-== cells crossed and vessel-hours (26602 | 33628)
+== cells crossed and vessel-hours (25990 | 38965)
  cells | vesselhours 
 -------+-------------
- 26602 |       33628
+ 25990 |       38965
 
 == Query: vessel-hours of resolution 5 computed from the trips and rolled up from resolution 7
 DROP TABLE
-SELECT 1344
+SELECT 1217
  cells | oneside | differ | overcount | directhours | rolledhours 
 -------+---------+--------+-----------+-------------+-------------
-  1372 |      46 |    483 |      1223 |       33628 |       33628
+  1238 |      35 |    437 |      1137 |       38965 |       38965
 
-== among the cells whose two values differ by more than 100 vessel-hours, the largest ratio (851f26d3fffffff: 11.1 against 418.6)
+== among the cells whose two values differ by more than 100 vessel-hours, the largest ratio (851f26d3fffffff: 11.4 against 469.0)
       cell       | directhours | rolledhours 
 -----------------+-------------+-------------
- 851f26d3fffffff |        11.1 |       418.6
+ 851f26d3fffffff |        11.4 |       469.0
 
-== its child with the most vessel-hours, and the share of the child inside the parent (871f26d1bffffff: 408.2 h, 50.1%)
+== its child with the most vessel-hours, and the share of the child inside the parent (871f26d1bffffff: 458.2 h, 50.1%)
       cell       | vesselhours 
 -----------------+-------------
- 871f26d1bffffff |       408.2
+ 871f26d1bffffff |       458.2
 
  pctinparent 
 -------------
@@ -37,21 +37,21 @@ SELECT 1344
 
 == Query: vessel-hours by the mean depth of the H3 cells of resolution 7
 DROP TABLE
-SELECT 26602
+SELECT 25990
 CREATE INDEX
-SELECT 17090
+SELECT 17137
  meandepth | cells | vesselhours 
 -----------+-------+-------------
- < 10 m    |   917 |       11604
- 10-20 m   |  2293 |        3460
- 20-50 m   |  7949 |        4128
- >= 50 m   |  3511 |        2104
- no depth  | 11932 |       12332
+ < 10 m    |   918 |       13415
+ 10-20 m   |  2293 |        3736
+ 20-50 m   |  8012 |        4278
+ >= 50 m   |  3503 |        2131
+ no depth  | 11264 |       15404
 
-== cells with a mean depth of less than 10 m that meet a port area, and their vessel-hours (169 | 8854)
+== cells with a mean depth of less than 10 m that meet a port area, and their vessel-hours (169 | 10400)
  cells | vesselhours 
 -------+-------------
-   169 |        8854
+   169 |       10400
 
 == mean depth of the three busiest cells (6.3, 3.3, 8.4)
       cell       | meandepth 

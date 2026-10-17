@@ -89,7 +89,7 @@ FROM (
     s.TripLonLat && stbox(n.GeomLonLat) ) t;
 
 \echo == Listing: parents of the cells at a finer resolution against the cells at the coarser one
--- 30 | 0
+-- 19 | 0
 SELECT count(*) FILTER (WHERE (getValues(th3index(TripLonLat, 7)) -
     getValues(cellToParent(th3index(TripLonLat, 9), 7))) IS NOT NULL) AS H3Missed,
   count(*) FILTER (WHERE getValues(tquadbin(TripLonLat, 13)) <>

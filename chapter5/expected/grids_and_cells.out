@@ -63,5 +63,5 @@ UPDATE 283
 == Listing: parents of the cells at a finer resolution against the cells at the coarser one
  h3missed | quadbindiffer 
 ----------+---------------
-       30 |             0
+       19 |             0
 

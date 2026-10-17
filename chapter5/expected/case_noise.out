@@ -1,23 +1,17 @@
 SET
 SET
-DROP FUNCTION
-CREATE FUNCTION
-DROP FUNCTION
-CREATE FUNCTION
-== vessels of the day with a known class and length
+== vessels under way outside the ports, and the range of their source level (1499 | 106.4 | 191.7)
 DROP TABLE
-SELECT 2320
- vessels 
----------
-    2320
-
-== vessels under way outside the ports, and the range of their source level (1555 | 106.4 | 195.4)
-DROP TABLE
-SELECT 1555
-DELETE 0
- noisy | round | round 
+SELECT 1499
+ noisy | minsl | maxsl 
 -------+-------+-------
-  1555 | 106.4 | 195.4
+  1499 | 106.4 | 191.7
+
+== the vessels with the smallest and the largest source level: type and length (Pleasure | 7 | 106.4, Pilot | 12 | 191.7)
+ shiptype | length |  sl   
+----------+--------+-------
+ Pleasure |      7 | 106.4
+ Pilot    |     12 | 191.7
 
 == Listing: the radius of the noise from the excess level and the depth
 CREATE FUNCTION
@@ -35,34 +29,34 @@ SELECT 1
 
 == the three moving regions of the noise of every vessel
 DROP TABLE
-SELECT 1055
+SELECT 1053
 DROP TABLE
-SELECT 1529
+SELECT 1494
 DROP TABLE
-SELECT 1555
+SELECT 1499
 ALTER TABLE
-UPDATE 1555
+UPDATE 1499
 CREATE INDEX
 CREATE INDEX
 CREATE INDEX
 ANALYZE
 == pairs of a vessel and a protected area its noise may reach under some model
 DROP TABLE
-SELECT 34001
-== vessels, vessels over the bathymetry, and vessels for which the depth law applies at some instant (1555 | 974 | 946)
+SELECT 33473
+== vessels, vessels over the bathymetry, and vessels for which the depth law applies at some instant (1499 | 972 | 944)
  vessels | overbathy | depthmatters 
 ---------+-----------+--------------
-    1555 |       974 |          946
+    1499 |       972 |          944
 
-== Table: pairs reached under the three models, the pairs and areas the depth adds, and the pairs gained and lost with both fields (6628 | 6992 | 6985 | 364 | 146 | 359 | 2)
- spherical | depthaware | depthwind | depthgained | depthgainedareas | envgained | envlost 
------------+------------+-----------+-------------+------------------+-----------+---------
-      6628 |       6992 |      6985 |         364 |              146 |       359 |       2
+== Table: pairs reached under the three models, the pairs and areas the depth adds, the pairs gained and lost with both fields, and the pairs reached with the depth that the wind loses (6628 | 6991 | 6984 | 363 | 146 | 358 | 2 | 7)
+ spherical | depthaware | depthwind | depthgained | depthgainedareas | envgained | envlost | windlost 
+-----------+------------+-----------+-------------+------------------+-----------+---------+----------
+      6628 |       6991 |      6984 |         363 |              146 |       358 |       2 |        7
 
-== the fishing vessel: type, length, period under way, sequences, km, source level, time over the bathymetry, depth (Fishing | 15 | 05:29:12 | 17:16:58 | 7 | 44.6 | 121.0 | 148.5 | 03:09:05.740078 | 0.3 | 60.7)
+== the fishing vessel: type, length, period under way, sequences, km, source level, time over the bathymetry, depth (Fishing | 15 | 05:29:12 | 17:16:58 | 5 | 45.2 | 121.0 | 148.5 | 03:14:05.740078 | 0.3 | 60.7)
  shiptype | length |         startt         |          endt          | seqs |  km  | minsl | maxsl |   depthknown    | mindepth | maxdepth 
 ----------+--------+------------------------+------------------------+------+------+-------+-------+-----------------+----------+----------
- Fishing  |     15 | 2026-01-20 05:29:12+00 | 2026-01-20 17:16:58+00 |    7 | 44.6 | 121.0 | 148.5 | 03:09:05.740078 |      0.3 |     60.7
+ Fishing  |     15 | 2026-01-20 05:29:12+00 | 2026-01-20 17:16:58+00 |    5 | 45.2 | 121.0 | 148.5 | 03:14:05.740078 |      0.3 |     60.7
 
 == nearest port to the start and to the end of its trip (Vesterø Havn, Læsø, 11719 m and 11723 m)
    k   |      portname      |   d   
@@ -94,4 +88,19 @@ SELECT 34001
  264 | Nordvestlige Kattegat                  | Special Protection Area (Birds Directive)                                 | 00:23:46.139024 | 00:39:14.64062  | 00:37:08.456
    4 | Waters around Læsø                     | Baltic Sea Protected Area (HELCOM)                                        | 00:23:43.677832 | 00:39:09.17718  | 00:36:53.2775
   35 | Strandenge på Læsø og havet syd herfor | Marine Protected Area (OSPAR)                                             |                 | 00:05:53.168909 | 00:03:56.911851
+
+== the fishing vessel: time under way, and time its trajectory spends in the reef area 22 (03:33:01 | 00:17:12.959115)
+ underway |     inreef      
+----------+-----------------
+ 03:33:01 | 00:17:12.959115
+
+== the wind of the day over the area: mean and highest wind speed (5.5 | 16.5)
+ meanwind | maxwind 
+----------+---------
+      5.5 |    16.5
+
+== along the trips: highest wind and ambient noise, and vessels whose ambient noise exceeds 81 dB (14.1 | 82.6 | 181)
+ maxwind | maxnl | over81 
+---------+-------+--------
+    14.1 |  82.6 |    181
 

@@ -1,30 +1,26 @@
 #!/bin/bash
-# Load the database of the chapter from the files fetched by fetch_data.sh, in
-# the order of the README: the AIS day and its trips, the ports and protected
-# areas, the bathymetry, the hourly fields of the ocean models and of ERA5, and
-# the bathymetry as RaQuet tiles. The database is the one named by the
-# PostgreSQL environment variables (PGDATABASE, PGHOST, PGPORT, ...), and the
-# files are read from $DATA (default: data/ below the working directory).
+# Load the tables of the chapter into the AIS database of the book, which
+# ../ais/build.sh builds with the AIS day (AISInput, AISClean, Vessels, Segments,
+# Ships), from the files fetched by fetch_data.sh, in the order of the README:
+# the ports and protected areas, the bathymetry, the hourly fields of the ocean
+# models and of ERA5, and the bathymetry as RaQuet tiles. The database is the
+# one named by the PostgreSQL environment variables (PGDATABASE, PGHOST, PGPORT,
+# ...), and the files are read from $DATA (default: data/ below the working
+# directory).
 #
-#   bash load_all.sh [ais] [aux] [ddm] [fields] [raquet]
+#   bash load_all.sh [aux] [ddm] [fields] [raquet]
 #
 # raquet needs the converter raquet-io 0.9.0 (pip install raquet-io==0.9.0) and
 # the Python packages psycopg2 and pyarrow.
 set -e
 export DATA=${DATA:-$PWD/data}
 HERE=$(cd "$(dirname "$0")" && pwd)
-PARTS=${*:-ais aux ddm fields raquet}
+PARTS=${*:-aux ddm fields raquet}
 PSQL="psql -X -q -v ON_ERROR_STOP=1"
 cd "$HERE"
 
 for part in $PARTS; do
   case $part in
-  ais)
-    $PSQL -f ais_load.sql
-    unzip -p "$DATA/ais/aisdk-2026-01-20.zip" | PGOPTIONS='-c datestyle=ISO,DMY' $PSQL -c \
-      "\copy AISInput(T, TypeOfMobile, MMSI, Latitude, Longitude, NavigationalStatus, ROT, SOG, COG, Heading, IMO, CallSign, Name, ShipType, CargoType, Width, Length, TypeOfPositionFixingDevice, Draught, Destination, ETA, DataSourceType, SizeA, SizeB, SizeC, SizeD) FROM STDIN CSV HEADER"
-    $PSQL -f ais_pipeline.sql
-    ;;
   aux)
     bash build_aux_data.sh
     $PSQL -f load_aux_tables.sql

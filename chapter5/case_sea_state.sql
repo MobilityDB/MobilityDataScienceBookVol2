@@ -17,7 +17,7 @@ GROUP BY lower(ValidTime)
 ORDER BY lower(ValidTime);
 
 \echo == Query: vessels that met waves of at least 1, 1.5, and 2 m, and for how long
--- 2403 | 443 | 95 | 26 | 2.70
+-- 2592 | 465 | 106 | 29 | 2.71
 DROP TABLE IF EXISTS SeaState;
 CREATE TABLE SeaState AS
 SELECT s.MMSI, mergeAgg(rasterValue(atTime(s.Trip, w.ValidTime), w.Rast)
@@ -32,16 +32,16 @@ SELECT count(*) AS Vessels,
   round(max(maxValue(WaveHeight))::numeric, 2) AS MaxHs
 FROM SeaState;
 /* MMSI      | MaxHs | Over2
-   219438000 |  2.45 | 03:59:52
-   257243000 |  2.65 | 03:54:39
-   314545000 |  2.23 | 03:18:35 */
+   257243000 |  2.65 | 05:29:41
+   314545000 |  2.23 | 04:11:14
+   219438000 |  2.45 | 03:59:52 */
 SELECT MMSI, round(maxValue(WaveHeight)::numeric, 2) AS MaxHs,
   duration(whenTrue(WaveHeight #>= 2)) AS Over2
 FROM SeaState
 WHERE maxValue(WaveHeight) >= 2
 ORDER BY duration(whenTrue(WaveHeight #>= 2)) DESC
 LIMIT 3;
-\echo == the 26 vessels that met waves of at least 2 m: longitudes of their highest waves, and how many after 20:00 (3.4 | 7.3 | 23)
+\echo == the 29 vessels that met waves of at least 2 m: longitudes of their highest waves, and how many after 20:00 (3.2 | 7.3 | 24)
 SELECT count(*) AS Vessels,
   round(min(ST_X(valueAtTimestamp(s.TripLonLat, startTimestamp(atMax(w.WaveHeight)))))::numeric, 1)
     AS MinLon,
@@ -54,21 +54,18 @@ WHERE maxValue(w.WaveHeight) >= 2;
 
 \echo == Query: did the vessels that met waves of at least 1.5 m sail slower in them
 /* ShipType | Vessels | SogHigh | SogLow | Slower | Faster
-   Cargo    |      12 |    10.0 |   10.9 |      3 |      1
-   Tanker   |      15 |    10.7 |   11.4 |      5 |      0
+   Cargo    |      15 |    10.5 |   11.3 |      3 |      1
+   Tanker   |      16 |    10.7 |   11.3 |      4 |      0
    ...
-            |      34 |    10.0 |   10.5 |      8 |      4 */
+            |      39 |    10.0 |   10.5 |      7 |      4 */
 DROP TABLE IF EXISTS SpeedWaves;
 CREATE TABLE SpeedWaves AS
 WITH Rough AS (
   SELECT MMSI, WaveHeight FROM SeaState
   WHERE maxValue(WaveHeight) >= 1.5 ),
 Speed AS (
-  SELECT a.MMSI, tfloatSeqSetGaps(array_agg(tfloat(a.SOG, a.T) ORDER BY a.T)
-    FILTER (WHERE a.SOG IS NOT NULL), interval '3 minutes') AS SOG,
-    mode() WITHIN GROUP (ORDER BY a.ShipType) AS ShipType
-  FROM AISNoJump a JOIN Rough r USING (MMSI)
-  GROUP BY a.MMSI )
+  SELECT s.MMSI, s.SOG, v.ShipType
+  FROM Ships s JOIN Vessels v USING (MMSI) )
 SELECT r.MMSI, s.ShipType,
   twAvg(atTime(s.SOG, whenTrue(r.WaveHeight #>= 1.5) * whenTrue(s.SOG #> 3)))
     AS SogHigh,
@@ -88,7 +85,7 @@ GROUP BY ROLLUP (ShipType)
 ORDER BY ShipType NULLS LAST;
 
 \echo == Query: vessels flagged by the highest waves of the day read along their trajectories
--- 2403 | 681 | 217 | 55
+-- 2592 | 715 | 237 | 63
 DROP TABLE IF EXISTS WaveMax;
 CREATE TABLE WaveMax AS
 SELECT ST_Union(Rast, 'MAX') AS Rast

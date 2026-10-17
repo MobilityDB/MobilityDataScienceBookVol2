@@ -140,7 +140,7 @@ SELECT 51
 == Query: stretches of the path of the vessel over water less than 20 m deep
  stretches | meters 
 -----------+--------
-        12 | 3286.9
+        13 | 3287.0
 
 == Listing: a line with measures loses them in the intersection
                    piece                   | depth 

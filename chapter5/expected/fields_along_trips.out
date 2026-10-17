@@ -29,7 +29,7 @@ psql:fields_along_trips.sql:50: ERROR:  A bilinear value varies quadratically al
 == Listing: a tiled raster read along every trip (number of vessels read)
  vessels 
 ---------
-    1548
+    1560
 
 == Listing: two hourly steps of a salinity field
 DROP TABLE

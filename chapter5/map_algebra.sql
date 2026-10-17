@@ -248,7 +248,7 @@ GROUP BY n.NameEng, v.value
 ORDER BY n.NameEng, v.value;
 
 \echo == Query: stretches of the path of the vessel over water less than 20 m deep
--- 12 | 3286.9
+-- 13 | 3287.0
 SELECT count(*) AS Stretches, round(sum(ST_Length(geom))::numeric, 1) AS Meters
 FROM (
   SELECT (ST_Dump(ST_LineMerge(ST_Union((gv).geom)))).geom

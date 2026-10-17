@@ -12,7 +12,7 @@ SET client_min_messages = warning;
 SELECT count(*) AS Tiles FROM BathymetryRaquet;
 
 \echo == Query: when did the vessel sail over water less than 20 m deep, according to the RaQuet tiles
--- 60 | 00:11:04.259428 | 10
+-- 60 | 00:11:04.256184 | 10
 WITH Tiles AS (
   SELECT s.MMSI, array_agg(r.Tile) AS Tiles
   FROM Ships s, BathymetryRaquet r
@@ -46,7 +46,7 @@ FROM BathymetryRaquet,
      endTimestamp(Trip) AS T3
    FROM Ships WHERE MMSI = 273277840) t;
 
-\echo == Listing: the tiles joined on the cells of the trip and on their period (10 | 00:11:04.259428)
+\echo == Listing: the tiles joined on the cells of the trip and on their period (10 | 00:11:04.256184)
 SELECT numSpans(whenTrue(Depth #< 20)) AS Periods,
   duration(whenTrue(Depth #< 20)) AS Under20
 FROM (

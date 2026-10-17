@@ -94,18 +94,26 @@ of October 2026 gives the geometries of the book within 0.06 mm.
 
 ### Reproducing the chapter
 
+The chapter runs on the AIS database of the book, which `../ais/build.sh`
+builds for January 20, 2026 (see `../ais/README.md`): the table `AISClean` of
+the cleaned reports, with their speed over ground `SOG`, ship type, length,
+draught, position `Geom` in EPSG:25832, and the number `Piece` of the piece of
+the track they belong to; the table `Vessels` of the static attributes of each
+vessel; and the table `Ships` of the 2,701 vessels of the day, with their trip
+`Trip`, in longitude and latitude `TripLonLat`, and their reported speed `SOG`,
+course `COG`, heading `Heading`, and rate of turn `ROT` as temporal floats, all
+split where a vessel is silent for more than 600 s. The chapter adds its tables
+to that database:
+
     bash fetch_data.sh                 # all datasets into $DATA
-    createdb tess                      # any database; export PGDATABASE=tess
-    bash load_all.sh                   # AIS, ports and protected areas, bathymetry,
+    export PGDATABASE=ais              # the AIS database of the book
+    bash load_all.sh                   # ports and protected areas, bathymetry,
                                        # hourly fields, RaQuet tiles
     bash run_all.sh                    # every script, out/ compared with expected/
     OUT=/mnt/c/Temp/figs bash figures/make_figures.sh    # every map figure
 
-`load_all.sh` runs, in this order: `ais_load.sql`, the copy of the AIS file,
-and `ais_pipeline.sql`, which clean the day into the tables `AISClean` and
-`AISNoJump` and build the trips of the table `Ships`, split where a vessel is
-silent for more than 3 minutes or moves more than one nautical mile between two
-positions; `build_aux_data.sh` and `load_aux_tables.sql`; the reprojection of
+`load_all.sh` runs, in this order: `build_aux_data.sh` and
+`load_aux_tables.sql`; the reprojection of
 the bathymetry to EPSG:25832 with `gdalwarp` and its loading into the table
 `Bathymetry` with `raster2pgsql`; `prep_waves.sh`, `load_waves.sh`,
 `prep_fields.sh`, and `load_field.sh`, which merge the Baltic Sea and North West
@@ -137,13 +145,18 @@ script states, before each listing of the chapter, the answer the book prints.
 
 The scripts run in this order, since later ones use tables of earlier ones:
 `map_algebra.sql` builds the rasters `Seabed`, `SeabedMean`, and
-`BathymetryMin100`, `grids_and_cells.sql` the table `Ships200` of the first
-200 vessels of the day, and `case_clearance.sql` the table `PortAreas` of the
-port areas.
+`BathymetryMin100`, and `grids_and_cells.sql` the table `Ships200` of the first
+200 vessels of the day. `case_clearance.sql` and `case_noise.sql` read the
+noise of chapter 3: `../chapter3/ships_noise.sql` creates the functions
+`ComputeVc` and `ComputeSL` of the source level at 63 Hz, the table
+`VesselClass` of the class of each vessel from `Vessels`, the table `PortAreas`
+of the port areas, and the column `Noise` of `Ships`, the noise of each vessel
+under way (reported speed over 3 knots, outside the port areas) under spherical
+spreading with an ambient noise of 80 dB. `run_all.sh` runs it first when
+`Ships` has no column `Noise`, which takes a few minutes.
 
-`case_noise.sql` computes the noise of the vessels of the day under way outside
-the ports with the source level of chapter 3 (the functions `ComputeVc` and
-`ComputeSL` of `chapter3/ships_noise.sql`, at 63 Hz), and the function
+`case_noise.sql` builds the table `ShipNoise` of the trip of each vessel over
+the periods of its noise and of its source level, and the function
 `noiseRadius` of the chapter, which turns the excess level and the depth along
 a trip into the radius of its noise. It builds, for each vessel, the moving
 regions of its noise under spherical spreading with an ambient noise of 80 dB,

@@ -39,12 +39,12 @@ WHERE Shallow
 GROUP BY Run
 ORDER BY FirstReport;
 
-\echo == Listing: using a mobility database (twelve periods, 00:10:21.56145)
+\echo == Listing: using a mobility database (thirteen periods, 00:10:21.567055)
 /* {[2026-01-20 01:27:49.285823, 2026-01-20 01:27:49.6816),
     [2026-01-20 01:27:59.256121, 2026-01-20 01:28:04.705125),
     [2026-01-20 01:28:09.322936, 2026-01-20 01:28:19.225736),
     [2026-01-20 01:28:19.520816, 2026-01-20 01:28:46.708854), ...,
-    [2026-01-20 08:48:43.108411, 2026-01-20 08:49:16.5474)} | 00:10:21.56145 */
+    [2026-01-20 08:48:43.108411, 2026-01-20 08:49:16.5474)} | 00:10:21.567055 */
 WITH VesselDepth AS (
   SELECT s.MMSI, mergeAgg(rasterValue(s.Trip, b.Rast)) AS Depth
   FROM Ships s, Bathymetry b
@@ -54,7 +54,7 @@ SELECT whenTrue(Depth #< 20) AS Periods,
   duration(whenTrue(Depth #< 20)) AS Total
 FROM VesselDepth;
 
-\echo == length of the trip restricted to the twelve periods (3286.9 m)
+\echo == length of the trip restricted to the thirteen periods (3287.0 m)
 WITH VesselDepth AS (
   SELECT s.Trip, mergeAgg(rasterValue(s.Trip, b.Rast)) AS Depth
   FROM Ships s, Bathymetry b
