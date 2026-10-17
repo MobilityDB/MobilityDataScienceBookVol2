@@ -62,8 +62,8 @@ ORDER BY Clearance;
 -- movable_object.trafficcone  0.63
 
 SELECT InstanceId, Category,
-  ST_Area(traversedArea(Trip)) AS Swept,
-  ST_Area(traversedArea(Trip)) / ST_Area(Trip::geometry) AS Ratio
+  ST_Area(traversedArea(Trip, true)) AS Swept,
+  ST_Area(traversedArea(Trip, true)) / ST_Area(Trip::geometry) AS Ratio
 FROM ObjectTrip
 ORDER BY Ratio DESC;
 
