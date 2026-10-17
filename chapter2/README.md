@@ -40,7 +40,8 @@ captions. The scripts write into `figures/out`.
      [Danish Maritime Authority](http://aisdata.ais.dk/), unzipped;
    - `trips.csv`, the first 700 trips of the BerlinMOD-Brussels database of scale factor 0.01
      ([MobilityDB-BerlinMOD](https://github.com/MobilityDB/MobilityDB-BerlinMOD)), written by
-     the `COPY` statement of the section Advanced PyMEOS Functionality;
+     the `COPY ... TO STDOUT` statement of the section Advanced PyMEOS Functionality, saved by
+     the client (`psql -d <database> -f trips.sql > trips.csv`);
    - `brussels_communes.csv` and `brussels_region.csv`, from `TheBook/src/main/resources` of
      `project-jmeos.zip`.
 3. MovingPandas, on `../2021-01-30_all.csv`: `delhi_check.py` prints every output of
@@ -71,7 +72,8 @@ and `pm_c.py` the PyMEOS one (`pm_b.py` and `pm_c.py` run the loading part of `p
 
 ### JMEOS Programs
 
-The folder `jmeos/src` holds the JMEOS programs of the advanced section and of the JMEOS exercise
+`DOCKER.md` states how to build the Docker image of the JMEOS examples (`Dockerfile`) and run them
+in it. The folder `jmeos/src` holds the JMEOS programs of the advanced section and of the JMEOS exercise
 in the layout of `TheBook/src` of `project-jmeos.zip`; copied over it, its files take the place of
 those of the archive. `JMEOS03` reads `/data/aisdk-2026-01-20.csv` with the day/month/year date
 style of the DMA files. `JMEOS07Extent` prints the instants and the extent of the first two trips
