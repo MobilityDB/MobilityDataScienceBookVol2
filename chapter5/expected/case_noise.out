@@ -27,15 +27,13 @@ SELECT 1
 ---------+---------+-------+-------+----------
      2.6 |     5.4 |  80.1 |  80.3 |    360.3
 
-== the three moving regions of the noise of every vessel
+== Listing: the depth, the wind, and the three moving regions of the noise of every vessel
 DROP TABLE
 SELECT 1053
 DROP TABLE
 SELECT 1494
 DROP TABLE
 SELECT 1499
-ALTER TABLE
-UPDATE 1499
 CREATE INDEX
 CREATE INDEX
 CREATE INDEX

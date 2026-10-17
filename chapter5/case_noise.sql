@@ -98,7 +98,7 @@ SELECT round(minValue(Wind)::numeric, 1) AS MinWind, round(maxValue(Wind)::numer
     / 1e6)::numeric, 1) AS AreaWind
 FROM Level l, NoiseOne o;
 
-\echo == the three moving regions of the noise of every vessel
+\echo == Listing: the depth, the wind, and the three moving regions of the noise of every vessel
 DROP TABLE IF EXISTS ShipDepth;
 CREATE TABLE ShipDepth AS
 SELECT s.MMSI, mergeAgg(rasterValue(s.Trip, b.Rast)) AS Depth
@@ -121,17 +121,18 @@ FROM Wind;
 
 DROP TABLE IF EXISTS NoiseModels;
 CREATE TABLE NoiseModels AS
-SELECT s.MMSI, s.Trip, d.Depth,
-  CASE WHEN w.NL IS NULL THEN s.SL - 80
-  ELSE merge(atTime(s.SL - 80, getTime(s.Trip) - getTime(w.NL)), s.SL - w.NL) END AS DLWind
-FROM ShipNoise s LEFT JOIN ShipDepth d USING (MMSI) LEFT JOIN WindNoise w USING (MMSI);
-ALTER TABLE NoiseModels ADD COLUMN Spherical tcbuffer, ADD COLUMN DepthAware tcbuffer,
-  ADD COLUMN DepthWind tcbuffer;
-UPDATE NoiseModels n SET
-  Spherical = tcbuffer(n.Trip, noiseRadius(s.SL - 80, NULL)),
-  DepthAware = tcbuffer(n.Trip, noiseRadius(s.SL - 80, n.Depth)),
-  DepthWind = tcbuffer(n.Trip, noiseRadius(n.DLWind, n.Depth))
-FROM ShipNoise s WHERE s.MMSI = n.MMSI;
+WITH Excess AS (
+  SELECT s.MMSI, s.Trip, d.Depth, s.SL - 80 AS DL,
+    CASE WHEN w.NL IS NULL THEN s.SL - 80
+    ELSE merge(atTime(s.SL - 80, getTime(s.Trip) - getTime(w.NL)), s.SL - w.NL)
+    END AS DLWind
+  FROM ShipNoise s LEFT JOIN ShipDepth d USING (MMSI)
+    LEFT JOIN WindNoise w USING (MMSI) )
+SELECT MMSI, Trip, Depth,
+  tcbuffer(Trip, noiseRadius(DL, NULL)) AS Spherical,
+  tcbuffer(Trip, noiseRadius(DL, Depth)) AS DepthAware,
+  tcbuffer(Trip, noiseRadius(DLWind, Depth)) AS DepthWind
+FROM Excess;
 CREATE INDEX ON NoiseModels USING gist (Spherical);
 CREATE INDEX ON NoiseModels USING gist (DepthAware);
 CREATE INDEX ON NoiseModels USING gist (DepthWind);
