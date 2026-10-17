@@ -1,5 +1,5 @@
 ## Mobility Data Science: In-Memory, Large-Scale and Stream Processing
-### Leticia Gómez, Alejandro Vaisman, Esteban Zimányi
+### Alejandro Vaisman, Esteban Zimányi, with contributions by Leticia Gómez
 
 ### Chapter 5: Rasters and Temporal Tessellations
 
