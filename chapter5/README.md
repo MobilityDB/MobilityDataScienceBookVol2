@@ -82,12 +82,15 @@ ports are the 139 Danish ports of GISCO and the four terminals of
 flags of `aux/gisco_ports_traffic.csv`. The protected areas are the 283 areas of
 the WDPA of Denmark listed, with the identifier the book uses, in
 `aux/natural_areas_sites.csv`. Protected Planet serves only its current monthly
-release; the release of September 2026 gives the geometries of the book, and
-the script stops if a listed area is absent from the release it reads.
-`fetch_data.sh` downloads the release of the current month, and
-`build_aux_data.sh` reads the release that it downloaded, whatever the month in
-which the database is built; `WDPA_RELEASE` selects another one, for instance
-`Sep2026`.
+release, as shapefiles or as a file geodatabase, and gives no access to older
+ones. `fetch_data.sh` downloads the current release in the format it is served
+in, and `build_aux_data.sh` reads either format (`WDPA_RELEASE` selects another
+release in `$DATA/aux`, for instance `Sep2026`). The geometries of the book are
+those of the release of September 2026; `aux/natural_areas_geom.csv` holds the
+area, the perimeter, and the number of vertices of each of them, and
+`build_aux_data.sh` stops if a listed area is absent from the release it reads
+and lists every area whose geometry differs from that of the book. The release
+of October 2026 gives the geometries of the book within 0.06 mm.
 
 ### Reproducing the chapter
 

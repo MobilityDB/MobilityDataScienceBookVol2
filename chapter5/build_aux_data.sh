@@ -19,13 +19,16 @@ set -e
 DATA=${DATA:-$PWD/data}
 HERE=$(cd "$(dirname "$0")" && pwd)
 # The WDPA release is the one fetch_data.sh downloaded (the most recent one in data/aux when
-# several are), or the one WDPA_RELEASE names (e.g. Sep2026).
+# several are), or the one WDPA_RELEASE names (e.g. Sep2026). Protected Planet publishes a
+# release as shapefiles (WDPA_<release>_DNK_shp.zip) or as a file geodatabase
+# (WDPA_<release>_DNK_gdb.zip); both are read.
 if [ -n "$WDPA_RELEASE" ]; then
-  WDPA_ZIP=$DATA/aux/WDPA_${WDPA_RELEASE}_DNK_shp.zip
+  WDPA_ZIP=$(ls "$DATA"/aux/WDPA_${WDPA_RELEASE}_DNK_{shp,gdb}.zip 2> /dev/null | head -1)
 else
-  WDPA_ZIP=$(ls -t "$DATA"/aux/WDPA_*_DNK_shp.zip 2> /dev/null | head -1)
+  WDPA_ZIP=$(ls -t "$DATA"/aux/WDPA_*_DNK_{shp,gdb}.zip 2> /dev/null | head -1)
 fi
 [ -s "$WDPA_ZIP" ] || { echo "no WDPA archive in $DATA/aux: run fetch_data.sh aux" >&2; exit 1; }
+R=$(basename "$WDPA_ZIP" | cut -d_ -f2)
 PSQL="psql -X -q -v ON_ERROR_STOP=1"
 PG="PG:dbname=${PGDATABASE:-$USER}${PGHOST:+ host=$PGHOST}${PGPORT:+ port=$PGPORT}${PGUSER:+ user=$PGUSER}"
 W=$DATA/aux/work
@@ -33,7 +36,9 @@ rm -rf "$W"; mkdir -p "$W"
 
 unzip -q -o "$DATA/aux/PORT_2013_SH.zip" -d "$W"
 unzip -q -o "$WDPA_ZIP" -d "$W/wdpa"
-for z in "$W"/wdpa/*_shp_[0-9].zip; do unzip -q -o "$z" -d "${z%.zip}"; done
+for z in "$W"/wdpa/*_shp_[0-9].zip; do
+  [ -f "$z" ] && unzip -q -o "$z" -d "${z%.zip}"
+done
 
 $PSQL -c "DROP SCHEMA IF EXISTS aux_stage CASCADE; CREATE SCHEMA aux_stage;"
 ogr2ogr -f PostgreSQL "$PG" "$W/PORT_2013_SH/Data/PORT_PT_2013.shp" \
@@ -41,9 +46,16 @@ ogr2ogr -f PostgreSQL "$PG" "$W/PORT_2013_SH/Data/PORT_PT_2013.shp" \
 ogr2ogr -f PostgreSQL "$PG" "$W/PORT_2013_SH/Data/PORT_AT_2013.dbf" -nln aux_stage.port_at
 first=1
 for s in "$W"/wdpa/*_shp_[0-9]/*-polygons.shp; do
+  [ -f "$s" ] || continue
   if [ $first = 1 ]; then mode=""; first=0; else mode="-append"; fi
   ogr2ogr -f PostgreSQL "$PG" "$s" -nln aux_stage.wdpa -nlt MULTIPOLYGON \
     -lco GEOMETRY_NAME=geom $mode
+done
+for g in "$W"/wdpa/*.gdb; do
+  [ -d "$g" ] || continue
+  layer=$(ogrinfo -q "$g" | sed -n 's/^Layer: \(WDPA_WDOECM_poly_[^ ]*\).*/\1/p')
+  ogr2ogr -f PostgreSQL "$PG" "$g" "$layer" -nln aux_stage.wdpa -nlt MULTIPOLYGON \
+    -lco GEOMETRY_NAME=geom
 done
 
 $PSQL <<EOF
@@ -88,6 +100,23 @@ SELECT s.id, w.site_id, w.site_pid, w.site_type, w.name_eng, w.name, w.desig,
   w.cons_obj, w.inlnd_wtrs, w.oecm_asmt,
   ST_AsText(ST_Multi(ST_Transform(w.geom, 25832))) AS geom
 FROM sites s JOIN wdpa w USING (site_id);
+
+-- The geometries of the book: aux/natural_areas_geom.csv holds the area, the perimeter, and
+-- the number of vertices in EPSG:25832 of each area of the release of September 2026, measures
+-- that do not depend on the order of the vertices and parts, which a release may change. The
+-- areas of the release read whose area differs by more than 1 m2, perimeter by more than 1 cm,
+-- or number of vertices are listed; the answers of the book that read them may then differ.
+CREATE TABLE geom_check (id integer, site_id integer, area_m2 numeric, perimeter_m numeric,
+  npoints integer);
+\copy geom_check FROM '$HERE/aux/natural_areas_geom.csv' CSV HEADER
+SELECT n.id, n.site_id, n.name_eng, g.area_m2 AS BookArea,
+  round(ST_Area(ST_GeomFromText(n.geom))::numeric, 1) AS ReleaseArea,
+  g.npoints AS BookPoints, ST_NPoints(ST_GeomFromText(n.geom)) AS ReleasePoints
+FROM natural_areas n JOIN geom_check g USING (id)
+WHERE abs(ST_Area(ST_GeomFromText(n.geom)) - g.area_m2) > 1
+  OR abs(ST_Perimeter(ST_GeomFromText(n.geom)) - g.perimeter_m) > 0.01
+  OR ST_NPoints(ST_GeomFromText(n.geom)) <> g.npoints
+ORDER BY n.id;
 
 SELECT (SELECT count(*) FROM port) AS Ports, (SELECT count(*) FROM natural_areas) AS Areas;
 \copy (SELECT * FROM port ORDER BY id) TO '$DATA/port.csv' CSV HEADER

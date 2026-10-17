@@ -49,9 +49,17 @@ for part in $PARTS; do
     mkdir -p "$DATA/aux"
     fetch https://ec.europa.eu/eurostat/cache/GISCO/geodatafiles/PORT_2013_SH.zip \
       "$DATA/aux/PORT_2013_SH.zip"
+    # A release is published as shapefiles (..._DNK_shp.zip) or as a file
+    # geodatabase (..._DNK.zip); the first name served is kept.
     R=${WDPA_RELEASE:-$(LC_ALL=C date +%b%Y)}
-    fetch "https://d1gam3xoknrgr2.cloudfront.net/current/WDPA_WDOECM_${R}_Public_DNK_shp.zip" \
-      "$DATA/aux/WDPA_${R}_DNK_shp.zip"
+    U=https://d1gam3xoknrgr2.cloudfront.net/current/WDPA_WDOECM_${R}_Public_DNK
+    if [ -s "$DATA/aux/WDPA_${R}_DNK_shp.zip" ] || [ -s "$DATA/aux/WDPA_${R}_DNK_gdb.zip" ]; then
+      echo "present: WDPA $R"
+    elif curl -fsI "${U}_shp.zip" > /dev/null; then
+      fetch "${U}_shp.zip" "$DATA/aux/WDPA_${R}_DNK_shp.zip"
+    else
+      fetch "${U}.zip" "$DATA/aux/WDPA_${R}_DNK_gdb.zip"
+    fi
     ;;
   cmems)
     # Hourly products of the Copernicus Marine Service for January 20, 2026. The
