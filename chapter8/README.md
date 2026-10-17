@@ -150,27 +150,28 @@ si no las toma revisar spark-defaults.conf
 
 
 
-----
-docker?
-----
-en el $HOME del usuario que ejecuta colocar directorio sedona_opt  con los directorios dentro  (compactado es 1,5 giga)
-para compartir volumen.
-Donde este el Dockerfile ejecutar
+### The cluster of the chapter
 
-docker build -t labex/my-app:latest .   
+The notebooks, the dashboards and the measurements of the chapter run on the YARN cluster of
+`docker-compose-nozeppelin.yml`: a name node and a data node of HDFS, a resource manager and two
+node managers of YARN, the History Server of Spark, and the container `sedona_20`, which runs
+JupyterLab and the driver of the applications. Every container runs the image that
+`Dockerfile.mobilityspark` builds: Spark 4.0.1 with Hadoop 3.3.6, Delta Lake 4.0.0 and Sedona 1.8.0,
+and MobilitySpark with its JMEOS jar and `libmeos.so`, generated and built from the commits of
+MobilityDB, JMEOS, MEOS-API and MobilitySpark that its `ARG` lines name.
 
+The cluster reads the data that `citibike/fetch_data.sh` and `flights/fetch_data.sh` download into
+the directory `data/` of this repository: the Citi Bike trips of 2023 (`data/citibike/csv`) at
+`/opt/data/2023-citibike-tripdata`, the Neighborhood Tabulation Areas
+(`data/citibike/nynta2020_26b`) at `/opt/data/nynta2020_26b`, and the flights data
+(`data/flights`) at `/opt/data/flights`, all read-only. The variable `DATA` names another
+directory holding the same layout. From this directory:
 
-docker run -d --name  thebook  -v c:\Users\lgomez\sedona_opt:/workspace -e  DRIVER_MEM=8g -e EXECUTOR_MEM=8g -p 18888:8888 -p 18080:8080 -p 18081:8081 -p 14040:4040 -p 18085:8085 -p 14041:4041 -u 0 labex/my-app:latest
+    docker build -f Dockerfile.mobilityspark -t mi-sedona-mobilityspark .
+    docker compose -f docker-compose-nozeppelin.yml up -d
 
-
-
-
-
-
-
-
-
-
+JupyterLab is then at http://localhost:8888, the resource manager of YARN at
+http://localhost:8088 and the History Server of Spark at http://localhost:18080.
 
 ### Figures and measurements of the air traffic use case
 

@@ -9,7 +9,7 @@ FROM python:3.11-slim
 # Server gives to the executor logs:
 #   /node/containerlogs/<container>/<user>/<file>?start=<offset>
 # A negative offset returns the last bytes of the file, as YARN does.
-# The server is written inline, as Dockerfile.leti writes the
+# The server is written inline, as Dockerfile.mobilityspark writes the
 # Hadoop configuration files. The companion repository has no other
 # web server; the nearest routine it has is #main of
 # chapter5/figures/render_map.py, a standalone script like this one.

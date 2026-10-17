@@ -84,10 +84,27 @@ RUN curl -fL -o $SPARK_HOME/jars/delta-spark_${SCALA_VERSION}-${DELTA_VERSION}.j
 
 
 # =========================================================
+# THE COMMITS OF MEOS AND OF THE BINDING
+#
+# MobilityDB 57fac5e427 is the master commit that computes tDwithin of temporal geography points on
+# the spheroid, which the query of the holding fixes of London Heathrow uses; JMEOS, MEOS-API and
+# MobilitySpark are the commits from which the binding that answered the queries of the chapter was
+# generated.
+# =========================================================
+ARG MOBILITYDB_COMMIT=57fac5e4276289f6254d674ac17fd81b30876b66
+ARG JMEOS_COMMIT=e8c65dc4ca543ebcf049e8623cb465f40ddc5147
+ARG MEOS_API_COMMIT=4baf11705c4bc642ca202df85fe0d6f972e3d4bf
+ARG MOBILITYSPARK_COMMIT=eef205a75cbbcbeb681ee6e20bae45ac467d747d
+RUN set -e; fetch() { mkdir -p "$3" && cd "$3" && git init -q && \
+      git fetch -q --depth 1 "https://github.com/MobilityDB/$1.git" "$2" && git checkout -q FETCH_HEAD; }; \
+    fetch MobilityDB ${MOBILITYDB_COMMIT} /usr/local/src/MobilityDB; \
+    fetch JMEOS ${JMEOS_COMMIT} /opt/JMEOS; \
+    fetch MEOS-API ${MEOS_API_COMMIT} /opt/MEOS-API; \
+    fetch MobilitySpark ${MOBILITYSPARK_COMMIT} /opt/MobilitySpark
+
+# =========================================================
 # MEOS
 # =========================================================
-# Build MobilityDB with MEOS enabled
-RUN git clone --depth 1 https://github.com/MobilityDB/MobilityDB.git -b master /usr/local/src/MobilityDB
 RUN mkdir -p /usr/local/src/MobilityDB/build
 RUN cd /usr/local/src/MobilityDB/build && \
     cmake -DMEOS=ON .. && \
@@ -104,22 +121,6 @@ COPY --from=maven:3.9.6-eclipse-temurin-11 /usr/share/maven/ref/settings-docker.
 RUN ln -s ${MAVEN_HOME}/bin/mvn /usr/bin/mvn
 
 # =========================================================
-# JMEOS
-# =========================================================
-RUN git clone --depth 1 \
-      https://github.com/MobilityDB/JMEOS.git \
-      /opt/JMEOS
-
-RUN git clone --depth 1 \
-      https://github.com/MobilityDB/MEOS-API.git \
-      /opt/MEOS-API
-
-
-
-
-
-
-# =========================================================
 # MOBILITYSPARK
 #
 # The pom of MobilitySpark builds against Spark 4.0.1, the
@@ -127,10 +128,6 @@ RUN git clone --depth 1 \
 # copy-dependencies adds to /opt/spark/jars below are those
 # of the Spark installed above.
 # =========================================================
-RUN git clone --depth 1 \
-      https://github.com/MobilityDB/MobilitySpark.git \
-      /opt/MobilitySpark
-
 WORKDIR /opt/MobilitySpark
 
 

@@ -23,7 +23,7 @@ Spark. The appendix "The Flights Data of the Book" describes the data and the ru
 ### Software
 
 - Apache Spark 4.0 with Apache Sedona 1.8.0 and Delta Lake 4.0.0, as for the Citi Bike data.
-- MobilitySpark, its JMEOS jar and `libmeos.so`, built as in `chapter8/Dockerfile.leti`.
+- MobilitySpark, its JMEOS jar and `libmeos.so`, built as in `chapter8/Dockerfile.mobilityspark`.
 - For `build.sh`: PostgreSQL 18 with PostGIS 3.6 (and its `shp2pgsql`) and MobilityDB 1.4, and
   the DuckDB shell 1.5.
 - curl and unzip.

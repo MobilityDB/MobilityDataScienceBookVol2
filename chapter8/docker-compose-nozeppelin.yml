@@ -78,7 +78,9 @@ services:
       - resourcemanager
     volumes:
       - nodemanager1_logs:/tmp/yarn-logs
-      - C:/Users/lgomez/sedonabook2/opt/data:/opt/data
+      - ${DATA:-../data}/citibike/csv:/opt/data/2023-citibike-tripdata:ro
+      - ${DATA:-../data}/citibike/nynta2020_26b:/opt/data/nynta2020_26b:ro
+      - ${DATA:-../data}/flights:/opt/data/flights:ro
 
   nodemanager2:
     #image: mi-sedona-yarnclient-nozeppelin
@@ -103,7 +105,9 @@ services:
       - resourcemanager
     volumes:
       - nodemanager2_logs:/tmp/yarn-logs
-      - C:/Users/lgomez/sedonabook2/opt/data:/opt/data
+      - ${DATA:-../data}/citibike/csv:/opt/data/2023-citibike-tripdata:ro
+      - ${DATA:-../data}/citibike/nynta2020_26b:/opt/data/nynta2020_26b:ro
+      - ${DATA:-../data}/flights:/opt/data/flights:ro
 
   history-server:
     #image: mi-sedona-yarnclient-nozeppelin
@@ -163,7 +167,9 @@ services:
       - "4040:4040"   # Monitoreo de Spark UI cuando ejecutas tareas
     volumes:
       - jupyter-notebooks:/opt/notebooks # Volumen limpio para guardar tus archivos .ipynb
-      - C:/Users/lgomez/sedonabook2/opt/data:/opt/data
+      - ${DATA:-../data}/citibike/csv:/opt/data/2023-citibike-tripdata:ro
+      - ${DATA:-../data}/citibike/nynta2020_26b:/opt/data/nynta2020_26b:ro
+      - ${DATA:-../data}/flights:/opt/data/flights:ro
 
   # The Spark Connect server that the dashboards query: an application of the YARN cluster
   # whose sessions hold the SQL surface of MobilitySpark, registered by the extension that
