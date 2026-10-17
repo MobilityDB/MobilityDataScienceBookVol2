@@ -1,4 +1,4 @@
-## Mobility Data Science: In-Memory, Large-Scale and Stream Processing
+## Mobility Data Science: From Edge to Cloud Processing
 ### Alejandro Vaisman, Esteban Zimányi, with contributions by Leticia Gómez
 
 ### Chapter 9: Mobility Streams

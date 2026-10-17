@@ -97,7 +97,7 @@ elif sys.argv[1] == "compare":
     answers = {int(parts[k]): parts[k + 1].strip() for k in range(1, len(parts) - 1, 2)}
     lines = ["-- SPDX-License-Identifier: PostgreSQL",
              "-" * 79,
-             "-- Mobility Data Science: In-Memory, Large-Scale and Stream Processing",
+             "-- Mobility Data Science: From Edge to Cloud Processing",
              "-- Chapter 4: Temporal Poses and Temporal Rigid Geometries",
              "--",
              "-- The worked examples of the type sections, in the order of the chapter",

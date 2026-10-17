@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: PostgreSQL
 -------------------------------------------------------------------------------
--- Mobility Data Science: In-Memory, Large-Scale and Stream Processing
+-- Mobility Data Science: From Edge to Cloud Processing
 -- Chapter 4: Temporal Poses and Temporal Rigid Geometries
 --
 -- Vessel-traffic analytics, as a maritime authority would ask them

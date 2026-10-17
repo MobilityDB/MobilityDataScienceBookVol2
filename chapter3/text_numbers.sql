@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: PostgreSQL
 -------------------------------------------------------------------------------
--- Mobility Data Science: In-Memory, Large-Scale and Stream Processing
+-- Mobility Data Science: From Edge to Cloud Processing
 -- Chapter 3: Temporal Geometries and Temporal Circular Buffers
 --
 -- The numbers the text of the underwater-noise case study quotes and no
