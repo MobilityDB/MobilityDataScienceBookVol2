@@ -20,7 +20,10 @@ The extension loads only into the DuckDB version of its build.
    artifacts of the latest successful run of the
    [Main Extension Distribution Pipeline](https://github.com/MobilityDB/MobilityDuck/actions/workflows/MainDistributionPipeline.yml)
    on the `main` branch, or by building MobilityDuck as its README explains. Set
-   `MOBILITYDUCK_EXTENSION` in the first cells of the notebooks to its path.
+   `MOBILITYDUCK_EXTENSION` in the first cells of `hanoi-book.ipynb` to its path.
+   `mobilityDuckAIS.ipynb` holds every listing of the chapter that reads the AIS data, in the
+   order of the chapter, and reads from the environment `MOBILITYDUCK_EXTENSION`, `AIS_DIR` and
+   `PG_AIS`, the variables of the section on reproducing the chapter below.
 3. The extension is not signed by DuckDB, so the notebooks open DuckDB with
    `allow_unsigned_extensions` (in the DuckDB shell, start it with `duckdb -unsigned`).
 4. The notebooks install the spatial extension from the `core_nightly` repository
@@ -110,13 +113,15 @@ vector tiles of OpenFreeMap drawn by Leaflet.VectorGrid (`figures/vtiles.py`, st
 text: its labels and legends are TikZ overlays (`<figure>_overlay.tex`) set in the font of the
 captions.
 
-1. Install the Python packages (the figures of the book are drawn with these versions) and the
-   Chromium of Playwright, and, for the hybrid maps, `pdftocairo` of Poppler:
+1. Install, with Python 3.11 or newer, the Python packages (the figures of the book are drawn
+   with these versions) and the Chromium of Playwright, and, for the hybrid maps, `pdftocairo`
+   of Poppler:
    `pip install folium==0.20.0 branca==0.8.2 pandas==2.3.3 shapely==2.2.0 matplotlib==3.11.2 pillow==12.3.0 pikepdf==10.16.0 playwright==1.63.0`
    and `playwright install chromium`. Set `CHROME` to use another Chromium executable.
 2. In `figures/`, create `data/ais`, `data/hanoi` and `out`, and write the data of the maps,
    which the scripts read and write relative to that folder:
-   - `md_figdata.sql` and `duck_figdata.sql` in the DuckDB database of `mobilityDuckAIS.ipynb`;
+   - `md_figdata.sql` and `duck_figdata.sql` in `ais_ch7.duckdb`, the DuckDB database that
+     `mobilityDuckAIS.ipynb` builds with the tables `AISInput` and `ships`;
    - `hanoi_figdata.sql` in `$CH7_DB_DIR/hanoi.duckdb`, or `hanoi_figdata_pg.sql` with `psql`
      in `PG_HANOI`.
 3. Draw the maps into `out`: `python3 fig_md.py`, `python3 fig_duck.py` and
