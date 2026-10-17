@@ -39,8 +39,8 @@ of OpenSky, 69,442,890 of the 695,706,186 state vectors of the day. The notebook
 from `/opt/data/flights/parquet`. On the cluster of the chapter it takes about 15 minutes, and
 prints:
 
-| | |
-|---|---|
+| Item | Count |
+|---|--:|
 | State vectors kept | 34,067,894 |
 | Aircraft | 29,395 |
 | Position reports | 27,812,444 |

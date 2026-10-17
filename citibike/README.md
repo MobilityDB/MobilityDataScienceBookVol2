@@ -42,8 +42,8 @@ tables in `data/citibike/warehouse/`, and `export_flink.sql`, which writes the t
 `data/citibike/flink/`. The variable `DAY` chooses another day for the export. On a laptop, the
 whole pipeline takes about six minutes, and prints:
 
-| | |
-|---|---|
+| Item | Count |
+|---|--:|
 | Trips | 35,002,469 |
 | Stations | 2,266 |
 | Stations in an NTA | 2,181 |
