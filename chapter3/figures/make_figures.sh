@@ -54,6 +54,12 @@ for m in tpoint tgeo tcbuffer tampa; do
   timeout 900 "${RUN[@]}" storms_qgis_map.py "storms_$m.json" "storms_$m.pdf" 2>&1 |
     grep -E 'wrote|Error|Traceback' || true
 done
+# The wind radii of the 2024 storms are arcs of many vertices, closer together than
+# a pixel of the map as the book prints it (\textwidth, 117 mm): pdf_simplify.py of
+# chapter7/figures simplifies them below half a printed pixel, with the Python of
+# PIKEPDF_PY (pikepdf and shapely)
+"${PIKEPDF_PY:-python3}" "$HERE/../../chapter7/figures/pdf_simplify.py" \
+  storms_tgeo.pdf storms_tgeo.pdf 117
 for m in ais_noise_region ais_encounter_sea_a ais_encounter_sea_b; do
   timeout 900 "${RUN[@]}" storms_qgis_map.py "$m.json" "$m.pdf" 2>&1 |
     grep -E 'wrote|Error|Traceback' || true

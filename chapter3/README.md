@@ -147,7 +147,9 @@ of each layer, and `hybrid_pdf.py` draws it with QGIS and the renderer of chapte
 which `storms_qgis_map.py` draws. The maps of vessels follow one color code: one
 vessel in blue, two vessels in blue and red, the protected areas in green. `storms_jobs.py` writes the
 same job `storms_<map>.json` for each storm map, in longitude and latitude, and
-`storms_qgis_map.py` draws it. The script also
+`storms_qgis_map.py` draws it; `pdf_simplify.py` of `chapter7/figures` simplifies the
+wind radii of `storms_tgeo.pdf` below half a pixel of the map as the book prints it,
+with the Python named by `PIKEPDF_PY` (with `pikepdf` and `shapely`). The script also
 draws with `fig_dist_tcbuffer_point.py` the turning point of the temporal
 distance between a temporal circular buffer and a point, at the circle
 MobilityDB answers. The databases are named by the PostgreSQL environment
