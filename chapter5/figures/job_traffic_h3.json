@@ -16,8 +16,26 @@
  "land": "#efeae2",
  "layers": [
   {
-   "type": "shortbread",
-   "water": "#f4f7fa"
+   "type": "vector",
+   "path": "traffic_base.gpkg",
+   "layer": "ocean",
+   "kind": "fill",
+   "style": {
+    "color": "#f4f7fa",
+    "outline_color": "#f4f7fa",
+    "outline_width": "0.1"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "traffic_base.gpkg",
+   "layer": "water_polygons",
+   "kind": "fill",
+   "style": {
+    "color": "#f4f7fa",
+    "outline_color": "#f4f7fa",
+    "outline_width": "0.1"
+   }
   },
   {
    "type": "vector",

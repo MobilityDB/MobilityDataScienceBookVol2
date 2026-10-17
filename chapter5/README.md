@@ -44,7 +44,8 @@ EPSG:25832, or kept in longitude and latitude in the columns whose name ends in
 - GDAL 3.8 with its Python bindings, and the PostGIS loader `raster2pgsql`.
 - Python 3 with the packages `copernicusmarine` 2.4.1, `cdsapi`, `psycopg2`,
   `pyarrow`, `Pillow`, and `raquet-io` 0.9.0.
-- QGIS 3.40 for the figures.
+- QGIS 3.40 for the figures, and the Python package `shapely` for the basemap of
+  the traffic map.
 
 The scripts connect to PostgreSQL through the usual environment variables
 (`PGDATABASE`, `PGHOST`, `PGPORT`, ...), and read the datasets from the
@@ -186,4 +187,4 @@ in blue, protected areas in green.
 | The seabed of a reef area north-east of Læsø | `export_seabed.sh`, `job_seabed_slope.json`, `job_seabed_tpi.json` |
 | The depth under a vessel between two reports | `export_depth_under_vessel.sh`, `job_depth_under_vessel.json`, and `overlay_depth_under_vessel.py`, which writes `depth_under_vessel_overlay.tex`, the image with its labels and legend in the style of the captions, which the book inputs |
 | An AIS track on the H3, QUADBIN, and S2 grids | `export_cellgrids.sql`, which writes the track of the pilot boat 219002732 leaving Frederikshavn from `Ships`, the protected area 17 of `NaturalAreas`, and the cells of the six panels; `cellgrids_panels.py`, which draws each panel; and `cellgrids_compose.tex`, which sets them in `cellgrids.pdf` |
-| Vessel-hours per H3 cell | `export_traffic_h3.sh`, `job_traffic_h3.json` |
+| Vessel-hours per H3 cell | `export_traffic_h3.sh`, `job_traffic_h3.json`, and `extract_base.py` of `chapter10/figures`, which merges the OSM Shortbread tiles of zoom 5 into the basemap `traffic_base.gpkg`, so that the map of Denmark stays near 1 MB and draws in under a second |

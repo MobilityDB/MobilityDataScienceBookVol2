@@ -17,6 +17,13 @@ mkdir -p "$OUT"
 for f in bathymetry_laeso depth_under_vessel traffic_h3 seabed; do
   bash "$HERE/export_$f.sh"
 done
+# The traffic map spans Denmark and its neighbours, so its basemap is one merged
+# GeoPackage of the OSM Shortbread tiles of zoom 5 (extract_base.py of
+# chapter10/figures, which needs shapely and the GDAL bindings), whose water
+# draws in under a second; the extent is that of job_traffic_h3.json in
+# EPSG:3857 with a margin.
+python3 "$HERE/../../chapter10/figures/extract_base.py" 5 780000 7150000 1800000 8050000 \
+  "$OUT/traffic_base.gpkg"
 cp "$HERE/../../chapter3/figures/hybrid_pdf.py" "$HERE/render_map.py" "$HERE"/job_*.json "$OUT/"
 if [ -n "$QGIS_PY" ]; then
   RUN=($QGIS_PY)
