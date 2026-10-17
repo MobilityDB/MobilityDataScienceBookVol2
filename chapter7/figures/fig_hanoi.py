@@ -20,7 +20,8 @@ from shapely.geometry import (LineString, MultiLineString, Point, MultiPoint,
 
 from vtiles import VectorTiles
 from vgprint import print_map, write_overlay
-from vghybrid import print_map_hybrid, print_dpi
+from vghybrid import print_map_hybrid, print_dpi, TEXTWIDTH_MM
+from pdf_simplify import simplify_printed
 
 D = 'data/hanoi/'
 O = 'out/'
@@ -60,21 +61,24 @@ def new_map(style):
     return m
 
 
-def save(m, name, size, bounds=None, view=None, incl=None, hybrid=None, **overlay):
+def save(m, name, size, bounds=None, view=None, incl=None, width=None, hybrid=False, **overlay):
     """`#shot` of fig_md.py: print the map with `#print_map` at half the pixel size `size`
-    (device scale 2), or, when hybrid (the fraction of \\textwidth at which the book prints the
-    map), with `#print_map_hybrid` of vghybrid.py, its dense trips one lossless image of the
-    printed pixels at 300 dpi over the vector basemap, as `#shot` of fig_duck.py does; when incl
-    (the \\includegraphics options of chapter7.tex) is given, write O + name_overlay.tex with the
-    legend or colour bar of `overlay`."""
+    (device scale 2), or, when hybrid, with `#print_map_hybrid` of vghybrid.py, its dense trips one
+    lossless image of the printed pixels at 300 dpi over the vector basemap, as `#shot` of
+    fig_duck.py does; when width (the fraction of \\textwidth at which the book prints the map) is
+    given, the paths of the map are simplified below half a printed pixel by `#simplify_printed` of
+    pdf_simplify.py; when incl (the \\includegraphics options of chapter7.tex) is given, write
+    O + name_overlay.tex with the legend or colour bar of `overlay`."""
     m.save(O + name + '.html')
     if hybrid:
         info = print_map_hybrid(O + name + '.html', O + name + '.pdf', round(size[0] / 2),
                                 round(size[1] / 2), view=view, bounds=bounds,
-                                dpi=print_dpi(round(size[0] / 2), hybrid))
+                                dpi=print_dpi(round(size[0] / 2), width))
     else:
         info = print_map(O + name + '.html', O + name + '.pdf', round(size[0] / 2),
                          round(size[1] / 2), view=view, bounds=bounds)
+    if width:
+        simplify_printed(O + name + '.pdf', width * TEXTWIDTH_MM)
     print(name, 'zoom', round(info['zoom'], 3), 'tiles', info['tiles'], flush=True)
     if incl:
         write_overlay(O + name + '_overlay.tex', f'figs/chap7/{name}.pdf', incl,
@@ -105,7 +109,8 @@ if 'tripsHanoi' in which:
     for g in trips['geom']:
         for line in lines_of(g):
             folium.PolyLine(latlon(line), color='#1010ee', weight=2, opacity=0.9).add_to(m)
-    save(m, 'tripsHanoi', (1884, 1036), bounds=(20.955, 105.745, 21.085, 105.945), hybrid=0.8)
+    save(m, 'tripsHanoi', (1884, 1036), bounds=(20.955, 105.745, 21.085, 105.945),
+         width=0.8, hybrid=True)
 
 if 'municipalitiesHanoi' in which:
     m = new_map('liberty')
@@ -114,7 +119,7 @@ if 'municipalitiesHanoi' in which:
         for line in lines_of(g):
             folium.PolyLine(latlon(line), color='#1010ee', weight=1.5, opacity=0.8).add_to(m)
     save(m, 'municipalitiesHanoi', (1882, 1030), bounds=(20.86, 105.565, 21.125, 106.005),
-         hybrid=0.8)
+         width=0.8, hybrid=True)
 
 if 'maxtripmuni' in which:
     df = pd.read_csv(D + 'maxtripmuni.csv')
@@ -136,7 +141,8 @@ if 'totaldistpermuni' in which:
         folium.GeoJson(mapping(row['geom']), style_function=lambda f, c=c: {
             'fillColor': c, 'color': 'white', 'weight': 1, 'fillOpacity': 0.8}).add_to(m)
     save(m, 'totaldistpermuni', (986, 728), bounds=bounds_of(list(munis['geom']), 0.22),
-         incl='width=0.7\\textwidth', colorbar=('Total kilometers traveled', colormap, 3.0))
+         incl='width=0.7\\textwidth', width=0.7,
+         colorbar=('Total kilometers traveled', colormap, 3.0))
 
 if 'closetrips' in which:
     df = pd.read_csv(D + 'closepairs.csv')
@@ -187,7 +193,7 @@ if 'tripsinstants' in which:
         folium.CircleMarker(location=(p.y, p.x), radius=4, color='red', fill=True,
                             fill_opacity=0.9).add_to(m)
     save(m, 'tripsinstants', (2018, 1188),
-         bounds=bounds_of(list(df['traj'].drop_duplicates()), 0.0))
+         bounds=bounds_of(list(df['traj'].drop_duplicates()), 0.0), width=0.8)
 
 def trip_colors(n):
     """`#get_trip_colors` of the notebook (cell 34)."""

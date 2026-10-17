@@ -11,22 +11,27 @@ from shapely import wkt
 
 from vtiles import VectorTiles
 from vgprint import print_map, write_overlay
-from vghybrid import print_map_hybrid, print_dpi
+from vghybrid import print_map_hybrid, print_dpi, TEXTWIDTH_MM
+from pdf_simplify import simplify_printed
 
 
-def shot(name, width, height, incl=None, labels=False, hide=(), hybrid=None, **overlay):
+def shot(name, width, height, incl=None, labels=False, hide=(), printed=None, hybrid=False, **overlay):
     """Print O + name.html to O + name.pdf at the CSS size of width x height
-    device px at scale 2), with #print_map, or, when hybrid (the fraction of \\textwidth at which the
-    book prints the map), with #print_map_hybrid of vghybrid.py (the basemap vector, the dense marker
-    layer embedded as one lossless image of the printed pixels at 300 dpi); when incl (the
+    device px at scale 2), with #print_map, or, when hybrid, with #print_map_hybrid of vghybrid.py (the
+    basemap vector, the dense marker layer embedded as one lossless image of the printed pixels at
+    300 dpi); when printed (the fraction of \\textwidth at which the book prints the map) is given,
+    the paths of the map are simplified below half a printed pixel by #simplify_printed of
+    pdf_simplify.py; when incl (the
     \\includegraphics options of chapter7.tex) is given, write O + name_overlay.tex with the measured
     labels (labels=True) and the legend of `overlay`."""
     if hybrid:
         info = print_map_hybrid(O + name + '.html', O + name + '.pdf', round(width / 2), round(height / 2),
-                                hide=hide, dpi=print_dpi(round(width / 2), hybrid))
+                                hide=hide, dpi=print_dpi(round(width / 2), printed))
     else:
         info = print_map(O + name + '.html', O + name + '.pdf', round(width / 2), round(height / 2),
                          hide=hide)
+    if printed:
+        simplify_printed(O + name + '.pdf', printed * TEXTWIDTH_MM)
     print(name, 'zoom', round(info['zoom'], 3), 'tiles', info['tiles'], 'labels',
           [lb['text'] for lb in info['labels']])
     if incl:
@@ -56,7 +61,7 @@ if 'centroid' in which:
         folium.CircleMarker(location=[row.geometry.y, row.geometry.x], radius=2,
             color=row['color'], fill=True, fill_opacity=0.7).add_to(m)
     m.save(O + 'duckdbcentroid.html')
-    shot('duckdbcentroid', 1278, 1032, hybrid=0.9)
+    shot('duckdbcentroid', 1278, 1032, printed=0.9, hybrid=True)
 
 if 'ships1000m' in which:
     gdf = pd.read_csv(D + 'ships1000m.csv')
@@ -93,7 +98,7 @@ if 'count' in which:
     </div>"""
     m.get_root().html.add_child(folium.Element(legend_html))
     m.save(O + 'countships1000m.html')
-    shot('countships1000m', 1388, 1056, incl='width=0.9\\textwidth', hybrid=0.9,
+    shot('countships1000m', 1388, 1056, incl='width=0.9\\textwidth', printed=0.9, hybrid=True,
          hide=('div[style*="position: fixed"]',), legend_at='south west',
          legend=('Neighbor count', [(lab, mcolors.to_hex(c), 'dot') for lab, c in
                  [('0', 'lightgray'), ('1-2', 'yellow'), ('3-5', 'orange'), ('6+', 'red')]]))
