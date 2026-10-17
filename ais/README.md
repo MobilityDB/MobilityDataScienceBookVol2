@@ -50,10 +50,24 @@ reaches 0.5 knots; a stopped run of at least 300 s is a stop.
 
 ### Building the database
 
-    bash fetch_data.sh            # January 20, 2026; `month` for January 2026
+January 20, 2026 is the canonical day of the book: every chapter that uses AIS data works on
+that day, except the lakehouse chapter (chapter 10), which uses the whole of January 2026.
+`fetch_data.sh`, `build.sh` and `check_duckdb.sh` therefore take one argument, `day` (the
+default) or `month`, and all three must be given the same one.
+
+To build the database of the canonical day, which every chapter but chapter 10 needs:
+
+    bash fetch_data.sh
     createdb ais
-    bash build.sh                 # `month` for January 2026
+    bash build.sh
     DUCKDB_ENGINE=/path/to/duckdb bash check_duckdb.sh
+
+To build the database of the whole month, for chapter 10:
+
+    bash fetch_data.sh month
+    createdb ais
+    bash build.sh month
+    DUCKDB_ENGINE=/path/to/duckdb bash check_duckdb.sh month
 
 `fetch_data.sh` downloads the archives into `data/ais/` and the table of Maritime Identification
 Digits into `data/`. The Danish Maritime Authority does not allow its data to be redistributed,
