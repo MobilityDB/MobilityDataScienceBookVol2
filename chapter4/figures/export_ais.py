@@ -201,7 +201,9 @@ dock_hulls = collection(cur, f"""SELECT {geo(f'valueAtTimestamp({DOCK}, t)')},
   to_char(t, 'HH24:MI') FROM generate_series(timestamptz '2026-01-20 08:10:00',
   timestamptz '2026-01-20 08:37:00', interval '3 minutes') t""")
 dock_track = collection(cur, f"SELECT {geo(f'trajectory(tgeompoint({DOCK}))')}")
-figure('ais_dock.pdf', bbox(dock_swept, pad=0.12, aspect=1.0), [
+# the map keeps the proportions of the swept area, so that at 0.85\textwidth it is
+# less than a third of the text height
+figure('ais_dock.pdf', bbox(dock_swept, pad=0.12), [
     dict(TRACK, file=save('dock_track', dock_track), width=0.5),
     dict(HULL, file=save('dock_hulls', dock_hulls)),
     dict(SWEPT, file=save('dock_swept', dock_swept))])
