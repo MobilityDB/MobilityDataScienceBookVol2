@@ -36,8 +36,10 @@ captions. The scripts write into `figures/out`.
    and `playwright install chromium`. Set `CHROME` to use another Chromium executable.
    `fig_charts_print.py` sets its text with `pdflatex` and the `lmodern` package.
 2. Put the input data in `figures/data`, or in the folder given by the variable `CH2_DATA`:
-   - `aisdk-2026-01-20.csv`, the file of January 20, 2026 of the
-     [Danish Maritime Authority](http://aisdata.ais.dk/), unzipped;
+   - `aisclean-2026-01-20.csv`, the reports of the table `AISClean` of the AIS database of the
+     book (directory `ais` of this repository), written by `figures/export_aisclean.sh` with the
+     columns, names and timestamp format of the files of the
+     [Danish Maritime Authority](http://aisdata.ais.dk/);
    - `trips.csv`, the first 700 trips of the BerlinMOD-Brussels database of scale factor 0.01
      ([MobilityDB-BerlinMOD](https://github.com/MobilityDB/MobilityDB-BerlinMOD)), written by
      the `COPY ... TO STDOUT` statement of the section Advanced PyMEOS Functionality, saved by
@@ -49,14 +51,16 @@ captions. The scripts write into `figures/out`.
    `mpandas2-*` (it takes the names of the figures to draw, by default all of them), and
    `fig_charts_print.py` the plots `mpandas2-delhisplits` and `mpandas2-generalization_*` at the
    width they are printed at. `delhi_common.py` holds the statements they share.
-4. PyMEOS on AIS data: `ais_load.py` cleans the DMA file as the complete example of the
-   chapter and writes `ais_filtered.parquet`; `ais_make_input.py` writes `aisinput.csv`, the
-   records of the five vessels of the chapter. `pymeos_ais1.py` runs the MovingPandas/PyMEOS
-   example on `aisinput.csv` and writes the simplified trajectories that `fig_pymeosais1.py`
-   draws (`pymeosais1_a/b`). `pymeos_ais2.py` runs the complete example into the MobilityDB
-   database `vessels` (variables `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, by default those of
-   the chapter), and `PSYCOPG_IMPL=python python3 pymeos_ais2_plot.py` reads one ship back and
-   draws `pymeosais2_a/b`.
+4. PyMEOS on AIS data, run with `TZ=UTC` (the timestamps of the reports are in UTC):
+   `ais_load.py` reads `aisclean-2026-01-20.csv` as the complete example of the chapter and
+   writes `ais_filtered.parquet`; `ais_make_input.py` writes `aisinput.csv`, the records of the
+   five vessels of the chapter. `pymeos_ais1.py` runs the MovingPandas/PyMEOS example on
+   `aisinput.csv` and writes the simplified trajectories that `fig_pymeosais1.py` draws
+   (`pymeosais1_a/b`). `pymeos_ais2.py` runs the complete example into the table `pymeos.Ships`
+   of the AIS database of the book (variables `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` and
+   `PGDATABASE`, by default those of the chapter and `ais`), and
+   `PSYCOPG_IMPL=python python3 pymeos_ais2_plot.py` reads one ship back and draws
+   `pymeosais2_a/b`.
 5. Advanced PyMEOS functionality, on BerlinMOD: `bmod_listings.py` runs the listings of the section on
    `trips.csv`, prints the values the chapter shows and draws the plots `pymeosbmod*` and
    `pymeossimplifications*`; then `fig_bmod_outputs.py` renders the printed outputs

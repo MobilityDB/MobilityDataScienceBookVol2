@@ -1,4 +1,4 @@
-"""Last listing of the complete PyMEOS example of chapter 2: read one ship back from MobilityDB
+"""Last listing of the complete PyMEOS example of chapter 2: read one ship back from the table pymeos.Ships
 and plot its trajectory and SOG (figures pymeosais2_a/b). Run with PSYCOPG_IMPL=python: the PyMEOS
 psycopg loader decodes bytes, and the psycopg C implementation passes a memoryview."""
 import os
@@ -16,11 +16,12 @@ from pymeos.db.psycopg import MobilityDB
 
 pymeos_initialize()
 connection = MobilityDB.connect(host=os.environ.get("PGHOST", "localhost"),
-                                port=int(os.environ.get("PGPORT", 5433)), dbname="vessels",
+                                port=int(os.environ.get("PGPORT", 5433)),
+                                dbname=os.environ.get("PGDATABASE", "ais"),
                                 user=os.environ.get("PGUSER", "postgres"),
                                 password=os.environ.get("PGPASSWORD", "postgres"))
 cursor = connection.cursor()
-cursor.execute("SELECT * FROM public.ships WHERE MMSI = 111219517;")
+cursor.execute("SELECT * FROM pymeos.Ships WHERE MMSI = 219026257;")
 mmsi, trajectory, sog = cursor.fetchone()
 cursor.close()
 print(mmsi, type(trajectory).__name__, trajectory.num_instants(), sog.num_instants(),
