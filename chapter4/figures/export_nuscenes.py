@@ -142,9 +142,23 @@ ax.add_patch(plt.Rectangle(BODY[:2], BODY[2] - BODY[0], BODY[3] - BODY[1], fill=
 ax.set_aspect('equal'); ax.set_xlim(-2.8, 5.6); ax.set_ylim(-2.4, 2.4)
 ax.set_xlabel('$x$ (m), forward'); ax.set_ylabel('$y$ (m), left')
 ax.grid(lw=0.3, alpha=0.5)
-# The arrows first, then each label at the first place around the tip of its arrow whose box meets
-# no arrow, no sensor, no edge of the body and no label already placed, inside the frame of the axes
-arrows, labels = [], []
+# Each label sits at its own arrow, at the tip (or the middle), offset in points and aligned so
+# that it extends away from the arrow; a line break keeps a label clear of a neighboring arrow
+PLACE = {  # channel: (anchor, dx, dy, ha, va, text)
+    'CAM_BACK': ('tip', -3, 0, 'right', 'center', 'CAM BACK'),
+    'CAM_BACK_LEFT': ('tip', -2, 2, 'right', 'bottom', 'CAM BACK\nLEFT'),
+    'CAM_BACK_RIGHT': ('tip', -2, -2, 'right', 'top', 'CAM BACK\nRIGHT'),
+    'CAM_FRONT': ('mid', 0, 3, 'center', 'bottom', 'CAM FRONT'),
+    'CAM_FRONT_LEFT': ('tip', -2, 2, 'right', 'bottom', 'CAM\nFRONT\nLEFT'),
+    'CAM_FRONT_RIGHT': ('tip', -2, -2, 'right', 'top', 'CAM\nFRONT\nRIGHT'),
+    'LIDAR_TOP': ('mid', -3, 0, 'right', 'center', 'LIDAR TOP'),
+    'RADAR_BACK_LEFT': ('tip', -3, 0, 'right', 'center', 'RADAR\nBACK LEFT'),
+    'RADAR_BACK_RIGHT': ('tip', -3, 0, 'right', 'center', 'RADAR\nBACK RIGHT'),
+    'RADAR_FRONT': ('tip', 3, 0, 'left', 'center', 'RADAR\nFRONT'),
+    'RADAR_FRONT_LEFT': ('tip', 3, 0, 'left', 'center', 'RADAR\nFRONT LEFT'),
+    'RADAR_FRONT_RIGHT': ('tip', 3, 0, 'left', 'center', 'RADAR\nFRONT RIGHT'),
+}
+arrows, texts = {}, {}
 for ch, x, y, *q in rig:
     look = rotate(q, (0, 0, 1) if ch.startswith('CAM') else (1, 0, 0))
     color = '#1f5fd6' if ch.startswith('CAM') else ('#d62728' if ch.startswith('RADAR')
@@ -152,40 +166,43 @@ for ch, x, y, *q in rig:
     tip = (x + 0.9 * look[0], y + 0.9 * look[1])
     ax.annotate('', xy=tip, xytext=(x, y), arrowprops=dict(arrowstyle='->', color=color, lw=1.2))
     ax.plot([x], [y], 'o', color=color, ms=3)
-    arrows.append(((x, y), tip))
-    labels.append((ch.replace('_', ' '), color, tip, math.atan2(look[1], look[0])))
+    arrows[ch] = ((x, y), tip)
+    anchor, dx, dy, ha, va, text = PLACE[ch]
+    at = tip if anchor == 'tip' else ((x + tip[0]) / 2, (y + tip[1]) / 2)
+    texts[ch] = ax.annotate(text, xy=at, xytext=(dx, dy), textcoords='offset points',
+                            fontsize=6.5, color=color, ha=ha, va=va, linespacing=1.0)
 fig.tight_layout()
+# Check: no label meets another sensor's arrow or dot, an edge of the body, another label or the
+# frame of the axes
 inv = ax.transData.inverted()
 renderer = fig.canvas.get_renderer()
 edges = [((BODY[0], BODY[1]), (BODY[2], BODY[1])), ((BODY[2], BODY[1]), (BODY[2], BODY[3])),
          ((BODY[2], BODY[3]), (BODY[0], BODY[3])), ((BODY[0], BODY[3]), (BODY[0], BODY[1]))]
-placed = []
-for text, color, tip, angle in labels:
-    for dist in (0.12, 0.25, 0.4, 0.6):
-        for turn in (0, 25, -25, 50, -50, 75, -75, 100, -100, 135, -135, 180):
-            a = angle + math.radians(turn)
-            ux, uy = math.cos(a), math.sin(a)
-            t = ax.text(tip[0] + dist * ux, tip[1] + dist * uy, text, fontsize=6.5, color=color,
-                        ha='left' if ux > 0.35 else ('right' if ux < -0.35 else 'center'),
-                        va='bottom' if uy > 0.35 else ('top' if uy < -0.35 else 'center'))
-            e = t.get_window_extent(renderer).expanded(1.15, 1.5)
-            (x0, y0), (x1, y1) = inv.transform([(e.x0, e.y0), (e.x1, e.y1)])
-            b = (x0, y0, x1, y1)
-            xl, yl = ax.get_xlim(), ax.get_ylim()
-            if (x0 >= xl[0] + 0.15 and x1 <= xl[1] - 0.15 and y0 >= yl[0] + 0.1 and y1 <= yl[1] - 0.1
-                    and not any(seg_hits_box(p, r, b) for p, r in arrows + edges)
-                    and not any(b[0] <= p[0] <= b[2] and b[1] <= p[1] <= b[3]
-                                for p, _ in arrows)
-                    and not any(b[0] < o[2] and o[0] < b[2] and b[1] < o[3] and o[1] < b[3]
-                                for o in placed)):
-                placed.append(b)
-                break
-            t.remove()
-        else:
-            continue
-        break
-    else:
-        raise SystemExit(f'nus_rig: no free place for the label {text}')
+boxes = {}
+for ch, t in texts.items():
+    e = t.get_window_extent(renderer).expanded(1.04, 1.1)
+    (x0, y0), (x1, y1) = inv.transform([(e.x0, e.y0), (e.x1, e.y1)])
+    boxes[ch] = (x0, y0, x1, y1)
+clashes = []
+xl, yl = ax.get_xlim(), ax.get_ylim()
+for ch, b in boxes.items():
+    if b[0] < xl[0] or b[2] > xl[1] or b[1] < yl[0] or b[3] > yl[1]:
+        clashes.append(f'{ch} leaves the axes')
+    for other, (p, r) in arrows.items():
+        if other == ch:  # its own arrow, but for the end the label is anchored at
+            a = PLACE[ch][0] == 'tip'
+            r = (p[0] + (r[0] - p[0]) * 0.85, p[1] + (r[1] - p[1]) * 0.85) if a else r
+            if seg_hits_box(p, r, b) and a:
+                clashes.append(f'{ch} meets its own arrow')
+        elif seg_hits_box(p, r, b) or (b[0] <= p[0] <= b[2] and b[1] <= p[1] <= b[3]):
+            clashes.append(f'{ch} meets the arrow of {other}')
+    if any(seg_hits_box(p, r, b) for p, r in edges):
+        clashes.append(f'{ch} meets the body')
+    for other, o in boxes.items():
+        if other < ch and b[0] < o[2] and o[0] < b[2] and b[1] < o[3] and o[1] < b[3]:
+            clashes.append(f'{ch} meets the label of {other}')
+if clashes:
+    raise SystemExit('nus_rig: ' + '; '.join(clashes))
 fig.savefig(os.path.join(OUT, 'nus_rig.pdf')); plt.close(fig)
 print('  wrote nus_rig.pdf with', len(rig), 'sensors')
 
