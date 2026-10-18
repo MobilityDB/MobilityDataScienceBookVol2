@@ -113,7 +113,7 @@ layers.append({'type': 'polygon', 'file': save('swept_ego', ego_swept),
                'fill': '0,120,0,110', 'stroke': '0,60,0,255', 'width': 0.25})
 figure('nus_swept.pdf', bbox(ego_swept, *fcs, pad=0.05, aspect=1.6), layers)
 
-# He sensor rig in the body frame of the vehicle
+# The sensor rig in the body frame of the vehicle
 print('nus_rig')
 sid = scene('scene-0061', 'singapore-onenorth')[0]
 cur.execute("""SELECT se.Channel, cs.X, cs.Y, cs.QW, cs.QX, cs.QY, cs.QZ
@@ -130,24 +130,65 @@ def rotate(q, v):
          [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)]]
     return [sum(r[i][j] * v[j] for j in range(3)) for i in range(3)]
 
+def seg_hits_box(p, q, b):
+    """Whether the segment pq meets the box b = (x0, y0, x1, y1), tested on 32 points of it"""
+    return any(b[0] <= p[0] + (q[0] - p[0]) * t / 32 <= b[2] and
+               b[1] <= p[1] + (q[1] - p[1]) * t / 32 <= b[3] for t in range(33))
+
 fig, ax = plt.subplots(figsize=(4.8, 3.0))
-ax.add_patch(plt.Rectangle((-0.7, -0.87), 4.1, 1.74, fill=True, fc='#eeeeee',
-                           ec='black', lw=0.8))
+BODY = (-0.7, -0.87, 3.4, 0.87)
+ax.add_patch(plt.Rectangle(BODY[:2], BODY[2] - BODY[0], BODY[3] - BODY[1], fill=True,
+                           fc='#eeeeee', ec='black', lw=0.8))
+ax.set_aspect('equal'); ax.set_xlim(-2.8, 5.6); ax.set_ylim(-2.4, 2.4)
+ax.set_xlabel('$x$ (m), forward'); ax.set_ylabel('$y$ (m), left')
+ax.grid(lw=0.3, alpha=0.5)
+ax.plot([0], [0], 'k+', ms=8)
+# The arrows first, then each label at the first place around the tip of its arrow whose box meets
+# no arrow, no sensor, no edge of the body and no label already placed
+arrows, labels = [], []
 for ch, x, y, *q in rig:
     look = rotate(q, (0, 0, 1) if ch.startswith('CAM') else (1, 0, 0))
     color = '#1f5fd6' if ch.startswith('CAM') else ('#d62728' if ch.startswith('RADAR')
                                                        else '#2ca02c')
-    ax.annotate('', xy=(x + 0.9 * look[0], y + 0.9 * look[1]), xytext=(x, y),
-                arrowprops=dict(arrowstyle='->', color=color, lw=1.2))
+    tip = (x + 0.9 * look[0], y + 0.9 * look[1])
+    ax.annotate('', xy=tip, xytext=(x, y), arrowprops=dict(arrowstyle='->', color=color, lw=1.2))
     ax.plot([x], [y], 'o', color=color, ms=3)
-    ax.text(x + 1.35 * look[0], y + 1.35 * look[1], ch.replace('_', ' '), fontsize=6.5,
-            ha='center', va='center', color=color)
-ax.plot([0], [0], 'k+', ms=8)
-ax.text(0.05, -0.2, 'origin', fontsize=6.5)
-ax.set_aspect('equal'); ax.set_xlim(-2.8, 5.6); ax.set_ylim(-2.4, 2.4)
-ax.set_xlabel('$x$ (m), forward'); ax.set_ylabel('$y$ (m), left')
-ax.grid(lw=0.3, alpha=0.5)
-fig.tight_layout(); fig.savefig(os.path.join(OUT, 'nus_rig.pdf')); plt.close(fig)
+    arrows.append(((x, y), tip))
+    labels.append((ch.replace('_', ' '), color, tip, math.atan2(look[1], look[0])))
+labels.append(('origin', 'black', (0.0, 0.0), -math.pi / 4))
+fig.tight_layout()
+inv = ax.transData.inverted()
+renderer = fig.canvas.get_renderer()
+edges = [((BODY[0], BODY[1]), (BODY[2], BODY[1])), ((BODY[2], BODY[1]), (BODY[2], BODY[3])),
+         ((BODY[2], BODY[3]), (BODY[0], BODY[3])), ((BODY[0], BODY[3]), (BODY[0], BODY[1]))]
+placed = []
+for text, color, tip, angle in labels:
+    for dist in (0.12, 0.25, 0.4, 0.6):
+        for turn in (0, 25, -25, 50, -50, 75, -75, 100, -100, 135, -135, 180):
+            a = angle + math.radians(turn)
+            ux, uy = math.cos(a), math.sin(a)
+            t = ax.text(tip[0] + dist * ux, tip[1] + dist * uy, text, fontsize=6.5, color=color,
+                        ha='left' if ux > 0.35 else ('right' if ux < -0.35 else 'center'),
+                        va='bottom' if uy > 0.35 else ('top' if uy < -0.35 else 'center'))
+            e = t.get_window_extent(renderer).expanded(1.15, 1.5)
+            (x0, y0), (x1, y1) = inv.transform([(e.x0, e.y0), (e.x1, e.y1)])
+            b = (x0, y0, x1, y1)
+            xl, yl = ax.get_xlim(), ax.get_ylim()
+            if (x0 >= xl[0] and x1 <= xl[1] and y0 >= yl[0] and y1 <= yl[1]
+                    and not any(seg_hits_box(p, r, b) for p, r in arrows + edges)
+                    and not any(b[0] <= p[0] <= b[2] and b[1] <= p[1] <= b[3]
+                                for p, _ in arrows + [((0.0, 0.0), None)])
+                    and not any(b[0] < o[2] and o[0] < b[2] and b[1] < o[3] and o[1] < b[3]
+                                for o in placed)):
+                placed.append(b)
+                break
+            t.remove()
+        else:
+            continue
+        break
+    else:
+        raise SystemExit(f'nus_rig: no free place for the label {text}')
+fig.savefig(os.path.join(OUT, 'nus_rig.pdf')); plt.close(fig)
 print('  wrote nus_rig.pdf with', len(rig), 'sensors')
 
 # He pitch of the vehicle: stepwise temporal float and slerp values
