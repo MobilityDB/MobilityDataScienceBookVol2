@@ -15,13 +15,14 @@ from vtiles import VectorTiles
 from vgprint import print_map, write_overlay
 
 
-def shot(name, width, height, incl=None, labels=False, hide=(), places=(), **overlay):
+def shot(name, width, height, incl=None, labels=False, hide=(), places=(), view=None, **overlay):
     """Print O + name.html to O + name.pdf at the CSS size of width x height
-    device px at scale 2), with #print_map; when incl (the \\includegraphics options of chapter7.tex) is
+    device px at scale 2), with #print_map, at view (lat, lon, zoom) when given, as #save of
+    fig_hanoi.py does; when incl (the \\includegraphics options of chapter7.tex) is
     given, write O + name_overlay.tex with the measured labels (labels=True), or the places alone
     (labels='places'), and the legend of `overlay`."""
     info = print_map(O + name + '.html', O + name + '.pdf', round(width / 2), round(height / 2),
-                     hide=hide, places=places)
+                     hide=hide, places=places, view=view)
     print(name, 'zoom', round(info['zoom'], 3), 'tiles', info['tiles'], 'labels',
           [lb['text'] for lb in info['labels']])
     if incl:
@@ -122,8 +123,10 @@ for fig, loc, zoom, size in [('points_a', None, None, (724, 856)),
     m.save(O + name + '.html')
     shot(name, *size)
 
-for fig, loc, zoom, size in [('close_a', [55.71, 8.0], 10, (1264, 652)),
-                             ('close_b', [55.4742, 8.4235], 16, (1246, 644))]:
+# Square panels of the size of the two panels of the buffers around Copenhagen, so that the four
+# panels of the two figures are printed at the same size
+for fig, loc, zoom, size in [('close_a', [55.71, 8.0], 10, (848, 848)),
+                             ('close_b', [55.47375, 8.4190], 15, (848, 848))]:
     if fig not in which:
         continue
     trajs = pd.read_csv(D + 'close300.csv')
@@ -144,9 +147,11 @@ for fig, loc, zoom, size in [('close_a', [55.71, 8.0], 10, (1264, 652)),
     m.save(O + name + '.html')
     if fig == 'close_a':   # the town that the text names (OpenStreetMap place node), labelled in the overlay
         shot(name, *size, incl='width=0.45\\textwidth', labels=True,
-             places=[('Esbjerg', 55.4664892, 8.4520751, 'south west')])
-    else:
-        shot(name, *size)
+             # above the point, clear of the trajectories that enter the harbour
+             places=[('Esbjerg', 55.4664892, 8.4520751, 'south, yshift=6pt')])
+    else:   # the slanted square basin (55.4740 N, 8.4234 E) centred vertically and right of the
+        # centre, so that the trajectories leaving the port westwards stay in the panel
+        shot(name, *size, view=(55.4732, 8.4213, 15.4))
 
 # The two maps are the panels (a) and (b) of one figure, drawn at the same scale: the same zoom, the
 # same layout size and the same printed width, centred on the same port, so that the buffers of
@@ -154,7 +159,7 @@ for fig, loc, zoom, size in [('close_a', [55.71, 8.0], 10, (1264, 652)),
 for fig, radius, cmap_name, label_color, zoom, size in [
         ('copenh', 500, 'tab20', 'red', 14, (848, 848)),
         ('copenhstop', 1000, 'Set1', 'black', 14, (848, 848))]:
-    incl = 'width=0.48\\textwidth'
+    incl = 'width=0.45\\textwidth'  # the width of the panels of the closest trajectories
     if fig not in which:
         continue
     df = pd.read_csv(D + fig + '.csv')

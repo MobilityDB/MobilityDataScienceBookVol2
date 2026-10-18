@@ -105,7 +105,7 @@ if {'tripsHanoi', 'municipalitiesHanoi'} & set(which):
     trips['geom'] = trips['traj'].apply(wkt.loads)
 
 if 'tripsHanoi' in which:
-    m = new_map('liberty')
+    m = new_map('liberty-city')
     for g in trips['geom']:
         for line in lines_of(g):
             folium.PolyLine(latlon(line), color='#1010ee', weight=2, opacity=0.9).add_to(m)
@@ -113,7 +113,7 @@ if 'tripsHanoi' in which:
          width=0.8, hybrid=True)
 
 if 'municipalitiesHanoi' in which:
-    m = new_map('liberty')
+    m = new_map('liberty-city')
     add_munis(m, opacity=0.45)
     for g in trips['geom']:
         for line in lines_of(g):
@@ -221,13 +221,22 @@ def poly_patch(geom, color):
 
 if 'tripdistricts' in which:
     # the 2 x 3 panels of the notebook (cell 38): the six municipalities crossed by most trips,
-    # each with its clipped trips, in EPSG:3857 on a square extent
+    # each with its clipped trips, in EPSG:3857 on a square extent. As the charts of
+    # chapter2/figures/fig_charts_print.py, the figure has the width at which the book prints it
+    # (0.95\textwidth), so that it is not scaled, and its text has the size of the captions
+    # (\small = 8.5 pt); the Vietnamese names, whose letters the T1 fonts of pdflatex lack, are
+    # set in the default font of matplotlib, embedded as TrueType
+    import matplotlib
     import matplotlib.pyplot as plt
+    FS = 8.5 * 72 / 72.27   # \small, 8.5 TeX points, in the points of matplotlib
+    matplotlib.rcParams.update({'pdf.fonttype': 42, 'font.size': FS, 'axes.titlesize': FS,
+                                'axes.linewidth': 0.4})
     random.seed(1)
     counts = pd.read_csv(D + 'districtcount.csv')
     clips = pd.read_csv(D + 'districttrips.csv')
     m3857 = munis.set_index('municipalityname')
-    fig, axes = plt.subplots(2, 3, figsize=(21, 14), dpi=150)
+    W = 0.95 * 332.89723 / 72.27   # 0.95 svmono \textwidth, in inches
+    fig, axes = plt.subplots(2, 3, figsize=(W, 0.76 * W), layout='constrained')
     for idx in range(6):
         ax = axes[idx // 3][idx % 3]
         name = counts.iloc[idx]['municipalityname']
@@ -238,7 +247,7 @@ if 'tripdistricts' in which:
         for c, w in zip(trip_colors(len(sub)), sub['trajClip']):
             for line in lines_of(wkt.loads(w)):
                 xs, ys = line.xy
-                ax.plot(xs, ys, color=c, linewidth=1)
+                ax.plot(xs, ys, color=c, linewidth=0.4, rasterized=True)
         minx, miny, maxx, maxy = g.bounds
         side = max(maxx - minx, maxy - miny) / 2
         cx, cy = (minx + maxx) / 2, (miny + maxy) / 2
@@ -247,7 +256,7 @@ if 'tripdistricts' in which:
         ax.set_aspect('equal')
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.set_title(f'{name}\n{n} trips', fontsize=15)
-    plt.tight_layout()
-    fig.savefig(O + 'tripdistricts.pdf')
-    fig.savefig(O + 'tripdistricts.png', dpi=100)
+        ax.set_title(f'{name}\n{n} trips', fontsize=FS)
+    # the clipped trips of each panel are one image of the pixels of the figure as the book
+    # prints it, at 300 dpi; the districts and the titles stay vectors
+    fig.savefig(O + 'tripdistricts.pdf', dpi=300)

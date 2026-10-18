@@ -24,7 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const v = window[k];
     if (!(k.startsWith('map_') && v && v.setView)) continue;
     const apply = () => {
-      if (ext.view) v.setView([ext.view[0], ext.view[1]], ext.view[2], {animate: false});
+      if (ext.view) {  // a fractional zoom, as fitBounds below may give, is kept
+        v.options.zoomSnap = 0;
+        v.setView([ext.view[0], ext.view[1]], ext.view[2], {animate: false});
+      }
       if (ext.bounds) {
         const [s, w, n, e] = ext.bounds;
         v.options.zoomSnap = 0;

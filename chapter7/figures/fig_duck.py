@@ -2,6 +2,7 @@
 of the companion notebook chapter7/mobilityDuckAIS.ipynb (cells of Queries 6.6, 6.8, 6.9 and
 6.10) over the OpenFreeMap vector basemap, from the CSV files written by duck_figdata.sql.
 Each map has a fixed extent and pixel size."""
+import math
 import sys
 import pandas as pd
 import folium
@@ -15,13 +16,16 @@ from vghybrid import print_map_hybrid, print_dpi, TEXTWIDTH_MM
 from pdf_simplify import simplify_printed
 
 
-def shot(name, width, height, incl=None, labels=False, hide=(), printed=None, hybrid=False, **overlay):
+def shot(name, width, height, incl=None, labels=False, hide=(), printed=None, hybrid=False,
+         bounds=None, shown=None, **overlay):
     """Print O + name.html to O + name.pdf at the CSS size of width x height
     device px at scale 2), with #print_map, or, when hybrid, with #print_map_hybrid of vghybrid.py (the
     basemap vector, the dense marker layer embedded as one lossless image of the printed pixels at
-    300 dpi); when printed (the fraction of \\textwidth at which the book prints the map) is given,
+    300 dpi), with the extent bounds (south, west, north, east) when given, as #save of fig_hanoi.py
+    does; when printed (the fraction of \\textwidth at which the book prints the map) is given,
     the paths of the map are simplified below half a printed pixel by #simplify_printed of
-    pdf_simplify.py; when incl (the
+    pdf_simplify.py, and when shown is also given the page is widened by white margins so that the
+    map shows at that fraction of \\textwidth; when incl (the
     \\includegraphics options of chapter7.tex) is given, write O + name_overlay.tex with the measured
     labels (labels=True) and the legend of `overlay`."""
     if hybrid:
@@ -29,9 +33,16 @@ def shot(name, width, height, incl=None, labels=False, hide=(), printed=None, hy
                                 hide=hide, dpi=print_dpi(round(width / 2), printed))
     else:
         info = print_map(O + name + '.html', O + name + '.pdf', round(width / 2), round(height / 2),
-                         hide=hide)
+                         hide=hide, bounds=bounds)
     if printed:
-        simplify_printed(O + name + '.pdf', printed * TEXTWIDTH_MM)
+        simplify_printed(O + name + '.pdf', (shown or printed) * TEXTWIDTH_MM)
+    if shown:
+        import pikepdf
+        with pikepdf.open(O + name + '.pdf', allow_overwriting_input=True) as p:
+            x0, y0, x1, y1 = [float(v) for v in p.pages[0].mediabox]
+            pad = (x1 - x0) * (printed / shown - 1) / 2
+            p.pages[0].mediabox = [x0 - pad, y0, x1 + pad, y1]
+            p.save(O + name + '.pdf')
     print(name, 'zoom', round(info['zoom'], 3), 'tiles', info['tiles'], 'labels',
           [lb['text'] for lb in info['labels']])
     if incl:
@@ -44,6 +55,14 @@ D = 'data/ais/'
 O = 'out/'
 which = sys.argv[1:] or ['centroid', 'ships1000m', 'count', 'k5nn']
 tgt = wkt.loads(pd.read_csv(D + 'target.csv')['Geom'].iloc[0])
+# The two maps of the ships around the ship in red share the size of the map and the printed size of
+# the dots of the centroids map (498 CSS px shown at 0.7\textwidth); each has the extent its ships
+# read best at: the whole port of Skagen with its breakwaters (750 m west, 1,480 m east, 780 m south,
+# 770 m north of the ship in red) for the ships within 1 km, its inner harbour (560 m west and east,
+# 380 m south, 600 m north) for the five nearest neighbours
+_kx, _ky = 1 / (111320 * math.cos(math.radians(tgt.y))), 1 / 110574
+SKAGEN = (tgt.y - 780 * _ky, tgt.x - 750 * _kx, tgt.y + 770 * _ky, tgt.x + 1480 * _kx)
+INNER_HARBOUR = (tgt.y - 380 * _ky, tgt.x - 560 * _kx, tgt.y + 600 * _ky, tgt.x + 560 * _kx)
 
 if 'centroid' in which:
     gdf = pd.read_csv(D + 'centroids.csv')
@@ -66,15 +85,16 @@ if 'centroid' in which:
 if 'ships1000m' in which:
     gdf = pd.read_csv(D + 'ships1000m.csv')
     gdf['geometry'] = gdf['Geom'].apply(wkt.loads)
-    m = folium.Map(location=[tgt.y, tgt.x], zoom_start=16, tiles=None)
+    m = folium.Map(location=[tgt.y, tgt.x], zoom_start=14, tiles=None)
     VectorTiles('positron').add_to(m)
-    folium.CircleMarker(location=[tgt.y, tgt.x], radius=8, color='red', fill=True,
-        fill_opacity=0.9).add_to(m)
     for _, row in gdf.iterrows():
-        folium.CircleMarker(location=[row.geometry.y, row.geometry.x], radius=5,
+        folium.CircleMarker(location=[row.geometry.y, row.geometry.x], radius=2,
             color='green', fill=True, fill_opacity=0.7).add_to(m)
+    folium.CircleMarker(location=[tgt.y, tgt.x], radius=3, color='red', fill=True,
+        fill_opacity=0.9).add_to(m)
     m.save(O + 'ships1000m.html')
-    shot('ships1000m', 712, 534)
+    # chapter7.tex prints the page at 0.9\textwidth, so the page has white margins on both sides
+    shot('ships1000m', 996, 696, printed=0.9, shown=0.7, bounds=SKAGEN)
 
 if 'count' in which:
     gdf = pd.read_csv(D + 'countships1000m.csv')
@@ -85,7 +105,7 @@ if 'count' in which:
     m = folium.Map(location=[55.95, 10.95], zoom_start=7, tiles=None)
     VectorTiles('positron').add_to(m)
     for _, row in gdf.sort_values('NeighborCount').iterrows():
-        folium.CircleMarker(location=[row.geometry.y, row.geometry.x], radius=6,
+        folium.CircleMarker(location=[row.geometry.y, row.geometry.x], radius=2,
             color=row['color'], fill=True, fill_color=row['color'], fill_opacity=0.8).add_to(m)
     legend_html = """
     <div style="position: fixed; bottom: 45px; left: 3px; width: 155px; z-index: 9999;
@@ -109,21 +129,21 @@ if 'k5nn' in which:
     pts = list(gdf['geometry']) + [tgt]
     center = [(min(p.y for p in pts) + max(p.y for p in pts)) / 2,
               (min(p.x for p in pts) + max(p.x for p in pts)) / 2]
-    # The map is laid out at the size it is printed (0.9\textwidth, 400 CSS px), at a zoom that shows
-    # the harbour around the ships and keeps the six markers apart (the closest pair is 22 m apart)
+    # The map has the size and the markers of the map of the ships within 1 km
     m = folium.Map(location=center, zoom_start=16, tiles=None)
     VectorTiles('positron').add_to(m)
     # The reference ship is a square, its neighbours are circles
-    folium.RegularPolygonMarker(location=[tgt.y, tgt.x], number_of_sides=4, rotation=45, radius=7,
-        color='red', weight=1, fill_color='red', fill_opacity=0.9, gradient=False).add_to(m)
     colors = ['blue', 'green', 'orange', 'purple', 'darkred']
     for idx, row in gdf.iterrows():
-        folium.CircleMarker(location=[row.geometry.y, row.geometry.x], radius=4,
-            color=colors[idx % len(colors)], weight=1, fill=True, fill_opacity=0.8).add_to(m)
+        folium.CircleMarker(location=[row.geometry.y, row.geometry.x], radius=2,
+            color=colors[idx % len(colors)], fill=True, fill_opacity=0.8).add_to(m)
+    folium.RegularPolygonMarker(location=[tgt.y, tgt.x], number_of_sides=4, rotation=45, radius=5,
+        color='red', weight=1, fill_color='red', fill_opacity=0.9, gradient=False).add_to(m)
     folium.Circle(location=[tgt.y, tgt.x], radius=1000, color='blue', fill=False, weight=2,
         opacity=0.5).add_to(m)
     m.save(O + 'k-5-NN.html')
-    shot('k-5-NN', 800, 600, incl='width=0.9\\textwidth', legend_at='south west',
+    shot('k-5-NN', 996, 696, incl='width=0.7\\textwidth', printed=0.7, bounds=INNER_HARBOUR,
+         legend_at='south west',
          legend=('Ships', [('Reference ship', mcolors.to_hex('red'), 'box')] +
                  [(f'Neighbour at {row.Distance:.0f} m', mcolors.to_hex(colors[idx % len(colors)]), 'dot')
                   for idx, row in gdf.iterrows()]))
