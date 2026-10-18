@@ -32,6 +32,12 @@
    "pg": "WITH tripInt AS\n (SELECT vehicleid, tripid,\n         COUNT(DISTINCT m.municipalityid) AS intersectCount\n  FROM trips t, municipalities m\n  WHERE eintersects(trip, municipalitygeo)\nGROUP BY vehicleid, tripid)\nSELECT t1.*, ST_AsText(t.trajectory) AS trajectory\nFROM trips t JOIN tripInt t1 ON (t.tripId = t1.tripId AND t.vehicleid = t1.vehicleid)\nORDER BY intersectCount DESC\nLIMIT 1"
   },
   {
+   "id": "q_districtcount",
+   "line": 1600,
+   "duck": "select municipalityid, municipalityname,\n  COUNT(*) as intersectCount\nfrom trips t, municipalities m\nwhere eintersects(t.trip, m.municipalitygeo)\ngroup by municipalityid, municipalityname\norder by intersectCount desc",
+   "pg": "select municipalityid, municipalityname,\n  COUNT(*) as intersectCount\nfrom trips t, municipalities m\nwhere eintersects(t.trip, m.municipalitygeo)\ngroup by municipalityid, municipalityname\norder by intersectCount desc"
+  },
+  {
    "id": "q_totalkm",
    "line": 1617,
    "duck": "SELECT m.MunicipalityName,\n  round((SUM(length(atGeometry(t.trip, m.MunicipalityGeo))) / 1000)\n    ::numeric, 3) AS TotalKm\nFROM Trips t, Municipalities m\nWHERE eintersects(t.trip, m.MunicipalityGeo)\nGROUP BY m.MunicipalityName",
