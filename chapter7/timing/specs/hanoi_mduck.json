@@ -40,8 +40,8 @@
   {
    "id": "q24_edwithin",
    "line": 1647,
-   "duck": "SELECT DISTINCT t1.VehicleId AS VehicleId1, t1.TripId AS TripId1,\n  ST_AsText(t1.Trajectory) AS Traj1, t2.VehicleId AS VehicleId2, t2.TripId AS TripId2,\n  ST_AsText(t2.Trajectory) AS Traj2\nFROM (SELECT * FROM trips t1 LIMIT 1000) t1,\n  (SELECT * FROM trips t2 LIMIT 1000) t2\nWHERE t1.VehicleId < t2.VehicleId AND eDwithin(t1.Trip, t2.Trip, 10.0)\nORDER BY t1.VehicleId, t2.VehicleId",
-   "pg": "SELECT DISTINCT t1.VehicleId AS VehicleId1, t1.TripId AS TripId1,\n  ST_AsText(t1.Trajectory) AS Traj1, t2.VehicleId AS VehicleId2, t2.TripId AS TripId2,\n  ST_AsText(t2.Trajectory) AS Traj2\nFROM (SELECT * FROM trips t1 LIMIT 1000) t1,\n  (SELECT * FROM trips t2 LIMIT 1000) t2\nWHERE t1.VehicleId < t2.VehicleId AND eDwithin(t1.Trip, t2.Trip, 10.0)\nORDER BY t1.VehicleId, t2.VehicleId"
+   "duck": "SELECT DISTINCT t1.VehicleId AS VehicleId1, t1.TripId AS TripId1,\n  ST_AsText(t1.Trajectory) AS Traj1, t2.VehicleId AS VehicleId2, t2.TripId AS TripId2,\n  ST_AsText(t2.Trajectory) AS Traj2\nFROM (SELECT * FROM trips t1 ORDER BY TripId LIMIT 1000) t1,\n  (SELECT * FROM trips t2 ORDER BY TripId LIMIT 1000) t2\nWHERE t1.VehicleId < t2.VehicleId AND eDwithin(t1.Trip, t2.Trip, 10.0)\nORDER BY t1.VehicleId, t2.VehicleId",
+   "pg": "SELECT DISTINCT t1.VehicleId AS VehicleId1, t1.TripId AS TripId1,\n  ST_AsText(t1.Trajectory) AS Traj1, t2.VehicleId AS VehicleId2, t2.TripId AS TripId2,\n  ST_AsText(t2.Trajectory) AS Traj2\nFROM (SELECT * FROM trips t1 ORDER BY TripId LIMIT 1000) t1,\n  (SELECT * FROM trips t2 ORDER BY TripId LIMIT 1000) t2\nWHERE t1.VehicleId < t2.VehicleId AND eDwithin(t1.Trip, t2.Trip, 10.0)\nORDER BY t1.VehicleId, t2.VehicleId"
   },
   {
    "id": "q26_lateral",
