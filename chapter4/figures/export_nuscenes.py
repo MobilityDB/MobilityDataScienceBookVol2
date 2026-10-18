@@ -142,9 +142,8 @@ ax.add_patch(plt.Rectangle(BODY[:2], BODY[2] - BODY[0], BODY[3] - BODY[1], fill=
 ax.set_aspect('equal'); ax.set_xlim(-2.8, 5.6); ax.set_ylim(-2.4, 2.4)
 ax.set_xlabel('$x$ (m), forward'); ax.set_ylabel('$y$ (m), left')
 ax.grid(lw=0.3, alpha=0.5)
-ax.plot([0], [0], 'k+', ms=8)
 # The arrows first, then each label at the first place around the tip of its arrow whose box meets
-# no arrow, no sensor, no edge of the body and no label already placed
+# no arrow, no sensor, no edge of the body and no label already placed, inside the frame of the axes
 arrows, labels = [], []
 for ch, x, y, *q in rig:
     look = rotate(q, (0, 0, 1) if ch.startswith('CAM') else (1, 0, 0))
@@ -155,7 +154,6 @@ for ch, x, y, *q in rig:
     ax.plot([x], [y], 'o', color=color, ms=3)
     arrows.append(((x, y), tip))
     labels.append((ch.replace('_', ' '), color, tip, math.atan2(look[1], look[0])))
-labels.append(('origin', 'black', (0.0, 0.0), -math.pi / 4))
 fig.tight_layout()
 inv = ax.transData.inverted()
 renderer = fig.canvas.get_renderer()
@@ -174,10 +172,10 @@ for text, color, tip, angle in labels:
             (x0, y0), (x1, y1) = inv.transform([(e.x0, e.y0), (e.x1, e.y1)])
             b = (x0, y0, x1, y1)
             xl, yl = ax.get_xlim(), ax.get_ylim()
-            if (x0 >= xl[0] and x1 <= xl[1] and y0 >= yl[0] and y1 <= yl[1]
+            if (x0 >= xl[0] + 0.15 and x1 <= xl[1] - 0.15 and y0 >= yl[0] + 0.1 and y1 <= yl[1] - 0.1
                     and not any(seg_hits_box(p, r, b) for p, r in arrows + edges)
                     and not any(b[0] <= p[0] <= b[2] and b[1] <= p[1] <= b[3]
-                                for p, _ in arrows + [((0.0, 0.0), None)])
+                                for p, _ in arrows)
                     and not any(b[0] < o[2] and o[0] < b[2] and b[1] < o[3] and o[1] < b[3]
                                 for o in placed)):
                 placed.append(b)
