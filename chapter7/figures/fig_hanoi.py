@@ -56,21 +56,24 @@ def bounds_of(geoms, pad=0.0):
     return (min(ys0) - dy, min(xs0) - dx, max(ys1) + dy, max(xs1) + dx)
 
 
-def fit_border(geoms, width, border_mm, css_w):
-    """(bounds, size) of a map printed at width times \\textwidth whose geometries fill it but for a
-    border of border_mm on every side: the bounds (south, west, north, east) widen the extent of the
-    geometries in Web Mercator, and the size (pixels, twice the CSS size `#save` lays out) has the
-    aspect of the widened extent, so that fitBounds fills the page with it."""
+def fit_border(geoms, width, border_mm, css_w, east_mm=0):
+    """(bounds, size, height_mm) of a map printed at width times \\textwidth whose geometries fill
+    it but for a border of border_mm on every side and east_mm more on the east, where a legend
+    goes: the bounds (south, west, north, east) widen the extent of the geometries in Web Mercator,
+    and the size (pixels, twice the CSS size `#save` lays out) has the aspect of the widened extent,
+    so that fitBounds fills the page with it; height_mm is the printed height of the map."""
     import math
     merc = lambda lat: math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
     unmerc = lambda y: math.degrees(2 * math.atan(math.exp(y)) - math.pi / 2)
     s, w, n, e = bounds_of(geoms)
     x0, x1, y0, y1 = math.radians(w), math.radians(e), merc(s), merc(n)
-    inner_mm = width * TEXTWIDTH_MM - 2 * border_mm
-    pad = (x1 - x0) * border_mm / inner_mm
-    x0, x1, y0, y1 = x0 - pad, x1 + pad, y0 - pad, y1 + pad
+    width_mm = width * TEXTWIDTH_MM
+    mm = (x1 - x0) / (width_mm - 2 * border_mm - east_mm)  # Web Mercator units per printed mm
+    x0, x1, y0, y1 = x0 - border_mm * mm, x1 + (border_mm + east_mm) * mm, y0 - border_mm * mm, \
+        y1 + border_mm * mm
     css_h = round(css_w * (y1 - y0) / (x1 - x0))
-    return ((unmerc(y0), math.degrees(x0), unmerc(y1), math.degrees(x1)), (2 * css_w, 2 * css_h))
+    return ((unmerc(y0), math.degrees(x0), unmerc(y1), math.degrees(x1)), (2 * css_w, 2 * css_h),
+            (y1 - y0) / mm)
 
 
 def new_map(style):
@@ -157,7 +160,11 @@ if 'maxtripmuni' in which:
             'fillColor': c, 'color': 'white', 'weight': 1.2, 'fillOpacity': 0.6}).add_to(m)
     for line in lines_of(trip):
         folium.PolyLine(latlon(line), color='crimson', weight=2, opacity=1).add_to(m)
-    save(m, 'maxtripmuni', (1154, 1162), bounds=bounds_of(list(munis['geom']), 0.02))
+    # the crossed municipalities and the trip fill the map but for a border of 5 mm as the book
+    # prints it, at 0.7\textwidth
+    bounds, size, h = fit_border([munis.at[i, 'geom'] for i in crossed] + [trip], 0.7, 5, 577)
+    print('maxtripmuni height', round(h, 1), 'mm', flush=True)
+    save(m, 'maxtripmuni', size, bounds=bounds)
 
 if 'totaldistpermuni' in which:
     # the choropleth of the notebook (cell 44); its scale goes to the LaTeX figure, not the map
@@ -170,10 +177,12 @@ if 'totaldistpermuni' in which:
         c = colormap(row['TotalKm']) if pd.notna(row['TotalKm']) else 'lightgrey'
         folium.GeoJson(mapping(row['geom']), style_function=lambda f, c=c: {
             'fillColor': c, 'color': 'white', 'weight': 1, 'fillOpacity': 0.8}).add_to(m)
-    # the municipalities fill the map but for a border of 5 mm as the book prints it
-    bounds, size = fit_border(list(munis['geom']), 0.65, 5, 493)
-    save(m, 'totaldistpermuni', size, bounds=bounds, incl='width=0.65\\textwidth', width=0.65,
-         colorbar=('Total kilometers\ntraveled', colormap, 4.5))
+    # the municipalities fill the map but for a border of 5 mm as the book prints it and 16 mm
+    # more on the east, where the colour bar goes; the map is at most a third of the text height
+    bounds, size, h = fit_border(list(munis['geom']), 0.59, 5, 493, east_mm=16)
+    print('totaldistpermuni height', round(h, 1), 'mm', flush=True)
+    save(m, 'totaldistpermuni', size, bounds=bounds, incl='width=0.59\\textwidth', width=0.59,
+         colorbar=('Total km\ntraveled', colormap, 2.6))
 
 if 'closetrips' in which:
     df = pd.read_csv(D + 'closepairs.csv')

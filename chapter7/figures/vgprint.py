@@ -179,8 +179,8 @@ def write_overlay(path, graphic, incl, pfx, labels=(), legend=None, colorbar=Non
                   comment='', font=r'\captionstyle'):
     """Write the tikzpicture of `graphic` with \\includegraphics[incl], its labels (dicts of #print_map),
     its categorical legend (title, [(label, colour, 'line'|'dot'|'box')]) and its colour bar
-    (title, LinearColormap or StepColormap, height cm), vertical, beside the map to the east and
-    bottom-aligned with it, one box per class of a StepColormap; a newline in the title breaks its line.
+    (title, LinearColormap or StepColormap, height cm), vertical, on a panel inside the map at its
+    south east corner, one box per class of a StepColormap; a newline in the title breaks its line.
     Colour names are prefixed with pfx. Its text is set in `font`, the caption's by default."""
     out = [f'% Written by vgprint.py ({comment})' if comment else '% Written by vgprint.py.']
     body = []
@@ -239,8 +239,11 @@ def write_overlay(path, graphic, incl, pfx, labels=(), legend=None, colorbar=Non
         title, cm, hcm = colorbar
         lo, hi = cm.vmin, cm.vmax
         y = lambda v: hcm * (v - lo) / (hi - lo)
-        wbar = 0.35
-        body.append(rf'\begin{{scope}}[shift={{(img.south east)}}, xshift=0.25cm, font={font}]')
+        wbar = 0.3
+        # a panel inside the map at its south east corner, as the categorical legend is
+        body.append(rf'\node[anchor=south east, fill=white, fill opacity=0.85, text opacity=1, '
+                    rf'inner sep=3pt, font={font}] at ([xshift=-3pt, yshift=3pt]img.south east) '
+                    r'{\begin{tikzpicture}[fill opacity=1]')
         if hasattr(cm, 'index'):
             # a StepColormap: one box per class, as the map colours it
             for a, b in zip(cm.index[:-1], cm.index[1:]):
@@ -257,9 +260,9 @@ def write_overlay(path, graphic, incl, pfx, labels=(), legend=None, colorbar=Non
         for t in _nice_ticks(lo, hi):
             body.append(rf'\draw[line width=0.2pt] ({wbar}, {y(t):.3f}) -- ++(0.06, 0) '
                         rf'node[anchor=west, inner sep=1pt] {{{t:,.0f}}};')
-        body.append(rf'\node[anchor=south west, inner sep=0, align=left] at (0, {hcm + 0.4:.3f}) '
+        body.append(rf'\node[anchor=south west, inner sep=0, align=left] at (0, {hcm + 0.25:.3f}) '
                     rf'{{{_tex(title).replace(chr(10), r" \\ ")}}};')
-        body.append(r'\end{scope}')
+        body.append(r'\end{tikzpicture}};')
     body.append(r'\end{tikzpicture}%')
     # each line outside the tikzpicture ends with %, so that the overlay adds no space where it is \input
     out += [rf'\definecolor{{{n}}}{{HTML}}{{{h}}}%' for h, n in cols.items()]
