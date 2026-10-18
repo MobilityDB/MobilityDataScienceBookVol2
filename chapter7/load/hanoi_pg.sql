@@ -4,7 +4,10 @@
 -- reads: the trips in longitude and latitude, transformed to EPSG:3857 as that loader does,
 -- the points and the municipalities in EPSG:3857.
 --
---   psql -d hanoi -v dir=<directory of the CSV files> -f load_hanoi.sql
+--   psql -d hanoi -v dir=<directory of the CSV files> -f load/hanoi_pg.sql
+--
+-- COPY reads the files on the database server: with PostgreSQL in a container, dir is the
+-- directory of the CSV files inside the container.
 
 \set ON_ERROR_STOP on
 CREATE EXTENSION IF NOT EXISTS mobilitydb CASCADE;

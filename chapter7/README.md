@@ -57,7 +57,8 @@ tied to one machine:
 | `DUCKDB` | The DuckDB v1.5.5 shell (default: `duckdb` on the `PATH`) |
 
 `run_duckdb.sh <database> <script.sql>` runs a script of this directory in the DuckDB shell,
-replacing these variables, and only these, by their values. The Python scripts need the
+replacing these variables, and only these, by their values with `envsubst` (on macOS, of the
+Homebrew package `gettext`). The Python scripts need the
 packages `duckdb==1.5.5`, `psycopg` and `matplotlib`. The timestamps printed by the AIS listings
 are those of a session in Central European Time, as the chapter prints them.
 
@@ -77,7 +78,15 @@ are those of a session in Central European Time, as the chapter prints them.
    downloaded from the link of its README. `psql "$PG_HANOI" -v dir=<directory of its CSV files>
    -f load/hanoi_pg.sql` loads them into PostgreSQL, and
    `./run_duckdb.sh "$CH7_DB_DIR/hanoi.duckdb" load/hanoi_duckdb.sql` copies the tables into
-   DuckDB.
+   DuckDB. `COPY` reads the CSV files on the database server: with PostgreSQL in a container,
+   copy them into it (`docker cp data0.01 <container>:/tmp/hanoi`) and give `dir` their path
+   there (`-v dir=/tmp/hanoi`). The loaded data hold 2,903 trips of 12,744,738 instants, from
+   2020-06-01 08:00:15.533 to 2020-06-06 04:51:35.92983 UTC, and
+   `psql "$PG_HANOI" -At -f load/hanoi_fingerprint.sql` prints
+
+       trips|2903|12744738|01f3eedbb67db581943c249af7182a84
+       municipalities|30|90ae9a83c4805a53a7b36cc5b5055a5e
+       socson|526|9871.984
 
 #### Values
 
