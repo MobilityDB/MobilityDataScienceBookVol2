@@ -223,12 +223,14 @@ if 'tripdistricts' in which:
     # the 2 x 3 panels of the notebook (cell 38): the six municipalities crossed by most trips,
     # each with its clipped trips, in EPSG:3857 on a square extent. As the charts of
     # chapter2/figures/fig_charts_print.py, the figure has the width at which the book prints it
-    # (0.95\textwidth), so that it is not scaled, and its text has the size of the captions
-    # (\small = 8.5 pt); the Vietnamese names, whose letters the T1 fonts of pdflatex lack, are
-    # set in the default font of matplotlib, embedded as TrueType
+    # (0.95\textwidth), so that it is not scaled; the Vietnamese names, whose letters the T1 fonts
+    # of pdflatex lack, are set in the default font of matplotlib, DejaVu Sans, embedded as
+    # TrueType, at the size whose x-height is that of the captions: \small, 8.5 TeX points of
+    # LM Roman 9 (x-height 0.431 em), is 8.5 * 72 / 72.27 points of matplotlib, and DejaVu Sans has
+    # an x-height of 0.547 em, so that at the same size it reads a quarter larger than the caption
     import matplotlib
     import matplotlib.pyplot as plt
-    FS = 8.5 * 72 / 72.27   # \small, 8.5 TeX points, in the points of matplotlib
+    FS = 8.5 * 72 / 72.27 * 0.431 / 0.547
     matplotlib.rcParams.update({'pdf.fonttype': 42, 'font.size': FS, 'axes.titlesize': FS,
                                 'axes.linewidth': 0.4})
     random.seed(1)
