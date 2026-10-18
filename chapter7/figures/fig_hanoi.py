@@ -12,6 +12,7 @@ import random
 import colorsys
 import pandas as pd
 import folium
+import matplotlib
 import matplotlib.colors as mcolors
 from branca.colormap import linear
 from shapely import wkt
@@ -123,9 +124,21 @@ if 'municipalitiesHanoi' in which:
 
 if 'maxtripmuni' in which:
     df = pd.read_csv(D + 'maxtripmuni.csv')
+    trip = wkt.loads(df['trajectory'].iloc[0])
     m = new_map('positron')
-    add_munis(m)
-    for line in lines_of(wkt.loads(df['trajectory'].iloc[0])):
+    # the municipalities the trip crosses take, in the order the trip enters them, the colours of
+    # tab10 but its red and grey, and the others are grey, each bounded by a white line, so that
+    # the crossings can be counted on the map
+    palette = [c for i, c in enumerate(matplotlib.colormaps['tab10'].colors) if i not in (3, 7)]
+    crossed = [i for i in munis.index if munis.at[i, 'geom'].intersects(trip)]
+    crossed.sort(key=lambda i: trip.project(munis.at[i, 'geom'].intersection(trip)
+                                             .representative_point()))
+    colour = {i: mcolors.to_hex(palette[k % len(palette)]) for k, i in enumerate(crossed)}
+    for i, row in munis.iterrows():
+        c = colour.get(i, '#b4b4b4')
+        folium.GeoJson(mapping(row['geom']), style_function=lambda f, c=c: {
+            'fillColor': c, 'color': 'white', 'weight': 1.2, 'fillOpacity': 0.6}).add_to(m)
+    for line in lines_of(trip):
         folium.PolyLine(latlon(line), color='crimson', weight=2, opacity=1).add_to(m)
     save(m, 'maxtripmuni', (1154, 1162), bounds=bounds_of(list(munis['geom']), 0.02))
 
