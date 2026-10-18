@@ -18,10 +18,22 @@
 -- On v1.0-mini, three scenes pitch by more than three degrees: scene-0916 up to 4.59 degrees,
 -- scene-0103 up to 3.29 and scene-1094 up to 3.21; export_nuscenes.py draws the pitch of
 -- scene-0916 (nus_pitch).
-WITH Attitude(SceneId, P) AS (
-  SELECT SceneId, degrees(pitch(Trip)) FROM EgoTrip )
-SELECT SceneId, maxValue(abs(P)) AS MaxPitch
+WITH Attitude(Name, P) AS (
+  SELECT s.Name, degrees(pitch(e.Trip))
+  FROM EgoTrip e JOIN Scene s ON e.SceneId = s.SceneId )
+SELECT Name, maxValue(abs(P)) AS MaxPitch
 FROM Attitude WHERE abs(P) ?> 3;
+
+-- The pitch has step interpolation
+SELECT s.Name, interp(degrees(pitch(e.Trip)))
+FROM EgoTrip e JOIN Scene s ON e.SceneId = s.SceneId
+WHERE s.Name LIKE '%0916';
+-- scene-0916 | Step
+
+-- The same instants with linear interpolation
+SELECT s.Name, tfloatSeq(instants(pitch(e.Trip)), 'Linear') AS Pitch
+FROM EgoTrip e JOIN Scene s ON e.SceneId = s.SceneId
+WHERE s.Name LIKE '%0916';
 
 
 -------------------------------------------------------------------------------
