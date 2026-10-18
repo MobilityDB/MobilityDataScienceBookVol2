@@ -130,6 +130,18 @@ def rotate(q, v):
          [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)]]
     return [sum(r[i][j] * v[j] for j in range(3)) for i in range(3)]
 
+def seg_point_dist(p, q, c):
+    """The distance from the point c to the segment pq"""
+    dx, dy = q[0] - p[0], q[1] - p[1]
+    t = max(0.0, min(1.0, ((c[0] - p[0]) * dx + (c[1] - p[1]) * dy) / (dx * dx + dy * dy)))
+    return math.hypot(p[0] + t * dx - c[0], p[1] + t * dy - c[1])
+
+def segs_cross(p, q, r, s):
+    """Whether the segments pq and rs cross"""
+    def side(a, b, c):
+        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    return (side(p, q, r) * side(p, q, s) < 0) and (side(r, s, p) * side(r, s, q) < 0)
+
 def seg_hits_box(p, q, b):
     """Whether the segment pq meets the box b = (x0, y0, x1, y1), tested on 32 points of it"""
     return any(b[0] <= p[0] + (q[0] - p[0]) * t / 32 <= b[2] and
@@ -158,12 +170,15 @@ PLACE = {  # channel: (anchor, dx, dy, ha, va, text)
     'RADAR_FRONT_LEFT': ('tip', 3, 0, 'left', 'center', 'RADAR\nFRONT LEFT'),
     'RADAR_FRONT_RIGHT': ('tip', 3, 0, 'left', 'center', 'RADAR\nFRONT RIGHT'),
 }
+# An arrow shows a direction, so its length is free: the lidar's, 0.9 m long, would pass over the
+# dot and the arrow of the rear right camera
+LENGTH = {'LIDAR_TOP': 0.3}
 arrows, texts = {}, {}
 for ch, x, y, *q in rig:
     look = rotate(q, (0, 0, 1) if ch.startswith('CAM') else (1, 0, 0))
     color = '#1f5fd6' if ch.startswith('CAM') else ('#d62728' if ch.startswith('RADAR')
                                                        else '#2ca02c')
-    tip = (x + 0.9 * look[0], y + 0.9 * look[1])
+    tip = (x + LENGTH.get(ch, 0.9) * look[0], y + LENGTH.get(ch, 0.9) * look[1])
     ax.annotate('', xy=tip, xytext=(x, y), arrowprops=dict(arrowstyle='->', color=color, lw=1.2))
     ax.plot([x], [y], 'o', color=color, ms=3)
     arrows[ch] = ((x, y), tip)
@@ -201,6 +216,12 @@ for ch, b in boxes.items():
     for other, o in boxes.items():
         if other < ch and b[0] < o[2] and o[0] < b[2] and b[1] < o[3] and o[1] < b[3]:
             clashes.append(f'{ch} meets the label of {other}')
+for ch, (p, r) in arrows.items():  # no arrow crosses another arrow or passes by another dot
+    for other, (p2, r2) in arrows.items():
+        if other > ch and segs_cross(p, r, p2, r2):
+            clashes.append(f'the arrow of {ch} crosses the arrow of {other}')
+        if other != ch and seg_point_dist(p, r, p2) < 0.12:
+            clashes.append(f'the arrow of {ch} passes by the dot of {other}')
 if clashes:
     raise SystemExit('nus_rig: ' + '; '.join(clashes))
 fig.savefig(os.path.join(OUT, 'nus_rig.pdf')); plt.close(fig)
