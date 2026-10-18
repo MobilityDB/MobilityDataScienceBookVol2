@@ -15,8 +15,9 @@
 -- The Vehicle as a Temporal Pose
 -------------------------------------------------------------------------------
 
--- On v1.0-mini, three scenes pitch by more than three degrees, up to 4.59, 3.29 and 3.21
--- degrees; the largest is scene-0916, whose pitch export_nuscenes.py draws (nus_pitch).
+-- On v1.0-mini, three scenes pitch by more than three degrees: scene-0916 up to 4.59 degrees,
+-- scene-0103 up to 3.29 and scene-1094 up to 3.21; export_nuscenes.py draws the pitch of
+-- scene-0916 (nus_pitch).
 WITH Attitude(SceneId, P) AS (
   SELECT SceneId, degrees(pitch(Trip)) FROM EgoTrip )
 SELECT SceneId, maxValue(abs(P)) AS MaxPitch
