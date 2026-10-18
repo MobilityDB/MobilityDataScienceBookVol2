@@ -176,11 +176,11 @@ def _tex(s):
 
 
 def write_overlay(path, graphic, incl, pfx, labels=(), legend=None, colorbar=None, legend_at='south east',
-                  comment='', font=r'\captionstyle'):
+                  colorbar_at='north east', comment='', font=r'\captionstyle'):
     """Write the tikzpicture of `graphic` with \\includegraphics[incl], its labels (dicts of #print_map),
     its categorical legend (title, [(label, colour, 'line'|'dot'|'box')]) and its colour bar
     (title, LinearColormap or StepColormap, height cm), vertical, on a panel inside the map at its
-    south east corner, one box per class of a StepColormap; a newline in the title breaks its line.
+    corner colorbar_at, one box per class of a StepColormap; a newline in the title breaks its line.
     Colour names are prefixed with pfx. Its text is set in `font`, the caption's by default."""
     out = [f'% Written by vgprint.py ({comment})' if comment else '% Written by vgprint.py.']
     body = []
@@ -240,9 +240,11 @@ def write_overlay(path, graphic, incl, pfx, labels=(), legend=None, colorbar=Non
         lo, hi = cm.vmin, cm.vmax
         y = lambda v: hcm * (v - lo) / (hi - lo)
         wbar = 0.3
-        # a panel inside the map at its south east corner, as the categorical legend is
-        body.append(rf'\node[anchor=south east, fill=white, fill opacity=0.85, text opacity=1, '
-                    rf'inner sep=3pt, font={font}] at ([xshift=-3pt, yshift=3pt]img.south east) '
+        # a panel inside the map at its corner colorbar_at, as the categorical legend is
+        xs = '-3pt' if 'east' in colorbar_at else '3pt'
+        ys = '3pt' if 'south' in colorbar_at else '-3pt'
+        body.append(rf'\node[anchor={colorbar_at}, fill=white, fill opacity=0.85, text opacity=1, '
+                    rf'inner sep=3pt, font={font}] at ([xshift={xs}, yshift={ys}]img.{colorbar_at}) '
                     r'{\begin{tikzpicture}[fill opacity=1]')
         if hasattr(cm, 'index'):
             # a StepColormap: one box per class, as the map colours it

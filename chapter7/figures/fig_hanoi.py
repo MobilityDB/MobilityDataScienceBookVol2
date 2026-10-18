@@ -182,7 +182,7 @@ if 'totaldistpermuni' in which:
     bounds, size, h = fit_border(list(munis['geom']), 0.59, 5, 493, east_mm=16)
     print('totaldistpermuni height', round(h, 1), 'mm', flush=True)
     save(m, 'totaldistpermuni', size, bounds=bounds, incl='width=0.59\\textwidth', width=0.59,
-         colorbar=('Total km\ntraveled', colormap, 2.6))
+         colorbar=('Total km\ntraveled', colormap, 2.6), colorbar_at='north east')
 
 if 'closetrips' in which:
     df = pd.read_csv(D + 'closepairs.csv')
