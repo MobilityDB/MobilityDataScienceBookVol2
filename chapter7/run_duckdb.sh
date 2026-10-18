@@ -9,5 +9,5 @@
 set -euo pipefail
 : "${DUCKDB:=duckdb}"
 [ $# -eq 2 ] || { echo "usage: $0 <database> <script.sql>" >&2; exit 2; }
-envsubst '${AIS_DIR} ${PG_AIS} ${PG_HANOI} ${MOBILITYDUCK_EXTENSION} ${CH7_DB_DIR} ${CH7_PLAN_DIR}' \
+envsubst '${AIS_DIR} ${PG_AIS} ${PG_HANOI} ${HANOI_DIR} ${MOBILITYDUCK_EXTENSION} ${CH7_DB_DIR} ${CH7_PLAN_DIR}' \
   < "$2" | "$DUCKDB" -unsigned "$1"

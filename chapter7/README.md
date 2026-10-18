@@ -51,6 +51,7 @@ tied to one machine:
 | `AIS_DIR` | Directory of `aisdk-2026-01-20.csv`: `ais/fetch_data.sh day` of this repository downloads its archive into `data/ais/`, and `unzip` extracts it |
 | `PG_AIS` | Connection string of the PostgreSQL database of the AIS data, built by `ais/build.sh` (for example `dbname=ais`) |
 | `PG_HANOI` | Connection string of the PostgreSQL database of the Hanoi data (for example `dbname=hanoi`) |
+| `HANOI_DIR` | Directory of the CSV files of `hanoi_sf0.01.zip` (its `data0.01`), for `load/hanoi_duckdb_csv.sql` |
 | `CH7_DB_DIR` | Directory of the DuckDB databases `ais.duckdb`, `ships.duckdb` and `hanoi.duckdb` |
 | `MOBILITYDUCK_EXTENSION` | Path of `mobilityduck.duckdb_extension`, obtained as the previous section says |
 | `CH7_PLAN_DIR` | Output directory of the plan figures |
@@ -80,12 +81,16 @@ are those of a session in Central European Time, as the chapter prints them.
    `./run_duckdb.sh "$CH7_DB_DIR/hanoi.duckdb" load/hanoi_duckdb.sql` copies the tables into
    DuckDB. `COPY` reads the CSV files on the database server: with PostgreSQL in a container,
    copy them into it (`docker cp data0.01 <container>:/tmp/hanoi`) and give `dir` their path
-   there (`-v dir=/tmp/hanoi`). The loaded data hold 2,903 trips of 12,744,738 instants, from
-   2020-06-01 08:00:15.533 to 2020-06-06 04:51:35.92983 UTC, and
-   `psql "$PG_HANOI" -At -f load/hanoi_fingerprint.sql` prints
+   there (`-v dir=/tmp/hanoi`). Without PostgreSQL,
+   `./run_duckdb.sh "$CH7_DB_DIR/hanoi.duckdb" load/hanoi_duckdb_csv.sql` builds the same tables
+   in DuckDB from the CSV files in `HANOI_DIR`. The loaded data hold 2,903 trips of 12,744,742
+   instants, from 2020-06-01 08:00:15.533 to 2020-06-06 04:51:35.92983 UTC, a trip keeping the
+   instants that are not exactly redundant, as the MEOS of MobilityDB master and of MobilityDuck
+   decides them. `load/hanoi_fingerprint.sql`, run by `psql "$PG_HANOI" -At -f` or by the DuckDB
+   shell after loading spatial and MobilityDuck, prints
 
-       trips|2903|12744738|01f3eedbb67db581943c249af7182a84
-       municipalities|30|90ae9a83c4805a53a7b36cc5b5055a5e
+       trips|2903|12744742|1ff016214762591b2d99b2d3e3525365
+       municipalities|30|2bbda5a88b1b4557dc3741dc1f79d4e6
        socson|526|9871.984
 
 #### Values
