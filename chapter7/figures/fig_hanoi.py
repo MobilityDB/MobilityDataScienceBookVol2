@@ -56,6 +56,23 @@ def bounds_of(geoms, pad=0.0):
     return (min(ys0) - dy, min(xs0) - dx, max(ys1) + dy, max(xs1) + dx)
 
 
+def fit_border(geoms, width, border_mm, css_w):
+    """(bounds, size) of a map printed at width times \\textwidth whose geometries fill it but for a
+    border of border_mm on every side: the bounds (south, west, north, east) widen the extent of the
+    geometries in Web Mercator, and the size (pixels, twice the CSS size `#save` lays out) has the
+    aspect of the widened extent, so that fitBounds fills the page with it."""
+    import math
+    merc = lambda lat: math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
+    unmerc = lambda y: math.degrees(2 * math.atan(math.exp(y)) - math.pi / 2)
+    s, w, n, e = bounds_of(geoms)
+    x0, x1, y0, y1 = math.radians(w), math.radians(e), merc(s), merc(n)
+    inner_mm = width * TEXTWIDTH_MM - 2 * border_mm
+    pad = (x1 - x0) * border_mm / inner_mm
+    x0, x1, y0, y1 = x0 - pad, x1 + pad, y0 - pad, y1 + pad
+    css_h = round(css_w * (y1 - y0) / (x1 - x0))
+    return ((unmerc(y0), math.degrees(x0), unmerc(y1), math.degrees(x1)), (2 * css_w, 2 * css_h))
+
+
 def new_map(style):
     m = folium.Map(location=[21.03, 105.85], zoom_start=11, tiles=None)
     VectorTiles(style).add_to(m)
@@ -153,9 +170,10 @@ if 'totaldistpermuni' in which:
         c = colormap(row['TotalKm']) if pd.notna(row['TotalKm']) else 'lightgrey'
         folium.GeoJson(mapping(row['geom']), style_function=lambda f, c=c: {
             'fillColor': c, 'color': 'white', 'weight': 1, 'fillOpacity': 0.8}).add_to(m)
-    save(m, 'totaldistpermuni', (986, 728), bounds=bounds_of(list(munis['geom']), 0.22),
-         incl='width=0.7\\textwidth', width=0.7,
-         colorbar=('Total kilometers traveled', colormap, 3.0))
+    # the municipalities fill the map but for a border of 5 mm as the book prints it
+    bounds, size = fit_border(list(munis['geom']), 0.65, 5, 493)
+    save(m, 'totaldistpermuni', size, bounds=bounds, incl='width=0.65\\textwidth', width=0.65,
+         colorbar=('Total kilometers\ntraveled', colormap, 4.5))
 
 if 'closetrips' in which:
     df = pd.read_csv(D + 'closepairs.csv')

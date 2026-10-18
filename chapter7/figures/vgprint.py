@@ -176,11 +176,12 @@ def _tex(s):
 
 
 def write_overlay(path, graphic, incl, pfx, labels=(), legend=None, colorbar=None, legend_at='south east',
-                  colorbar_at='north east', comment='', font=r'\captionstyle'):
+                  comment='', font=r'\captionstyle'):
     """Write the tikzpicture of `graphic` with \\includegraphics[incl], its labels (dicts of #print_map),
     its categorical legend (title, [(label, colour, 'line'|'dot'|'box')]) and its colour bar
-    (title, LinearColormap, width cm); colour names are prefixed with pfx. Its text is set in `font`, the
-    caption's by default."""
+    (title, LinearColormap or StepColormap, height cm), vertical, beside the map to the east and
+    bottom-aligned with it, one box per class of a StepColormap; a newline in the title breaks its line.
+    Colour names are prefixed with pfx. Its text is set in `font`, the caption's by default."""
     out = [f'% Written by vgprint.py ({comment})' if comment else '% Written by vgprint.py.']
     body = []
     cols = {}
@@ -235,28 +236,29 @@ def write_overlay(path, graphic, incl, pfx, labels=(), legend=None, colorbar=Non
         body.extend(rows)
         body.append(r'\end{tabular}};')
     if colorbar:
-        title, cm, wcm = colorbar
+        title, cm, hcm = colorbar
         lo, hi = cm.vmin, cm.vmax
-        n = 8
-        stops = [lo + (hi - lo) * i / n for i in range(n + 1)]
-        names = [col(cm.rgb_hex_str(v)) for v in stops]
-        x = lambda v: wcm * (v - lo) / (hi - lo)
-        anchor = colorbar_at
-        h = 0.95
-        x_off = f'-{wcm + 0.25:.2f}cm' if 'east' in anchor else '0.25cm'
-        y_off = f'-{h + 0.1:.2f}cm' if 'north' in anchor else '0.1cm'
-        body.append(rf'\begin{{scope}}[shift={{(img.{anchor})}}, xshift={x_off}, yshift={y_off}, '
-                    rf'font={font}]')
-        body.append(rf'\fill[white, opacity=0.85] (-0.15, -0.02) rectangle ({wcm + 0.15:.3f}, {h:.2f});')
-        body.append(rf'\node[anchor=south west, inner sep=0] at (0, 0.58) {{{_tex(title)}}};')
-        for i in range(n):
-            body.append(rf'\shade[left color={names[i]}, right color={names[i + 1]}] ({x(stops[i]):.3f}, 0.40) '
-                        rf'rectangle ({x(stops[i + 1]):.3f}, 0.52);')
-        body.append(rf'\draw[line width=0.2pt] (0, 0.40) rectangle ({wcm:.3f}, 0.52);')
+        y = lambda v: hcm * (v - lo) / (hi - lo)
+        wbar = 0.35
+        body.append(rf'\begin{{scope}}[shift={{(img.south east)}}, xshift=0.25cm, font={font}]')
+        if hasattr(cm, 'index'):
+            # a StepColormap: one box per class, as the map colours it
+            for a, b in zip(cm.index[:-1], cm.index[1:]):
+                body.append(rf'\fill[color={col(cm.rgb_hex_str((a + b) / 2))}] (0, {y(a):.3f}) '
+                            rf'rectangle ({wbar}, {y(b):.3f});')
+        else:
+            n = 8
+            stops = [lo + (hi - lo) * i / n for i in range(n + 1)]
+            names = [col(cm.rgb_hex_str(v)) for v in stops]
+            for i in range(n):
+                body.append(rf'\shade[bottom color={names[i]}, top color={names[i + 1]}] '
+                            rf'(0, {y(stops[i]):.3f}) rectangle ({wbar}, {y(stops[i + 1]):.3f});')
+        body.append(rf'\draw[line width=0.2pt] (0, 0) rectangle ({wbar}, {hcm:.3f});')
         for t in _nice_ticks(lo, hi):
-            lab = f'{t:g}'
-            body.append(rf'\draw[line width=0.2pt] ({x(t):.3f}, 0.40) -- ++(0, -0.04) '
-                        rf'node[anchor=north, inner sep=0.5pt] {{{lab}}};')
+            body.append(rf'\draw[line width=0.2pt] ({wbar}, {y(t):.3f}) -- ++(0.06, 0) '
+                        rf'node[anchor=west, inner sep=1pt] {{{t:,.0f}}};')
+        body.append(rf'\node[anchor=south west, inner sep=0, align=left] at (0, {hcm + 0.4:.3f}) '
+                    rf'{{{_tex(title).replace(chr(10), r" \\ ")}}};')
         body.append(r'\end{scope}')
     body.append(r'\end{tikzpicture}%')
     # each line outside the tikzpicture ends with %, so that the overlay adds no space where it is \input
