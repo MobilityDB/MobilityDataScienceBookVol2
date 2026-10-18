@@ -1,6 +1,6 @@
 package book.examples.utils;
 
-import static functions.functions.*;
+import static functions.GeneratedFunctions.*;
 
 import jnr.ffi.Pointer;
 

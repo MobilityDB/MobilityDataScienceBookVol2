@@ -79,8 +79,16 @@ and `pm_c.py` the PyMEOS one (`pm_b.py` and `pm_c.py` run the loading part of `p
 `DOCKER.md` states how to build the Docker image of the JMEOS examples (`Dockerfile`) and run them
 in it. The folder `jmeos/src` holds the JMEOS programs of the advanced section and of the JMEOS exercise
 in the layout of `TheBook/src` of `project-jmeos.zip`; copied over it, its files take the place of
-those of the archive. `JMEOS03` reads `/data/aisdk-2026-01-20.csv` with the day/month/year date
-style of the DMA files. `JMEOS07Extent` prints the instants and the extent of the first two trips
+those of the archive. The programs use the JMEOS of
+[MobilityDB/JMEOS](https://github.com/MobilityDB/JMEOS) `main`, generated from the MEOS of
+MobilityDB `master`: `jmeos/pom.xml` and `jmeos/tools/refresh.conf` build them as a consumer of
+`tools/refresh-binding.sh` of [MEOS-API](https://github.com/MobilityDB/MEOS-API), which builds
+libmeos and the JMEOS jar and then the examples, without warnings:
+`<MEOS-API>/tools/refresh-binding.sh --binding <the examples>` over the files of `TheBook` with
+those of `jmeos` copied over them. `JMEOS03` reads `/data/aisclean-2026-01-20.csv` (or the path
+given as argument) with the day/month/year date style of the DMA files and writes the table
+`jmeos.Ships` of the AIS database of the book; `PGDBStore` connects with the variables `PGHOST`,
+`PGPORT`, `PGUSER` and `PGPASSWORD`, by default those of the chapter. `JMEOS07Extent` prints the instants and the extent of the first two trips
 and the extent of all of them, `JMEOS08` computes the speed-time tiles and `JMEOS09` the spatial
 tiles (classes `TripsInSpeedTimeTile` and `TripsInTile`); each takes the path of
 `berlinmod_trips.csv` as argument. `JMEOS08a`, `JMEOS08b` and `JMEOS10` answer the three items

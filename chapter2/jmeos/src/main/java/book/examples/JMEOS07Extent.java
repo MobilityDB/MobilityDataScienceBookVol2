@@ -1,6 +1,6 @@
 package book.examples;
 
-import static functions.functions.*;
+import static functions.GeneratedFunctions.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.List;
 import book.examples.utils.BerlinmodTripRecord;
 import book.examples.utils.CSVRecords;
 import functions.MeosErrorHandler;
-import functions.functions;
+import functions.GeneratedFunctions;
 import jnr.ffi.Pointer;
 
 // The extent aggregation of chapter 2 (Sect. Temporal Aggregation of JMEOS), printing the
@@ -16,9 +16,9 @@ import jnr.ffi.Pointer;
 public class JMEOS07Extent {
 
 	public static void main(String[] args) throws Exception {
-		functions.meos_initialize();
-		functions.meos_initialize_timezone("UTC");
-		functions.meos_initialize_error_handler(new MeosErrorHandler());
+		GeneratedFunctions.meos_initialize();
+		GeneratedFunctions.meos_initialize_timezone("UTC");
+		GeneratedFunctions.meos_initialize_error_handler(new MeosErrorHandler());
 
 		CSVRecords.setSkipHeaderLines(1);
 		ArrayList<BerlinmodTripRecord> dataTrips =
@@ -45,6 +45,6 @@ public class JMEOS07Extent {
 		}
 		if (extent != null)
 			System.out.println("Final extent: " + stbox_out(extent, 6));
-		functions.meos_finalize();
+		GeneratedFunctions.meos_finalize();
 	}
 }

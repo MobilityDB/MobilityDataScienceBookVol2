@@ -1,6 +1,6 @@
 package book.examples;
 
-import static functions.functions.*;
+import static functions.GeneratedFunctions.*;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ import book.examples.utils.SizeOfBox;
 import book.examples.utils.SizeOfBox.option;
 import book.examples.utils.TripsInSpeedTimeTile;
 import functions.MeosErrorHandler;
-import functions.functions;
+import functions.GeneratedFunctions;
 import jnr.ffi.Memory;
 import jnr.ffi.Pointer;
 import jnr.ffi.Runtime;
@@ -22,9 +22,9 @@ import types.boxes.TBox;
 public class JMEOS08 {
 
 	public static void main(String[] args) throws Exception {
-		functions.meos_initialize();
-		functions.meos_initialize_timezone("UTC");
-		functions.meos_initialize_error_handler(new MeosErrorHandler());
+		GeneratedFunctions.meos_initialize();
+		GeneratedFunctions.meos_initialize_timezone("UTC");
+		GeneratedFunctions.meos_initialize_error_handler(new MeosErrorHandler());
 
 		CSVRecords.setSkipHeaderLines(1);
 		ArrayList<BerlinmodTripRecord> dataTrips =
@@ -38,15 +38,15 @@ public class JMEOS08 {
 			// Recalculate the temporal extent
 			temporalExtent = span_extent_transfn(temporalExtent, currentSpanPtr);
 			// Compute max speed
-			Pointer speed = tpoint_speed(tripRec.getTrip());
+			Pointer speed = tpoint_speed(tripRec.getTrip(), true);
 			float currentSpeed = (float) tfloat_max_value(speed);
 			if (maxSpeed < currentSpeed)
 				maxSpeed = currentSpeed;
 		}
 		// Build float span for the speed from 0 to the max calculated speed
-		Pointer speedSpan = functions.floatspan_make(0.0f, maxSpeed, true, true);
+		Pointer speedSpan = GeneratedFunctions.floatspan_make(0.0f, maxSpeed, true, true);
 		// Build the speed-time TBox
-		Pointer speedTimeExtent = functions.tbox_make(speedSpan, temporalExtent);
+		Pointer speedTimeExtent = GeneratedFunctions.tbox_make(speedSpan, temporalExtent);
 		System.out.println(tbox_out(speedTimeExtent, 6));
 
 		// bin sizes
@@ -54,14 +54,14 @@ public class JMEOS08 {
 		Pointer temporalBinSize = pg_interval_in("1 day", -1);
 		// origins
 		double speedOrigin = 0.0;
-		OffsetDateTime startingTimestamp = functions.tstzspan_lower(temporalExtent);
-		int pgDate = functions.timestamptz_to_date(startingTimestamp);
-		OffsetDateTime temporalOrigin = functions.date_to_timestamptz(pgDate);
+		OffsetDateTime startingTimestamp = GeneratedFunctions.tstzspan_lower(temporalExtent);
+		int pgDate = GeneratedFunctions.timestamptz_to_date(startingTimestamp);
+		OffsetDateTime temporalOrigin = GeneratedFunctions.date_to_timestamptz(pgDate);
 
 		Runtime runtime = Runtime.getSystemRuntime();
 		Pointer speedTimeTilesQtyPtr = Memory.allocate(runtime, Integer.BYTES);
 		Pointer speedTimeTiles = tfloatbox_value_time_tiles(speedTimeExtent, speedBinSize,
-				temporalBinSize, speedOrigin, temporalOrigin, speedTimeTilesQtyPtr);
+				temporalBinSize, speedOrigin, temporalOrigin, true, speedTimeTilesQtyPtr);
 		int tilesQty = speedTimeTilesQtyPtr.getInt(0);
 
 		final long TBOX_SIZE = SizeOfBox.calculate(TBox.class, option.sizeof);
@@ -82,7 +82,7 @@ public class JMEOS08 {
 			System.out.printf("Tile %d <- Trips ", tilePointer.getId());
 			for (BerlinmodTripRecord tripRec : dataTrips) {
 				Pointer trip = tripRec.getTrip();
-				Pointer speed = tpoint_speed(trip);
+				Pointer speed = tpoint_speed(trip, true);
 				Pointer split = tnumber_at_tbox(speed, tilePointer.getTilePtr());
 				if (split != null) {
 					System.out.printf("%d ", tripRec.getId());
@@ -105,6 +105,6 @@ public class JMEOS08 {
 				System.out.printf("Tile: %d, Box: %s, Count: %d%n",
 						tilePointer.getId(), tboxStr, tilePointer.getCount());
 		}
-		functions.meos_finalize();
+		GeneratedFunctions.meos_finalize();
 	}
 }

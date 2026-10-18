@@ -1,6 +1,6 @@
 package book.examples;
 
-import static functions.functions.*;
+import static functions.GeneratedFunctions.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,15 +9,15 @@ import book.examples.utils.BerlinmodTripRecord;
 import book.examples.utils.CSVRecords;
 import book.examples.utils.TripsInSpeedTimeTile;
 import functions.MeosErrorHandler;
-import functions.functions;
+import functions.GeneratedFunctions;
 
 // Exercise: speed-time tiles with an 8-hour temporal granularity
 public class JMEOS08b {
 
 	public static void main(String[] args) throws Exception {
-		functions.meos_initialize();
-		functions.meos_initialize_timezone("UTC");
-		functions.meos_initialize_error_handler(new MeosErrorHandler());
+		GeneratedFunctions.meos_initialize();
+		GeneratedFunctions.meos_initialize_timezone("UTC");
+		GeneratedFunctions.meos_initialize_error_handler(new MeosErrorHandler());
 
 		CSVRecords.setSkipHeaderLines(1);
 		ArrayList<BerlinmodTripRecord> dataTrips =
@@ -37,6 +37,6 @@ public class JMEOS08b {
 			else
 				System.out.printf("Tile: %d, %s, Count: 0%n", tilePointer.getId(), tboxStr);
 		}
-		functions.meos_finalize();
+		GeneratedFunctions.meos_finalize();
 	}
 }

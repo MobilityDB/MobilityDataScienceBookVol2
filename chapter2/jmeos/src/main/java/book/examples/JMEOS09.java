@@ -1,6 +1,6 @@
 package book.examples;
 
-import static functions.functions.*;
+import static functions.GeneratedFunctions.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,7 @@ import book.examples.utils.SizeOfBox;
 import book.examples.utils.SizeOfBox.option;
 import book.examples.utils.TripsInTile;
 import functions.MeosErrorHandler;
-import functions.functions;
+import functions.GeneratedFunctions;
 import jnr.ffi.Memory;
 import jnr.ffi.Pointer;
 import jnr.ffi.Runtime;
@@ -21,9 +21,9 @@ import types.boxes.STBox;
 public class JMEOS09 {
 
 	public static void main(String[] args) throws Exception {
-		functions.meos_initialize();
-		functions.meos_initialize_timezone("UTC");
-		functions.meos_initialize_error_handler(new MeosErrorHandler());
+		GeneratedFunctions.meos_initialize();
+		GeneratedFunctions.meos_initialize_timezone("UTC");
+		GeneratedFunctions.meos_initialize_error_handler(new MeosErrorHandler());
 
 		CSVRecords.setSkipHeaderLines(1);
 		ArrayList<BerlinmodTripRecord> dataTrips =
@@ -68,7 +68,7 @@ public class JMEOS09 {
 				if (split != null) {
 					System.out.printf("%d ", tripRec.getId());
 					tilePointer.incrementCount();
-					tilePointer.addDistance(tpoint_length(split));
+					tilePointer.addDistance(tpoint_length(split, true));
 					tilePointer.addDuration(temporal_duration(split, false));
 				}
 			}
@@ -86,6 +86,6 @@ public class JMEOS09 {
 				System.out.printf("Tile: %d, Box: %s, Count: %d%n",
 						tilePointer.getId(), tboxStr, tilePointer.getCount());
 		}
-		functions.meos_finalize();
+		GeneratedFunctions.meos_finalize();
 	}
 }

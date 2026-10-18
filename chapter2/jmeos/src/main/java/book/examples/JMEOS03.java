@@ -2,10 +2,10 @@ package book.examples;
 
      
 import functions.MeosErrorHandler;   
-import functions.functions;
+import functions.GeneratedFunctions;
 import jnr.ffi.Runtime;
-import static functions.functions.temporal_num_instants;
-import static functions.functions.tpoint_length;
+import static functions.GeneratedFunctions.temporal_num_instants;
+import static functions.GeneratedFunctions.tpoint_length;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,10 +19,10 @@ public class JMEOS03 {
  
     public static void main(String[] args) throws Exception {
     	
-    	 functions.meos_initialize();
-         functions.meos_initialize_timezone("UTC");
-         functions.meos_initialize_error_handler(new MeosErrorHandler());
-         functions.meos_set_datestyle("ISO, DMY", null);  // day/month/year
+    	 GeneratedFunctions.meos_initialize();
+         GeneratedFunctions.meos_initialize_timezone("UTC");
+         GeneratedFunctions.meos_initialize_error_handler(new MeosErrorHandler());
+         GeneratedFunctions.meos_set_datestyle("ISO, DMY", null);  // day/month/year
      	
     	
     	AISReadRecords.setSkipHeaderLines(1);  // no header
@@ -34,7 +34,7 @@ public class JMEOS03 {
     	// populating AISRecords.
     	// Last parameter is a Lambda fn used to filter data. 
     	 HashMap<Long, ArrayList<AISRecord>> data = 
-    			 AISReadRecords.readRecords("/data/aisdk-2026-01-20.csv",
+    			 AISReadRecords.readRecords(args.length > 0 ? args[0] : "/data/aisclean-2026-01-20.csv",
     			 List.of(0,2,3,4,7),
     			 
     			 // lambda filter
@@ -67,11 +67,11 @@ public class JMEOS03 {
      	
      	for (ShipRecord trip : shipRecords) {
      		 System.out.printf("  Trip %d-> Number of instants: %d, Distance travelled %f%n",
-                     trip.getMMSI(), temporal_num_instants(trip.getTrip()), tpoint_length(trip.getTrip()));
+                     trip.getMMSI(), temporal_num_instants(trip.getTrip()), tpoint_length(trip.getTrip(), true));
      		 
           
     		 System.out.printf(" Simplified Trip by Douglas-Peucker %d-> Number of instants: %d, Distance travelled %f%n",
-                     trip.getMMSI(), temporal_num_instants(trip.getSimplifiedTrip()), tpoint_length(trip.getSimplifiedTrip()));
+                     trip.getMMSI(), temporal_num_instants(trip.getSimplifiedTrip()), tpoint_length(trip.getSimplifiedTrip(), true));
 
  
      	}
@@ -79,11 +79,11 @@ public class JMEOS03 {
      	// Now store the information in a PosgreSQL MobilityDB
      	PGDBStore db = new PGDBStore();
      	
-     	// The  database name should be in lowercase
-     	db.createDatabase("vessels");
+     	// The AIS database of the book
+     	db.connectToDatabase("ais");
      	db.createShipsTable();
      	db.populateShipsTable(shipRecords);
       
-        functions.meos_finalize();
+        GeneratedFunctions.meos_finalize();
     }
 }

@@ -1,6 +1,6 @@
 package book.examples;
 
-import static functions.functions.*;
+import static functions.GeneratedFunctions.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,7 @@ import book.examples.utils.CSVRecords;
 import book.examples.utils.SizeOfBox;
 import book.examples.utils.SizeOfBox.option;
 import functions.MeosErrorHandler;
-import functions.functions;
+import functions.GeneratedFunctions;
 import jnr.ffi.Memory;
 import jnr.ffi.Pointer;
 import jnr.ffi.Runtime;
@@ -22,9 +22,9 @@ import types.boxes.STBox;
 public class JMEOS10 {
 
 	public static void main(String[] args) throws Exception {
-		functions.meos_initialize();
-		functions.meos_initialize_timezone("UTC");
-		functions.meos_initialize_error_handler(new MeosErrorHandler());
+		GeneratedFunctions.meos_initialize();
+		GeneratedFunctions.meos_initialize_timezone("UTC");
+		GeneratedFunctions.meos_initialize_error_handler(new MeosErrorHandler());
 
 		CSVRecords.setSkipHeaderLines(1);
 		ArrayList<BerlinmodTripRecord> dataTrips =
@@ -62,7 +62,7 @@ public class JMEOS10 {
 					continue;
 				Pointer split = tgeo_at_stbox(dataTrips.get(j).getTrip(), tile, false);
 				if (split != null)
-					km += tpoint_length(split) / 1000.0;
+					km += tpoint_length(split, true) / 1000.0;
 			}
 			String tileStr = stbox_out(tile, 0);
 			String day = tileStr.replaceAll(".*\\[(\\d{4}-\\d{2}-\\d{2}).*", "$1");
@@ -73,6 +73,6 @@ public class JMEOS10 {
 		}
 		for (String day : bestKm.keySet())
 			System.out.printf("%s: %.1f km in %s%n", day, bestKm.get(day), bestTile.get(day));
-		functions.meos_finalize();
+		GeneratedFunctions.meos_finalize();
 	}
 }

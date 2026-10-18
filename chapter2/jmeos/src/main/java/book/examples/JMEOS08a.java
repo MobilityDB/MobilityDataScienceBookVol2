@@ -1,6 +1,6 @@
 package book.examples;
 
-import static functions.functions.*;
+import static functions.GeneratedFunctions.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,16 +11,16 @@ import book.examples.utils.BerlinmodTripRecord;
 import book.examples.utils.CSVRecords;
 import book.examples.utils.TripsInSpeedTimeTile;
 import functions.MeosErrorHandler;
-import functions.functions;
+import functions.GeneratedFunctions;
 import jnr.ffi.Pointer;
 
 // Exercise: trips with speed in [23, 33] during a day, from the tile summaries only
 public class JMEOS08a {
 
 	public static void main(String[] args) throws Exception {
-		functions.meos_initialize();
-		functions.meos_initialize_timezone("UTC");
-		functions.meos_initialize_error_handler(new MeosErrorHandler());
+		GeneratedFunctions.meos_initialize();
+		GeneratedFunctions.meos_initialize_timezone("UTC");
+		GeneratedFunctions.meos_initialize_error_handler(new MeosErrorHandler());
 
 		CSVRecords.setSkipHeaderLines(1);
 		ArrayList<BerlinmodTripRecord> dataTrips =
@@ -48,9 +48,9 @@ public class JMEOS08a {
 		int exact = 0;
 		for (BerlinmodTripRecord tripRec : dataTrips)
 			if (candidates.contains(tripRec.getId()) &&
-					tnumber_at_tbox(tpoint_speed(tripRec.getTrip()), query) != null)
+					tnumber_at_tbox(tpoint_speed(tripRec.getTrip(), true), query) != null)
 				exact++;
 		System.out.printf("%d of them satisfy the query exactly%n", exact);
-		functions.meos_finalize();
+		GeneratedFunctions.meos_finalize();
 	}
 }
