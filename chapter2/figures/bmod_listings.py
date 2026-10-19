@@ -1,8 +1,8 @@
 """Advanced PyMEOS section of chapter 2 (BerlinMOD-Brussels, 700 trips): runs the printed
 listings in order on trips.csv, prints every value the chapter shows, and saves the matplotlib
-figures pymeosbmod2_a ... pymeosbmod11_b and pymeossimplifications* as PDF and PNG panels, and
-the values of pymeosbmod10 and pymeosbmod12 that fig_bmod_outputs.py renders. Code inside the
-listings is the chapter's code."""
+figures pymeosbmod2_a ... pymeosbmod11_b but the maps pymeosbmod2_b and pymeosbmod6, and
+pymeossimplifications* as PDF and PNG panels, and the values of pymeosbmod10 and pymeosbmod12
+that fig_bmod_outputs.py renders. Code inside the listings is the chapter's code."""
 import os
 from pathlib import Path
 
@@ -222,27 +222,6 @@ for trip in trips["trip"]:
 extent_stream = extent_aggregator.aggregation()
 count_stream = count_aggregator.aggregation()
 head('stream == bulk', (str(extent_stream) == str(extent_bulk), str(count_stream) == str(tcount_bulk)))
-
-# pymeosbmod6_a (stopping after 20 trips) and pymeosbmod6_b (after 40 trips, the listing)
-for name, last in (('pymeosbmod6_a', 21), ('pymeosbmod6_b', 41)):
-    extent_aggregator = TemporalPointExtentAggregator.start_aggregation()
-    fig, ax = plt.subplots(1, 1, figsize=(20, 10))
-    plt.sca(ax)
-    color = "black"
-    colors = []
-    for i, trip in enumerate(trips["trip"], 1):
-        extent_aggregator.add(trip)
-        if i % 20 == 0 and i <= last:
-            plot = extent_aggregator.aggregation().plot_xy(label=f"{i} trips")
-            color = plot[0][0].get_color()
-            colors += [color] * 20
-            print(f'{i} trips:', extent_aggregator.aggregation())
-    extent_stream = extent_aggregator.aggregation()
-    extent_stream.plot_xy(label="Final extent")
-    for trip, color in zip(trips["trip"], colors):
-        trip.plot(show_markers=False, color=color)
-    plt.legend()
-    save_panels(fig, [ax], [name])
 
 # Tiling
 tiled_trips = trips["trip"].apply(lambda tr: tr.tile(5e3, remove_empty=True))

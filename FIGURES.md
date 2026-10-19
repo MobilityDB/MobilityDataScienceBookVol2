@@ -49,7 +49,7 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 | 2.34 | Original trajectories (a); Trajectories simplified with DP (b); Trajectories simplified with SED (c) | `pymeossimplifications_a.pdf`, `pymeossimplifications_b.pdf`, `pymeossimplifications_c.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.35 | Bulk aggregation: spatial (a) and temporal (b) | `pymeosbmod9_a.pdf`, `pymeosbmod9_b.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.36 | Bulk aggregation as in Fig. 2.35, considering four hours of trajectories | `pymeosbmod5_a.pdf`, `pymeosbmod5_b.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.37 | Extent of the first 20 trips (a); extent of the second 20 trips (b) | `pymeosbmod6_a.pdf`, `pymeosbmod6_b.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.37 | Streaming aggregation of the spatial extent: the extent of the first 40 trips (a) and of the first 80 trips (b), within the extent of all the trips | `pymeosbmod6_a.pdf`, `pymeosbmod6_b.pdf` | `chapter2/figures/fig_pymeosbmod6.py` |
 | 2.38 | Portion of the result of the space and speed tiling | `pymeosbmod10.pdf` | `chapter2/figures/fig_bmod_outputs.py` |
 | 2.39 | Trajectory tilings (a); Speed tilings (b) | `pymeosbmod11_a.pdf`, `pymeosbmod11_b.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.40 | Coloring of trajectories within a tile, one colour per tile (a); coloring of speeds within a tile (b) | `pymeosbmod7_a.pdf`, `pymeosbmod7_b.pdf` | `chapter2/figures/bmod_listings.py` |

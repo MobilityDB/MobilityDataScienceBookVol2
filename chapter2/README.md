@@ -64,8 +64,8 @@ captions. The scripts write into `figures/out`.
 5. Advanced PyMEOS functionality, on BerlinMOD: `bmod_listings.py` runs the listings of the section on
    `trips.csv`, prints the values the chapter shows and draws the plots `pymeosbmod*` and
    `pymeossimplifications*`; then `fig_bmod_outputs.py` renders the printed outputs
-   `pymeosbmod10` and `pymeosbmod12_a/b`, and `fig_pymeosbmod2_b.py` draws the map
-   `pymeosbmod2_b`.
+   `pymeosbmod10` and `pymeosbmod12_a/b`, `fig_pymeosbmod2_b.py` draws the map `pymeosbmod2_b`,
+   and `fig_pymeosbmod6.py` draws the maps `pymeosbmod6_a/b`.
 
 ### Exercises
 
