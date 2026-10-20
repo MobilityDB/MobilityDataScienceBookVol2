@@ -46,10 +46,8 @@ DROP TABLE IF EXISTS airborne3d;
 
 CREATE TABLE airborne3d USING DELTA AS
 WITH Europe(Env) AS (
-  SELECT geometryFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(ST_Transform(
-    ST_Segmentize(ST_SetSRID(
-      ST_PolygonFromEnvelope(-35.58, 24.60, 44.83, 84.73), 4326), 1),
-    'EPSG:4326', 'EPSG:3035'), 3035))) ),
+  SELECT geoTransform(segmentize(geometryFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(
+    ST_PolygonFromEnvelope(-35.58, 24.60, 44.83, 84.73), 4326))), 1), 3035) ),
 Airborne AS (
   SELECT t.icao24, t.callsign, atGeometry(atTime(t.trip, spansetIntersection(
       getTime(atSpan(f.geoaltitude, floatspanFromText('[3000, 15000]'))),

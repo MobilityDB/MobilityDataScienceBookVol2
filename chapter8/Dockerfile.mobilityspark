@@ -86,15 +86,18 @@ RUN curl -fL -o $SPARK_HOME/jars/delta-spark_${SCALA_VERSION}-${DELTA_VERSION}.j
 # =========================================================
 # THE COMMITS OF MEOS AND OF THE BINDING
 #
-# MobilityDB 57fac5e427 is the master commit that computes tDwithin of temporal geography points on
-# the spheroid, which the query of the holding fixes of London Heathrow uses; JMEOS, MEOS-API and
-# MobilitySpark are the commits from which the binding that answered the queries of the chapter was
-# generated.
+# MobilityDB f44ab0710c is the master commit whose MEOS projects a geometry (geoTransform) and
+# densifies it (segmentize) with the code PostgreSQL runs, which the countries and the envelope of
+# Europe use, splits a trip into time bins (timeSplit) with the code PostgreSQL runs, which the
+# closest pair of aircraft of the second dashboard uses, and computes tDwithin of temporal
+# geography points on the spheroid, which the query of the holding fixes of London Heathrow uses;
+# JMEOS, MEOS-API and MobilitySpark are the commits from which the binding that answered the
+# queries of the chapter was generated.
 # =========================================================
-ARG MOBILITYDB_COMMIT=57fac5e4276289f6254d674ac17fd81b30876b66
-ARG JMEOS_COMMIT=e8c65dc4ca543ebcf049e8623cb465f40ddc5147
-ARG MEOS_API_COMMIT=4baf11705c4bc642ca202df85fe0d6f972e3d4bf
-ARG MOBILITYSPARK_COMMIT=eef205a75cbbcbeb681ee6e20bae45ac467d747d
+ARG MOBILITYDB_COMMIT=f44ab0710c5d4880d1aa1fb6df0fcfb8c663b80d
+ARG JMEOS_COMMIT=f76fabf32713f00333d6cca0256dd674102c1cd3
+ARG MEOS_API_COMMIT=1008ba165030af2d785cbf31fec428f151f5b934
+ARG MOBILITYSPARK_COMMIT=7af92fef3822b62e508dee3feacac6c8b29d78d8
 RUN set -e; fetch() { mkdir -p "$3" && cd "$3" && git init -q && \
       git fetch -q --depth 1 "https://github.com/MobilityDB/$1.git" "$2" && git checkout -q FETCH_HEAD; }; \
     fetch MobilityDB ${MOBILITYDB_COMMIT} /usr/local/src/MobilityDB; \
