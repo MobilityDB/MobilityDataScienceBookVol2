@@ -21,26 +21,26 @@ CTRL = ('.leaflet-control-zoom', '.leaflet-control-scale', '.leaflet-control-lay
 def delhitrips():
     m = my_trajs.explore(column="deviceId", cmap="tab10", tiles=None,
                          style_kwds={"weight": 4})
-    VectorTiles("liberty").add_to(m)
+    VectorTiles("liberty-city").add_to(m)
     return m
 
 
 def delhispeeds():
     m = my_trajs.explore(tiles=None, style_kwds={"weight": 4}, column="speed")
-    VectorTiles("liberty").add_to(m)
+    VectorTiles("liberty-city").add_to(m)
     return m
 
 
 def delhitraj():
     m = my_traj.explore(tiles=None, style_kwds={"weight": 4})
-    VectorTiles("liberty").add_to(m)
+    VectorTiles("liberty-city").add_to(m)
     return m
 
 
 def splits_detail():
     m = my_traj_split.trajectories[1].explore(
         tiles=None, style_kwds={"weight": 4}, column="speed")
-    VectorTiles("liberty").add_to(m)
+    VectorTiles("liberty-city").add_to(m)
     return m
 
 
@@ -51,7 +51,7 @@ def _stops():
         min_duration=timedelta(seconds=60), max_diameter=100)
     m = my_traj_stop.explore(color="slategray", style_kwds={"weight": 4},
                              tiles=None, name="Trajectory")
-    VectorTiles("liberty").add_to(m)
+    VectorTiles("liberty-city").add_to(m)
     stop_points.explore(
         m=m, color="deeppink", name="Stop points",
         style_kwds={"fillOpacity": 1, "style_function": lambda x:
@@ -94,7 +94,7 @@ def stops_collect():
         marker_kwds={"radius": 7},
         name="Stop points",
     )
-    VectorTiles("liberty").add_to(m)
+    VectorTiles("liberty-city").add_to(m)
     folium.LayerControl().add_to(m)
     return m
 
@@ -113,7 +113,7 @@ def stops_agg():
     m = pts.explore(marker_kwds={"radius": 7}, name="Significant points", tiles=None)
     clusters.explore(m=m, color="red",
                      marker_kwds={"radius": 7}, name="Cluster centroids")
-    VectorTiles("liberty").add_to(m)
+    VectorTiles("liberty-city").add_to(m)
     folium.LayerControl().add_to(m)
     return m
 
@@ -141,7 +141,7 @@ def smooth_a():
     kwargs = {"column": "deviceId", "cmap": ListedColormap(colors), "legend": False,
               "style_kwds": {"weight": 4}, "tiles": None}
     m = split_tr.to_traj_gdf().explore(**kwargs)
-    VectorTiles("liberty").add_to(m)
+    VectorTiles("liberty-city").add_to(m)
     return m
 
 
@@ -156,7 +156,7 @@ def smooth_b():
     kwargs = {"column": "deviceId", "cmap": ListedColormap(colors), "legend": False,
               "style_kwds": {"weight": 4}, "tiles": None}
     m = smooth.to_traj_gdf().explore(**kwargs)
-    VectorTiles("liberty").add_to(m)
+    VectorTiles("liberty-city").add_to(m)
     return m
 
 
@@ -166,7 +166,7 @@ def smooth_speed_a():
               "style_kwds": {"weight": 4}, "tiles": None}
     split_tr.add_speed(overwrite=True)
     m = split_tr.trajectories[8].to_line_gdf().explore(**kwargs)
-    VectorTiles("liberty").add_to(m)
+    VectorTiles("liberty-city").add_to(m)
     return m
 
 
@@ -177,7 +177,7 @@ def smooth_speed_b():
               "style_kwds": {"weight": 4}, "tiles": None}
     smooth.add_speed(overwrite=True)
     m = smooth.trajectories[8].to_line_gdf().explore(**kwargs)
-    VectorTiles("liberty").add_to(m)
+    VectorTiles("liberty-city").add_to(m)
     return m
 
 
@@ -237,9 +237,9 @@ PRINTED = {
     'mpandas2-smooth-speed_a': ('height', 74), 'mpandas2-smooth-speed_b': ('height', 74),
 }
 # The maps whose paths #simplify_printed of chapter7/figures/pdf_simplify.py simplifies below half a
-# printed pixel
-SIMPLIFIED = {'mpandas2-smooth_a', 'mpandas2-smooth_b', 'mpandas2-smooth-speed_a',
-              'mpandas2-smooth-speed_b'}
+# printed pixel: all of them, since every vertex closer than a printed pixel costs a viewer time to
+# draw and none of them shows
+SIMPLIFIED = set(FIGS)
 
 
 def shown_bounds(ext, css_w, css_h):

@@ -25,10 +25,12 @@ STYLES = {
 # since VectorGrid draws a layer without a style with the default Leaflet path style
 _JS = """(map => {
   const c = %s;
-  // a city map printed small (a style name ending in -city) leaves out, below zoom 13, the road
-  // casings, the tertiary roads and the residential areas, which it would print below a pixel
+  // a city map printed small (a style name ending in -city) leaves out, when the map is shown below
+  // zoom 13, the road casings, the tertiary and minor roads, the residential areas and the buildings,
+  // which it would print below a pixel; the zoom is that of the map, the scale it prints at, not the
+  // zoom of its tiles, which Leaflet rounds up from 12.5
   const city = %s;
-  const coarse = z => city && z < 13;
+  const coarse = z => city && map.getZoom() < 13;
   // beyond zoom 14, the most detailed level of the tiles, a tile is enlarged; its lines are drawn
   // thinner in proportion, so that they keep their width on the map
   const k = () => 2 ** Math.min(0, 14 - map.getZoom());
@@ -48,7 +50,7 @@ _JS = """(map => {
        hospital: fill('#ffddee'), school: fill('#eceecc'), pitch: fill('#dee3cd'),
        track: fill('#dee3cd')})[p.class] || none,
      park: p => p.rank === undefined ? fill(c.park) : none,  // a park with a rank is a label point
-     aeroway: fill(c.aeroway), building: fill(c.building)},
+     aeroway: fill(c.aeroway), building: (p, z) => coarse(z) ? none : fill(c.building)},
     {waterway: p => p.brunnel === 'tunnel' ? none : line(c.waterway, 0.7),
      transportation: (p, z) => coarse(z) ? none : ({motorway: line(c.casing, 3.0), trunk: line(c.casing, 3.0),
        primary: line(c.casing, 3.0), secondary: line(c.casing, 2.2), tertiary: line(c.casing, 2.2),
@@ -56,7 +58,7 @@ _JS = """(map => {
     {transportation: (p, z) => ({motorway: line(c.motorway, 2.0), trunk: line(c.major, 2.0),
        primary: line(c.major, 2.0), secondary: line(c.major, 1.3),
        tertiary: coarse(z) ? none : line(c.major, 1.3),
-       minor: z >= 13 ? line(c.minor, 1.0) : none})[road(p)] || none}];
+       minor: z >= 13 && !coarse(z) ? line(c.minor, 1.0) : none})[road(p)] || none}];
   return grids.map(g => Object.fromEntries(all.map(n => [n, g[n] || none])));
 })"""
 
