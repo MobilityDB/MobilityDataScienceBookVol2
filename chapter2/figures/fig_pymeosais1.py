@@ -11,7 +11,9 @@ OUT.mkdir(exist_ok=True)
 import geopandas as gpd
 import movingpandas as mpd
 from vtiles import VectorTiles
-from vgprint import print_map, write_overlay
+from vgprint import MM_PER_PX, print_map, write_overlay
+sys.path.append(str(Path(__file__).resolve().parents[2] / 'chapter7' / 'figures'))
+from pdf_simplify import simplify_printed  # noqa: E402
 
 # The towns that the chapter names for this trajectory (OpenStreetMap place nodes), labelled in the overlay
 PLACES = [('Fredericia', 55.5652680, 9.7562169, 'south'), ('Middelfart', 55.4993014, 9.7392181, 'north')]
@@ -25,8 +27,14 @@ def traj_from_points(path):
     return mpd.Trajectory(g, 1)
 
 
-specs = [('pymeosais1_a', 527, 422, 150.0124), ('pymeosais1_b', 504, 406, 143.9926)]
-for name, w, h, dpi in specs:
+# The two panels are set side by side over the text width, each 0.48 of it wide with the shape of
+# 527 x 422, laid out at their printed size in mm / MM_PER_PX, the scale of the Delhi maps of
+# fig_delhi.py, and simplified below half a printed pixel by #simplify_printed of
+# chapter7/figures/pdf_simplify.py
+TEXTWIDTH_MM = 332.89723 / 72.27 * 25.4
+width_mm = 0.48 * TEXTWIDTH_MM
+height_mm = width_mm * 422 / 527
+for name in ('pymeosais1_a', 'pymeosais1_b'):
     g = gpd.read_file(f'{D}/{name}.gpkg')
     print(name, list(g.columns), len(g))
     tcol = [c for c in g.columns if 'time' in c.lower() or c == 't']
@@ -38,9 +46,11 @@ for name, w, h, dpi in specs:
     html = f'{OUT}/{name}.html'
     m.save(html)
     view = None if len(sys.argv) < 2 else tuple(float(x) for x in sys.argv[1].split(','))
-    info = print_map(html, f'{OUT}/{name}.pdf', (w + 1) // 2, (h + 1) // 2, round(w / dpi, 4),
-                     round(h / dpi, 4), view=view, places=PLACES)
+    info = print_map(html, f'{OUT}/{name}.pdf', round(width_mm / MM_PER_PX),
+                     round(height_mm / MM_PER_PX), round(width_mm / 25.4, 4),
+                     round(height_mm / 25.4, 4), view=view, places=PLACES)
+    simplify_printed(f'{OUT}/{name}.pdf', width_mm)
     print(name, 'zoom', round(info['zoom'], 3), 'tiles', info['tiles'])
-    write_overlay(f'{OUT}/{name}_overlay.tex', f'figs/chap2/{name}.pdf', 'scale=0.55',
+    write_overlay(f'{OUT}/{name}_overlay.tex', f'figs/chap2/{name}.pdf', 'width=0.48\\textwidth',
                   'ov' + ''.join(c for c in name if c.isalpha()), labels=info['labels'],
                   comment='fig_pymeosais1.py')
