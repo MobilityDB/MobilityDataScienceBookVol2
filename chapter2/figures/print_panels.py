@@ -8,6 +8,7 @@ print size. #print_grid does the same for a grid of maps with titles, which it w
 width of a panel."""
 import matplotlib
 import matplotlib.dates as mdates
+from matplotlib.colors import to_hex
 from matplotlib.lines import Line2D
 from matplotlib.collections import LineCollection, PathCollection
 
@@ -37,16 +38,23 @@ def _texts(ax):
         yield from leg.get_texts()
 
 
-def _style(ax, map_, lw, ms):
+EMPHASIS_LW = 1.0                  # points: the lines of the emphasis colour stand out of the data
+
+
+def _style(ax, map_, lw, ms, frame=True, margin=0.03, emphasis=None, tz=None):
     """Sets the text of ax at FS in the font of the captions, thins the data lines to lw points
-    and the markers to ms points, and for a map removes the coordinates."""
+    and the markers to ms points, and for a map removes the coordinates; frame False draws no
+    frame, margin is the fraction of the data range left free around it, the lines of the colour
+    emphasis are drawn EMPHASIS_LW wide, and a time axis is labelled in the time zone tz."""
     for a in (ax.title, ax.xaxis.label, ax.yaxis.label):
         a.set_fontsize(FS)
     ax.tick_params(labelsize=FS, width=0.4, length=2, pad=1.5)
     for s in ax.spines.values():
         s.set_linewidth(0.4)
     for line in ax.get_lines():
-        if line.get_linewidth() > lw:
+        if emphasis and to_hex(line.get_color()) == to_hex(emphasis):
+            line.set_linewidth(EMPHASIS_LW)
+        elif line.get_linewidth() > lw:
             line.set_linewidth(lw)
         if ms is not None and line.get_markersize() > ms:
             line.set_markersize(ms)
@@ -63,7 +71,8 @@ def _style(ax, map_, lw, ms):
     ax.grid(False)
     # A margin around the data, so that a frame drawn at the extent of the data (an extent
     # aggregate) stays clear of the frame of the panel
-    ax.margins(0.03)
+    ax.margins(margin)
+    ax.set_frame_on(frame)
     ax.autoscale_view()
     if leg and not map_:
         # Under the axes, clear of the data
@@ -77,9 +86,9 @@ def _style(ax, map_, lw, ms):
         ax.set_aspect('equal', adjustable='datalim')
     elif isinstance(ax.xaxis.get_major_formatter(), mdates.DateFormatter) or \
             isinstance(ax.xaxis.get_major_locator(), mdates.DateLocator):
-        loc = mdates.AutoDateLocator(minticks=3, maxticks=5)
+        loc = mdates.AutoDateLocator(minticks=3, maxticks=5, tz=tz)
         ax.xaxis.set_major_locator(loc)
-        ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc))
+        ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc, tz=tz))
         for t in ax.get_xticklabels():
             t.set_rotation(0); t.set_ha('center')
     for t in _texts(ax):
@@ -108,7 +117,8 @@ def _fit(fig, axes_boxes, width, height):
             ax.set_position([l / width, b / height, (rr - l) / width, (t - b) / height])
 
 
-def print_panel(fig, ax, path, width, height, map_=False, lw=0.5, ms=2):
+def print_panel(fig, ax, path, width, height, map_=False, lw=0.5, ms=2, frame=True, margin=0.03,
+                emphasis=None, tz=None):
     """Saves ax alone as a page of width x height inches at path (PDF through PGF)."""
     others = [(a, a.get_visible()) for a in fig.axes if a is not ax]
     texts = [(t, t.get_visible()) for t in fig.texts]
@@ -116,7 +126,7 @@ def print_panel(fig, ax, path, width, height, map_=False, lw=0.5, ms=2):
         a.set_visible(False)
     for t, _ in texts:
         t.set_visible(False)
-    _style(ax, map_, lw, ms)
+    _style(ax, map_, lw, ms, frame, margin, emphasis, tz)
     _fit(fig, [(ax, (0, 0, width, height))], width, height)
     fig.savefig(path, backend='pgf')
     for a, v in others:

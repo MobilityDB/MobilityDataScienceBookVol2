@@ -47,8 +47,8 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 | 2.32 | Trajectories clipped to each municipality in Brussels | `pymeosbmod4.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.33 | The first trajectory (in gray) with its DP simplification (a, red) and its SED simplification (b, blue) | `pymeossimplifications-first.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.34 | Original trajectories (a); Trajectories simplified with DP (b); Trajectories simplified with SED (c) | `pymeossimplifications_a.pdf`, `pymeossimplifications_b.pdf`, `pymeossimplifications_c.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.35 | Bulk aggregation: spatial (a) and temporal (b) | `pymeosbmod9_a.pdf`, `pymeosbmod9_b.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.36 | Bulk aggregation as in Fig. 2.35, considering four hours of trajectories | `pymeosbmod5_a.pdf`, `pymeosbmod5_b.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.35 | Bulk aggregation: the spatial extent of the trips, the red rectangle (a); the number of trips under way at each instant, with the temporal extent between the two red lines (b) | `pymeosbmod9_a.pdf`, `pymeosbmod9_b.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.36 | Bulk aggregation as in Fig. 2.35, considering four hours of trajectories: the spatial extent, the red rectangle (a); the number of trips under way, with the temporal extent between the two red lines (b) | `pymeosbmod5_a.pdf`, `pymeosbmod5_b.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.37 | Streaming aggregation of the spatial extent: the extent of the first 40 trips (a) and of the first 80 trips (b), within the extent of all the trips | `pymeosbmod6_a.pdf`, `pymeosbmod6_b.pdf` | `chapter2/figures/fig_pymeosbmod6.py` |
 | 2.38 | Portion of the result of the space and speed tiling | `pymeosbmod10.pdf` | `chapter2/figures/fig_bmod_outputs.py` |
 | 2.39 | Trajectory tilings (a); Speed tilings (b) | `pymeosbmod11_a.pdf`, `pymeosbmod11_b.pdf` | `chapter2/figures/bmod_listings.py` |

@@ -46,12 +46,25 @@ PANELS = {
 }
 
 
+# The extent aggregations (Figs. 2.35 and 2.36): the map without a frame, so that the red rectangle
+# of the spatial extent is its only box, and the chart with room on both sides of the two red lines
+# of the temporal extent
+FRAMELESS = {'pymeosbmod9_a', 'pymeosbmod5_a'}
+MARGIN = {'pymeosbmod9_b': 0.08, 'pymeosbmod5_b': 0.08}
+EMPHASIS = {'pymeosbmod9_a': 'red', 'pymeosbmod9_b': 'red', 'pymeosbmod5_a': 'red',
+            'pymeosbmod5_b': 'red'}
+# The trips are timestamped in the time zone of Brussels (+02 in June): the time axes are labelled in it
+TZ = 'Europe/Brussels'
+
+
 def save_panels(fig, axes, names, ms=1.5):
     """Prints each axes as its panel by #print_panel of print_panels.py, at the size of PANELS, its
     markers at most ms points (None: as drawn)."""
     for ax, name in zip(axes, names):
         width, height, map_, lw = PANELS[name]
-        print_panel(fig, ax, f'{OUT}/{name}.pdf', width, height, map_=map_, lw=lw, ms=ms)
+        print_panel(fig, ax, f'{OUT}/{name}.pdf', width, height, map_=map_, lw=lw, ms=ms,
+                    frame=name not in FRAMELESS, margin=MARGIN.get(name, 0.03),
+                    emphasis=EMPHASIS.get(name), tz=TZ)
     plt.close(fig)
 
 
