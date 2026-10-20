@@ -79,5 +79,6 @@ for name, traj in [("a", original_traj), ("b", dp_generalized), ("c", tdtr_gener
     plt.close(fig)
 fig = plt.figure(figsize=(0.6 * TEXTWIDTH, 0.42))
 colorbar(fig, fig.add_axes([0.03, 0.62, 0.94, 0.3]))
-fig.savefig(f"{OUT}/mpandas2-generalization_cbar.pdf")
+# Cropped to its drawn content, so that the page holds the descenders of the label
+fig.savefig(f"{OUT}/mpandas2-generalization_cbar.pdf", bbox_inches="tight", pad_inches=0.005)
 plt.close(fig)
