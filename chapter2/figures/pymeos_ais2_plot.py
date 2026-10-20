@@ -13,6 +13,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pymeos import *
 from pymeos.db.psycopg import MobilityDB
+import movingpandas as mpd
+from vtiles import VectorTiles
+from vgprint import MM_PER_PX, print_map
 
 pymeos_initialize()
 connection = MobilityDB.connect(host=os.environ.get("PGHOST", "localhost"),
@@ -28,14 +31,25 @@ print(mmsi, type(trajectory).__name__, trajectory.num_instants(), sog.num_instan
       trajectory.start_timestamp(), trajectory.end_timestamp(), sog.min_value(), sog.max_value(),
       trajectory.length())
 
-fig, axes = plt.subplots(1, 2, figsize=(20, 10))
-trajectory.plot(axes=axes[0])
-sog.plot(axes=axes[1])
+# --- the listing printed in the chapter, from the line after cursor.close()
+traj = mpd.Trajectory(trajectory.to_geometric().to_dataframe(), mmsi)
+m = traj.explore(tiles=None, color="blue", style_kwds={"weight": 4})
+VectorTiles("liberty").add_to(m)
+fig, ax = plt.subplots(figsize=(10, 10))
+sog.plot(axes=ax)
 plt.suptitle(f"Ship {mmsi}")
-fig.savefig(f"{OUT}/pymeosais2_full.png", dpi=72)
-# Each panel at the size at which the book prints it, 6 cm high, two side by side: the trajectory
-# a map, the SOG a chart
+# --- end of the listing
+# Panel (a) the map over the extent of the trip, at the print scale of the maps of fig_delhi.py
+# (MM_PER_PX); panel (b) the SOG chart. Both are printed 6 cm high, side by side.
 from print_panels import CM, TEXTWIDTH, print_panel
-print_panel(fig, axes[0], f"{OUT}/pymeosais2_a.pdf", 0.44 * TEXTWIDTH, 6 * CM, map_=True, lw=0.8)
-print_panel(fig, axes[1], f"{OUT}/pymeosais2_b.pdf", 0.44 * TEXTWIDTH, 6 * CM, lw=0.5, ms=1.5)
+html = f"{OUT}/pymeosais2_a.html"
+m.save(html)
+box = trajectory.to_geometric().bounding_box()
+# A margin of a twentieth of the extent, so that the ends of the trip stay inside the frame
+dx, dy = (box.xmax() - box.xmin()) / 20, (box.ymax() - box.ymin()) / 20
+width_mm, height_mm = 0.48 * TEXTWIDTH * 25.4, 60
+print_map(html, f"{OUT}/pymeosais2_a.pdf", round(width_mm / MM_PER_PX), round(height_mm / MM_PER_PX),
+          round(width_mm / 25.4, 4), round(height_mm / 25.4, 4),
+          bounds=(box.ymin() - dy, box.xmin() - dx, box.ymax() + dy, box.xmax() + dx))
+print_panel(fig, ax, f"{OUT}/pymeosais2_b.pdf", 0.44 * TEXTWIDTH, 6 * CM, lw=0.5, ms=1.5)
 pymeos_finalize()
