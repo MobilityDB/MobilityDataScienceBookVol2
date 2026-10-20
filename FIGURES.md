@@ -45,7 +45,7 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 | 2.30 | Trajectories overlaid with Brussels' municipalities | `pymeosbmod2_a.pdf`, `pymeosbmod2_b.pdf` | `chapter2/figures/bmod_listings.py` (a), `chapter2/figures/fig_pymeosbmod2_b.py` (b) |
 | 2.31 | Trajectories inside (a) and outside (b) Brussels | `pymeosbmod3_a.pdf`, `pymeosbmod3_b.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.32 | Trajectories clipped to each municipality in Brussels | `pymeosbmod4.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.33 | The first trajectory (in gray) with its DP simplification (a, red) and its SED simplification (b, blue) | `pymeossimplifications-first.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.33 | The first trajectory, in gray, with (a) its DP simplification, in red; (b) its SED simplification, in blue | `pymeossimplifications-first_a.pdf`, `pymeossimplifications-first_b.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.34 | Original trajectories (a); Trajectories simplified with DP (b); Trajectories simplified with SED (c) | `pymeossimplifications_a.pdf`, `pymeossimplifications_b.pdf`, `pymeossimplifications_c.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.35 | Bulk aggregation: the spatial extent of the trips, the red rectangle (a); the number of trips under way at each instant, with the temporal extent between the two red lines (b) | `pymeosbmod9_a.pdf`, `pymeosbmod9_b.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.36 | Bulk aggregation as in Fig. 2.35, considering four hours of trajectories: the spatial extent, the red rectangle (a); the number of trips under way, with the temporal extent between the two red lines (b) | `pymeosbmod5_a.pdf`, `pymeosbmod5_b.pdf` | `chapter2/figures/bmod_listings.py` |
