@@ -16,6 +16,9 @@ import json
 import pathlib
 
 CHROME = os.environ.get('CHROME')  # None: the Chromium that Playwright installs
+# One CSS px of a map prints as MM_PER_PX mm, so that a weight or a radius of explore() and the roads
+# of the basemap print alike in every map: weight 4 is 0.4 mm, radius 7 a 1.4 mm dot
+MM_PER_PX = 0.1
 
 _INIT = """
 document.addEventListener('DOMContentLoaded', () => {

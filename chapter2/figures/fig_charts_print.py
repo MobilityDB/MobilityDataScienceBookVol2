@@ -17,6 +17,7 @@ OUT.mkdir(exist_ok=True)
 PT = 1 / 72.27                     # inches per TeX point
 TEXTWIDTH = 332.89723 * PT         # svmono \textwidth
 FS = 8                             # caption size, half a point under for dense figures
+LW = 0.4 * 72 / 25.4               # the 0.4 mm of the trajectories of the maps of fig_delhi.py
 matplotlib.rcParams.update({
     "pgf.texsystem": "pdflatex",
     "pgf.rcfonts": False,
@@ -54,26 +55,26 @@ fig = plt.figure(figsize=(TEXTWIDTH, 1.6), layout="constrained")
 fig.get_layout_engine().set(w_pad=0.02, h_pad=0.02, wspace=0.02, hspace=0.02)
 top, bottom = fig.subfigures(2, 1, height_ratios=[1, 0.42])
 for ax, traj in zip(top.subplots(1, 5), my_traj_split):
-    traj.plot(ax=ax, linewidth=1.0, capstyle="round", column="speed", norm=NORM, cmap=CMAP)
+    traj.plot(ax=ax, linewidth=LW, capstyle="round", column="speed", norm=NORM, cmap=CMAP)
     # Five panels a fifth of the text wide cannot carry readable coordinates: frames only
     ax.set_xticks([]); ax.set_yticks([]); ax.set_xlabel(""); ax.set_ylabel("")
 colorbar(fig, bottom.add_axes([0.25, 0.74, 0.5, 0.14]))
 fig.savefig(f"{OUT}/mpandas2-delhisplits.pdf")
 plt.close(fig)
 
-# Fig. 2.6: three panels at 0.31 textwidth each, the most three \subfloat fit on a line with their
-# spacing, and their shared colour bar. The panels carry frames only, as those of Fig. 2.4, so that
+# Fig. 2.6: three panels at 0.49 textwidth each, the width of their \includegraphics, two on a line,
+# and their shared colour bar. The panels carry frames only, as those of Fig. 2.4, so that
 # each trajectory fills its panel and its gradient shows; cropped to the frame, a panel holds no
 # text and is printed at the width it is drawn at.
 original_traj = my_traj_split.trajectories[1]
 dp_generalized = mpd.DouglasPeuckerGeneralizer(original_traj).generalize(tolerance=0.001)
 tdtr_generalized = mpd.TopDownTimeRatioGeneralizer(original_traj).generalize(tolerance=0.001)
-W = 0.31 * TEXTWIDTH
+W = 0.49 * TEXTWIDTH
 for name, traj in [("a", original_traj), ("b", dp_generalized), ("c", tdtr_generalized)]:
     print(name, len(traj.df))
     fig, ax = plt.subplots(figsize=(W, W))
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-    traj.plot(ax=ax, linewidth=1.25, capstyle="round", column="speed", norm=NORM, cmap=CMAP)
+    traj.plot(ax=ax, linewidth=LW, capstyle="round", column="speed", norm=NORM, cmap=CMAP)
     ax.set_xticks([]); ax.set_yticks([]); ax.set_xlabel(""); ax.set_ylabel("")
     fig.savefig(f"{OUT}/mpandas2-generalization_{name}.pdf", bbox_inches="tight", pad_inches=0.005)
     plt.close(fig)

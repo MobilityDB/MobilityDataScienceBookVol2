@@ -1,6 +1,7 @@
 """Delhi figures of chapter 2 (mpandas2-*): the explore() code printed in the chapter over the
 OpenFreeMap vector styles (#VectorTiles in vtiles.py), printed to PDF at the size of each figure.
 Usage: fig_delhi.py [name ...]  (default: all)."""
+import math
 import sys
 from pathlib import Path
 from delhi_common import *  # noqa: F401,F403  (tc, my_trajs, my_traj, my_traj_split, ...)
@@ -8,7 +9,7 @@ import folium
 import matplotlib
 from matplotlib.colors import ListedColormap, to_hex
 from vtiles import VectorTiles
-from vgprint import print_map, categorical_legend, colorbar_of, write_overlay
+from vgprint import MM_PER_PX, print_map, categorical_legend, colorbar_of, write_overlay
 sys.path.append(str(Path(__file__).resolve().parents[2] / 'chapter7' / 'figures'))
 from pdf_simplify import simplify_printed  # noqa: E402
 
@@ -18,7 +19,8 @@ CTRL = ('.leaflet-control-zoom', '.leaflet-control-scale', '.leaflet-control-lay
 
 
 def delhitrips():
-    m = my_trajs.explore(column="deviceId", cmap="tab10", tiles=None)
+    m = my_trajs.explore(column="deviceId", cmap="tab10", tiles=None,
+                         style_kwds={"weight": 4})
     VectorTiles("liberty").add_to(m)
     return m
 
@@ -47,13 +49,13 @@ def _stops():
     detector = mpd.TrajectoryStopDetector(my_traj_stop)
     stop_points = detector.get_stop_points(
         min_duration=timedelta(seconds=60), max_diameter=100)
-    m = my_traj_stop.explore(color="slategray", style_kwds={"weight": 7},
+    m = my_traj_stop.explore(color="slategray", style_kwds={"weight": 4},
                              tiles=None, name="Trajectory")
-    VectorTiles("positron").add_to(m)
+    VectorTiles("liberty").add_to(m)
     stop_points.explore(
         m=m, color="deeppink", name="Stop points",
         style_kwds={"fillOpacity": 1, "style_function": lambda x:
-                    {"radius": x["properties"]["duration_s"] ** 0.5 / 2}})
+                    {"radius": x["properties"]["duration_s"] ** 0.5 / 1.2}})
     return m, detector
 
 
@@ -65,7 +67,7 @@ def segments():
     m, detector = _stops()
     stop_segments = detector.get_stop_segments(
         min_duration=timedelta(seconds=60), max_diameter=100)
-    stop_segments.explore(m=m, color="orange", style_kwds={"weight": 7},
+    stop_segments.explore(m=m, color="orange", style_kwds={"weight": 6},
                           name="Stop segments")
     return m
 
@@ -89,10 +91,10 @@ def stops_collect():
         color="red",
         tooltip="stop_id",
         popup=True,
-        marker_kwds={"radius": 5},
+        marker_kwds={"radius": 7},
         name="Stop points",
     )
-    VectorTiles("positron").add_to(m)
+    VectorTiles("liberty").add_to(m)
     folium.LayerControl().add_to(m)
     return m
 
@@ -108,10 +110,10 @@ def stops_agg():
     pts = aggregator.get_significant_points_gdf()
     clusters = aggregator.get_clusters_gdf()
     print("significant points", len(pts), "clusters", len(clusters))
-    m = pts.explore(marker_kwds={"radius": 3}, name="Significant points", tiles=None)
+    m = pts.explore(marker_kwds={"radius": 7}, name="Significant points", tiles=None)
     clusters.explore(m=m, color="red",
-                     marker_kwds={"radius": 3}, name="Cluster centroids")
-    VectorTiles("positron").add_to(m)
+                     marker_kwds={"radius": 7}, name="Cluster centroids")
+    VectorTiles("liberty").add_to(m)
     folium.LayerControl().add_to(m)
     return m
 
@@ -137,9 +139,9 @@ def smooth_a():
     colors = [{"#e377c2": "blue", "#9edae5": "red"}.get(c, c) for c in
               map(to_hex, matplotlib.colormaps["tab20"].resampled(n).colors)]
     kwargs = {"column": "deviceId", "cmap": ListedColormap(colors), "legend": False,
-              "style_kwds": {"weight": 2}, "tiles": None}
+              "style_kwds": {"weight": 4}, "tiles": None}
     m = split_tr.to_traj_gdf().explore(**kwargs)
-    VectorTiles("positron").add_to(m)
+    VectorTiles("liberty").add_to(m)
     return m
 
 
@@ -152,19 +154,19 @@ def smooth_b():
     colors = [{"#e377c2": "blue", "#9edae5": "red"}.get(c, c) for c in
               map(to_hex, matplotlib.colormaps["tab20"].resampled(n).colors)]
     kwargs = {"column": "deviceId", "cmap": ListedColormap(colors), "legend": False,
-              "style_kwds": {"weight": 2}, "tiles": None}
+              "style_kwds": {"weight": 4}, "tiles": None}
     m = smooth.to_traj_gdf().explore(**kwargs)
-    VectorTiles("positron").add_to(m)
+    VectorTiles("liberty").add_to(m)
     return m
 
 
 def smooth_speed_a():
     split_tr, smooth = _smooth()
     kwargs = {"column": "speed", "cmap": "viridis", "vmin": 0, "vmax": 20,
-              "style_kwds": {"weight": 7}, "tiles": None}
+              "style_kwds": {"weight": 4}, "tiles": None}
     split_tr.add_speed(overwrite=True)
     m = split_tr.trajectories[8].to_line_gdf().explore(**kwargs)
-    VectorTiles("positron").add_to(m)
+    VectorTiles("liberty").add_to(m)
     return m
 
 
@@ -172,14 +174,15 @@ def smooth_speed_b():
     """Smoothed twin of #smooth_speed_a (same kwargs, the smooth collection)."""
     split_tr, smooth = _smooth()
     kwargs = {"column": "speed", "cmap": "viridis", "vmin": 0, "vmax": 20,
-              "style_kwds": {"weight": 7}, "tiles": None}
+              "style_kwds": {"weight": 4}, "tiles": None}
     smooth.add_speed(overwrite=True)
     m = smooth.trajectories[8].to_line_gdf().explore(**kwargs)
-    VectorTiles("positron").add_to(m)
+    VectorTiles("liberty").add_to(m)
     return m
 
 
-# name -> (builder, width, height in px at dpi, dpi, extent, hidden controls)
+# name -> (builder, width, height in px at dpi, dpi, extent, hidden controls); the width and height
+# give the shape of the map and, with the extent, the ground it shows
 # extent: ('view', lat, lon, zoom) or ('bounds', south, west, north, east)
 FIGS = {
     'mpandas2-delhitrips': (delhitrips, 1724, 1032, 143.9926, ('view', 28.579, 77.221, 12),
@@ -219,12 +222,51 @@ OVERLAY = {
     'mpandas2-smooth-speed_a': (('colorbar', 'Speed (m/s)', 2.6), 'height=7.4cm'),
     'mpandas2-smooth-speed_b': (('colorbar', 'Speed (m/s)', 2.6), 'height=7.4cm'),
 }
-# name -> the side and the length in mm at which the book prints the map, for the maps whose paths
-# #simplify_printed of chapter7/figures/pdf_simplify.py simplifies below half a printed pixel
+# name -> the side and the length in mm at which the book prints the map (\includegraphics of
+# chapter2.tex)
+TEXTWIDTH_MM = 332.89723 / 72.27 * 25.4
 PRINTED = {
+    'mpandas2-delhitrips': ('width', 0.8 * TEXTWIDTH_MM),
+    'mpandas2-delhispeeds': ('width', 0.8 * TEXTWIDTH_MM),
+    'mpandas2-delhitraj': ('width', 0.8 * TEXTWIDTH_MM),
+    'mpandas2-splits-detail': ('width', TEXTWIDTH_MM),
+    'mpandas2-stops': ('width', 0.42 * TEXTWIDTH_MM), 'mpandas2-segments': ('width', 0.42 * TEXTWIDTH_MM),
+    'mpandas2-stops-collect': ('width', 0.8 * TEXTWIDTH_MM),
+    'mpandas2-stops-agg': ('width', 0.6 * TEXTWIDTH_MM),
     'mpandas2-smooth_a': ('height', 60), 'mpandas2-smooth_b': ('height', 60),
     'mpandas2-smooth-speed_a': ('height', 74), 'mpandas2-smooth-speed_b': ('height', 74),
 }
+# The maps whose paths #simplify_printed of chapter7/figures/pdf_simplify.py simplifies below half a
+# printed pixel
+SIMPLIFIED = {'mpandas2-smooth_a', 'mpandas2-smooth_b', 'mpandas2-smooth-speed_a',
+              'mpandas2-smooth-speed_b'}
+
+
+def shown_bounds(ext, css_w, css_h):
+    """The (south, west, north, east) that a Leaflet map of css_w x css_h CSS px shows for the extent
+    ext of FIGS, in the Web Mercator projection of Leaflet: setView centres the view at its zoom;
+    fitBounds without padding and with zoomSnap 0 takes the largest zoom at which the bounds fit and
+    centres them."""
+    def project(lat, lon):
+        y = math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
+        return (lon + 180) / 360 * 256, (1 - y / math.pi) / 2 * 256
+
+    def unproject(x, y):
+        return (math.degrees(2 * math.atan(math.exp((1 - 2 * y / 256) * math.pi)) - math.pi / 2),
+                x / 256 * 360 - 180)
+
+    if ext[0] == 'view':
+        (cx, cy), scale = project(ext[1], ext[2]), 2 ** ext[3]
+    else:
+        x0, y1 = project(ext[1], ext[2])
+        x1, y0 = project(ext[3], ext[4])
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+        scale = min(css_w / (x1 - x0), css_h / (y1 - y0))
+    s, w = unproject(cx - css_w / 2 / scale, cy + css_h / 2 / scale)
+    n, e = unproject(cx + css_w / 2 / scale, cy - css_h / 2 / scale)
+    return s, w, n, e
+
+
 FONT_8PT = {'mpandas2-delhitrips', 'mpandas2-delhispeeds', 'mpandas2-splits-detail',
             'mpandas2-stops-collect'}
 
@@ -234,13 +276,16 @@ for name in names:
     m = build()
     html = f'{OUT}/{name}.html'
     m.save(html)
-    kw = {'view': ext[1:]} if ext[0] == 'view' else {'bounds': ext[1:]}
-    dd = dpi
-    info = print_map(html, f'{OUT}/{name}.pdf', (w + 1) // 2, (h + 1) // 2, round(w / dd, 4),
-                     round(h / dd, 4), **kw)
-    if name in PRINTED:
-        side, mm = PRINTED[name]
-        simplify_printed(f'{OUT}/{name}.pdf', mm if side == 'width' else mm * w / h)
+    # The extent the map shows at the size of FIGS, laid out at its printed size in mm / MM_PER_PX
+    side, mm = PRINTED[name]
+    width_mm = mm if side == 'width' else mm * w / h
+    css_w = round(width_mm / MM_PER_PX)
+    css_h = round(css_w * h / w)
+    bounds = shown_bounds(ext, (w + 1) // 2, (h + 1) // 2)
+    info = print_map(html, f'{OUT}/{name}.pdf', css_w, css_h, round(width_mm / 25.4, 4),
+                     round(width_mm * h / w / 25.4, 4), bounds=bounds, hide=hide)
+    if name in SIMPLIFIED:
+        simplify_printed(f'{OUT}/{name}.pdf', width_mm)
     print(name, 'zoom', round(info['zoom'], 3), 'tiles', info['tiles'])
     if name in OVERLAY:
         (kind, *a), incl = OVERLAY[name]
