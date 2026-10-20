@@ -26,9 +26,10 @@ STYLES = {
 _JS = """(map => {
   const c = %s;
   // a city map printed small (a style name ending in -city) leaves out, when the map is shown below
-  // zoom 13, the road casings, the tertiary and minor roads, the residential areas and the buildings,
-  // which it would print below a pixel; the zoom is that of the map, the scale it prints at, not the
-  // zoom of its tiles, which Leaflet rounds up from 12.5
+  // zoom 13, the road casings, the tertiary and minor roads and the residential areas, which it
+  // would print below a pixel, and below zoom 14 the buildings, which it would print as
+  // specks; the zoom is that of the map, the scale it prints at, not the zoom of its tiles, which
+  // Leaflet rounds up from 12.5
   const city = %s;
   const coarse = z => city && map.getZoom() < 13;
   // beyond zoom 14, the most detailed level of the tiles, a tile is enlarged; its lines are drawn
@@ -50,7 +51,7 @@ _JS = """(map => {
        hospital: fill('#ffddee'), school: fill('#eceecc'), pitch: fill('#dee3cd'),
        track: fill('#dee3cd')})[p.class] || none,
      park: p => p.rank === undefined ? fill(c.park) : none,  // a park with a rank is a label point
-     aeroway: fill(c.aeroway), building: (p, z) => coarse(z) ? none : fill(c.building)},
+     aeroway: fill(c.aeroway), building: () => city && map.getZoom() < 14 ? none : fill(c.building)},
     {waterway: p => p.brunnel === 'tunnel' ? none : line(c.waterway, 0.7),
      transportation: (p, z) => coarse(z) ? none : ({motorway: line(c.casing, 3.0), trunk: line(c.casing, 3.0),
        primary: line(c.casing, 3.0), secondary: line(c.casing, 2.2), tertiary: line(c.casing, 2.2),

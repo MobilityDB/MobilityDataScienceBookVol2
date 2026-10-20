@@ -35,7 +35,9 @@ H6, H56, PAIR = 6 * CM, 5.6 * CM, 0.44 * TEXTWIDTH
 BMOD2_B = (653, 678)  # the size of the map pymeosbmod2_b of fig_pymeosbmod2_b.py, in CSS px
 PANELS = {
     'pymeosbmod2_a': (H56 * BMOD2_B[0] / BMOD2_B[1], H56, True, 0.3),
-    'pymeosbmod3_a': (PAIR, H56, True, 0.4), 'pymeosbmod3_b': (PAIR, H56, True, 0.4),
+    # Fig. 2.31 at the size of the map pymeosbmod2_a of Fig. 2.30, over the same ground
+    'pymeosbmod3_a': (H56 * BMOD2_B[0] / BMOD2_B[1], H56, True, 0.4),
+    'pymeosbmod3_b': (H56 * BMOD2_B[0] / BMOD2_B[1], H56, True, 0.4),
     'pymeossimplifications_a': (0.3 * TEXTWIDTH, 0.345 * TEXTWIDTH, True, 0.25),
     'pymeossimplifications_b': (0.3 * TEXTWIDTH, 0.345 * TEXTWIDTH, True, 0.25),
     'pymeossimplifications_c': (0.3 * TEXTWIDTH, 0.345 * TEXTWIDTH, True, 0.25),
@@ -48,8 +50,8 @@ PANELS = {
 }
 
 
-# The extent aggregations (Figs. 2.35 and 2.36) and the tiles of Fig. 2.40: the map without a frame,
-# so that the blue rectangle of the spatial extent, or the grid of the tiles, is its only box, and the chart with room on both sides of the two red lines
+# The extent aggregations (Figs. 2.35 and 2.36) and the tiles of Fig. 2.40: the map without a frame
+# or margin, so that the blue rectangle of the spatial extent, or the grid of the tiles, is its only box, and the chart with room on both sides of the two red lines
 # of the temporal extent; each panel names its lines in a legend under it
 FRAMELESS = {'pymeosbmod9_a', 'pymeosbmod5_a', 'pymeosbmod7_a'}
 MARGIN = {'pymeosbmod9_b': 0.08, 'pymeosbmod5_b': 0.08}
@@ -69,7 +71,8 @@ def save_panels(fig, axes, names, ms=1.5):
         width, height, map_, lw = PANELS[name]
         panels.append((ax, f'{OUT}/{name}.pdf', width, height,
                        dict(map_=map_, lw=lw, ms=ms, frame=name not in FRAMELESS,
-                            margin=MARGIN.get(name, 0.03), emphasis=EMPHASIS.get(name), tz=TZ)))
+                            margin=MARGIN.get(name, 0 if name in FRAMELESS else 0.03),
+                            emphasis=EMPHASIS.get(name), tz=TZ)))
     if len(panels) > 1:
         print_aligned(fig, panels)
     else:
@@ -137,11 +140,9 @@ for traj in brussels_inout_trajectories["outside"].dropna():
         TemporalPointSequencePlotter.plot_xy(traj, axes=axes[1], show_markers=False, show_grid=False)
     else:
         TemporalPointSequenceSetPlotter.plot_xy(traj, axes=axes[1], show_markers=False, show_grid=False)
-axes[0].set_xlim(min(axes[0].get_xlim()[0], axes[1].get_xlim()[0]),
-                 max(axes[0].get_xlim()[1], axes[1].get_xlim()[1]))
-axes[0].set_ylim(min(axes[0].get_ylim()[0], axes[1].get_ylim()[0]),
-                 max(axes[0].get_ylim()[1], axes[1].get_ylim()[1]))
-axes[1].set_xlim(axes[0].get_xlim()); axes[1].set_ylim(axes[0].get_ylim())
+# the extent of Fig. 2.30, so that the three maps show the same ground
+for ax in axes:
+    ax.set_xlim(bounds[0], bounds[2]); ax.set_ylim(bounds[1], bounds[3])
 save_panels(fig, axes, ['pymeosbmod3_a', 'pymeosbmod3_b'])
 del brussels_inout_trajectories
 

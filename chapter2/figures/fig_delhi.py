@@ -199,9 +199,9 @@ FIGS = {
                                ('bounds', 28.4847, 77.1314, 28.6787, 77.4114), CTRL),
     'mpandas2-stops-agg': (stops_agg, 556, 620, 143.9926,
                            ('bounds', 28.5551, 77.1690, 28.6751, 77.2712), CTRL),
-    'mpandas2-smooth_a': (smooth_a, 610, 888, 143.9926,
+    'mpandas2-smooth_a': (smooth_a, 648, 888, 143.9926,
                           ('bounds', 28.554, 77.2035, 28.629, 77.2545), CTRL),
-    'mpandas2-smooth_b': (smooth_b, 687, 888, 143.9926,
+    'mpandas2-smooth_b': (smooth_b, 648, 888, 143.9926,
                           ('bounds', 28.554, 77.2035, 28.629, 77.2545), CTRL),
     'mpandas2-smooth-speed_a': (smooth_speed_a, 679, 888, 143.9926,
                                 ('bounds', 28.511, 77.2365, 28.595, 77.2935), CTRL),
@@ -233,7 +233,8 @@ PRINTED = {
     'mpandas2-stops': ('width', 0.42 * TEXTWIDTH_MM), 'mpandas2-segments': ('width', 0.42 * TEXTWIDTH_MM),
     'mpandas2-stops-collect': ('width', 0.8 * TEXTWIDTH_MM),
     'mpandas2-stops-agg': ('width', 0.6 * TEXTWIDTH_MM),
-    'mpandas2-smooth_a': ('height', 60), 'mpandas2-smooth_b': ('height', 60),
+    # Fig. 2.10: the two maps side by side over the width of the text, one shape, one ground
+    'mpandas2-smooth_a': ('width', 0.48 * TEXTWIDTH_MM), 'mpandas2-smooth_b': ('width', 0.48 * TEXTWIDTH_MM),
     'mpandas2-smooth-speed_a': ('height', 74), 'mpandas2-smooth-speed_b': ('height', 74),
 }
 # The maps whose paths #simplify_printed of chapter7/figures/pdf_simplify.py simplifies below half a

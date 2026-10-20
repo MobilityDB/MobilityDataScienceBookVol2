@@ -74,6 +74,12 @@ def _style(ax, map_, lw, ms, frame=True, margin=0.03, emphasis=None, tz=None):
     # aggregate) stays clear of the frame of the panel
     ax.margins(margin)
     ax.set_frame_on(frame)
+    if not frame:
+        # The box of a map without a frame is its data: the limits a plotter set are dropped
+        ax.autoscale(True)
+        # The lines at the edge of the data, the box of a map without a frame, are drawn whole
+        for c in ax.get_lines() + list(ax.collections) + list(ax.patches):
+            c.set_clip_on(False)
     ax.autoscale_view()
     if leg:
         # Under the axes, clear of the data
@@ -168,6 +174,16 @@ def print_aligned(fig, panels):
         boxes.append(ax.get_position())
     box = [max(b.x0 for b in boxes), max(b.y0 for b in boxes)]
     box += [min(b.x1 for b in boxes) - box[0], min(b.y1 for b in boxes) - box[1]]
+    # A map without a frame has the shape of its data (its extent rectangle or its grid of tiles is
+    # its box): the box of every panel is the one the map takes at the top of the common box
+    for ax, _, _, _, style in panels:
+        if style.get('map_') and not style.get('frame', True):
+            ax.set_aspect('equal', adjustable='box', anchor='N')
+            # the limits again those of the data, which the aspect of #_style widened to fill a box
+            ax.autoscale_view()
+            ax.set_position(box)
+            ax.apply_aspect()
+            box = list(ax.get_position(original=False).bounds)
     for ax, path, _, _, _ in panels:
         for a in fig.axes:
             a.set_visible(a is ax)
