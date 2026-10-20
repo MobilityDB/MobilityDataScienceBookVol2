@@ -34,6 +34,14 @@ def traj_from_points(path):
 TEXTWIDTH_MM = 332.89723 / 72.27 * 25.4
 width_mm = 0.48 * TEXTWIDTH_MM
 height_mm = width_mm * 422 / 527
+# Both panels show one ground: the trips of the two and the towns the chapter names, with a margin
+# of MARGIN of its size on every side
+MARGIN = 0.05
+ext = gpd.GeoSeries(list(gpd.points_from_xy([p[2] for p in PLACES], [p[1] for p in PLACES]))
+                    + [gpd.read_file(f'{D}/{n}.gpkg').to_crs(4326).union_all()
+                       for n in ('pymeosais1_a', 'pymeosais1_b')]).total_bounds
+dx, dy = MARGIN * (ext[2] - ext[0]), MARGIN * (ext[3] - ext[1])
+bounds = (ext[1] - dy, ext[0] - dx, ext[3] + dy, ext[2] + dx)
 for name in ('pymeosais1_a', 'pymeosais1_b'):
     g = gpd.read_file(f'{D}/{name}.gpkg')
     print(name, list(g.columns), len(g))
@@ -48,7 +56,8 @@ for name in ('pymeosais1_a', 'pymeosais1_b'):
     view = None if len(sys.argv) < 2 else tuple(float(x) for x in sys.argv[1].split(','))
     info = print_map(html, f'{OUT}/{name}.pdf', round(width_mm / MM_PER_PX),
                      round(height_mm / MM_PER_PX), round(width_mm / 25.4, 4),
-                     round(height_mm / 25.4, 4), view=view, places=PLACES)
+                     round(height_mm / 25.4, 4), view=view, bounds=None if view else bounds,
+                     places=PLACES)
     simplify_printed(f'{OUT}/{name}.pdf', width_mm)
     print(name, 'zoom', round(info['zoom'], 3), 'tiles', info['tiles'])
     write_overlay(f'{OUT}/{name}_overlay.tex', f'figs/chap2/{name}.pdf', 'width=0.48\\textwidth',
