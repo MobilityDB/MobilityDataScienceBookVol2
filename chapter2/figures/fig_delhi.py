@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 from delhi_common import *  # noqa: F401,F403  (tc, my_trajs, my_traj, my_traj_split, ...)
 import folium
+import matplotlib
+from matplotlib.colors import ListedColormap, to_hex
 from vtiles import VectorTiles
 from vgprint import print_map, categorical_legend, colorbar_of, write_overlay
 sys.path.append(str(Path(__file__).resolve().parents[2] / 'chapter7' / 'figures'))
@@ -129,8 +131,13 @@ def _smooth():
 
 def smooth_a():
     split_tr, smooth = _smooth()
-    kwargs = {"column": "deviceId", "cmap": "tab20", "legend": False,
-              "style_kwds": {"weight": 4}, "tiles": None}
+    # tab20 as explore() spreads it over the devices, with blue for its pink and red for its
+    # light blue
+    n = split_tr.to_traj_gdf()["deviceId"].nunique()
+    colors = [{"#e377c2": "blue", "#9edae5": "red"}.get(c, c) for c in
+              map(to_hex, matplotlib.colormaps["tab20"].resampled(n).colors)]
+    kwargs = {"column": "deviceId", "cmap": ListedColormap(colors), "legend": False,
+              "style_kwds": {"weight": 2}, "tiles": None}
     m = split_tr.to_traj_gdf().explore(**kwargs)
     VectorTiles("positron").add_to(m)
     return m
@@ -139,8 +146,13 @@ def smooth_a():
 def smooth_b():
     """Smoothed twin of #smooth_a (same kwargs, the smooth collection)."""
     split_tr, smooth = _smooth()
-    kwargs = {"column": "deviceId", "cmap": "tab20", "legend": False,
-              "style_kwds": {"weight": 4}, "tiles": None}
+    # tab20 as explore() spreads it over the devices, with blue for its pink and red for its
+    # light blue
+    n = split_tr.to_traj_gdf()["deviceId"].nunique()
+    colors = [{"#e377c2": "blue", "#9edae5": "red"}.get(c, c) for c in
+              map(to_hex, matplotlib.colormaps["tab20"].resampled(n).colors)]
+    kwargs = {"column": "deviceId", "cmap": ListedColormap(colors), "legend": False,
+              "style_kwds": {"weight": 2}, "tiles": None}
     m = smooth.to_traj_gdf().explore(**kwargs)
     VectorTiles("positron").add_to(m)
     return m

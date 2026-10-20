@@ -39,7 +39,7 @@ DejaVu Sans at 6.67 points, the size whose x-height is that of the captions.
 
 1. Install the Python packages (the figures of the book are drawn with these versions) and the
    Chromium of Playwright:
-   `pip install movingpandas==0.23.0 pymeos==1.2.1 pymeos_cffi==1.2.0 geopandas==1.2.0 pandas==2.3.3 shapely==2.2.0 matplotlib==3.11.2 folium==0.20.0 branca==0.8.2 mapclassify==2.11.0 stonesoup==1.9.1 scikit-learn==1.9.1 distinctipy==1.3.4 pyarrow==26.0.0 psycopg==3.3.6 pillow==12.3.0 playwright==1.63.0`
+   `pip install movingpandas==0.23.0 pymeos==1.2.1 pymeos_cffi==1.2.0 geopandas==1.2.0 pandas==2.3.3 shapely==2.2.0 matplotlib==3.11.2 folium==0.20.0 branca==0.8.2 mapclassify==2.11.0 stonesoup==1.9.1 scikit-learn==1.9.1 distinctipy==1.3.4 pyarrow==26.0.0 psycopg==3.3.6 pillow==12.3.0 pikepdf==10.16.0 playwright==1.63.0`
    and `playwright install chromium`. Set `CHROME` to use another Chromium executable.
    `fig_charts_print.py` sets its text with `pdflatex` and the `lmodern` package.
 2. Put the input data in `figures/data`, or in the folder given by the variable `CH2_DATA`:
