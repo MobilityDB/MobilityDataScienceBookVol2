@@ -73,6 +73,10 @@ DejaVu Sans at 6.67 points, the size whose x-height is that of the captions.
    `pymeossimplifications*`; then `fig_bmod_outputs.py` renders the printed outputs
    `pymeosbmod10` and `pymeosbmod12_a/b`, `fig_pymeosbmod2_b.py` draws the map `pymeosbmod2_b`,
    and `fig_pymeosbmod6.py` draws the maps `pymeosbmod6_a/b`.
+   `bmod_listings.py` runs with `pymeos==1.1.3 pymeos_cffi==1.1.3`: the MEOS library of
+   `pymeos_cffi` 1.2.0 answers `STBox.tile` with tiles that have no space dimension
+   (`STBOX T((null))`), so that `TGeomPoint.tile` of the tiling listings raises "The box must
+   have space dimension". The listings before the tiling print the same values with both versions.
 
 ### Exercises
 
