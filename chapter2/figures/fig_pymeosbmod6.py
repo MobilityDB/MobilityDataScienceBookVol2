@@ -6,6 +6,7 @@ without images, as fig_pymeosbmod2_b.py does. The red frame is the extent of the
 after the 80 trips in green, which contains the blue one. The listing of the chapter draws (b);
 (a) is the same listing stopped after the first group."""
 import os
+import sys
 from pathlib import Path
 import folium
 import geopandas as gpd
@@ -14,6 +15,8 @@ import shapely.geometry as shp
 from pymeos import *
 from vtiles import VectorTiles
 from vgprint import print_map
+sys.path.append(str(Path(__file__).resolve().parents[2] / 'chapter7' / 'figures'))
+from pdf_simplify import simplify_printed  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 D = Path(os.environ.get('CH2_DATA', HERE / 'data'))  # input data, see README.md
@@ -31,7 +34,7 @@ def draw(name, groups):
     total_extent = TemporalPointExtentAggregator.aggregate(trips["trip"])
     extent_aggregator = TemporalPointExtentAggregator.start_aggregation()
     m = folium.Map(tiles=None)
-    VectorTiles("positron").add_to(m)
+    VectorTiles("positron-city").add_to(m)
     extents = [(total_extent, "red")]
     for i, color in ((40, "blue"), (80, "green"))[:groups]:
         group = trips["trip"][i - 40:i]
@@ -57,6 +60,8 @@ def draw(name, groups):
     m.save(html)
     print_map(html, f'{OUT}/{name}.pdf', css_w, css_h, W_IN, round(W_IN * css_h / css_w, 4),
               bounds=(b[1], b[0], b[3], b[2]))
+    # below half a printed pixel, by #simplify_printed of chapter7/figures/pdf_simplify.py
+    simplify_printed(f'{OUT}/{name}.pdf', W_IN * 25.4)
 
 
 draw('pymeosbmod6_a', 1)

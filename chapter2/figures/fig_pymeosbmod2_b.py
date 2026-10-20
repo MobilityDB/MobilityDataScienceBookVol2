@@ -2,6 +2,7 @@
 OpenFreeMap positron colours drawn as SVG by Leaflet.VectorGrid (#VectorTiles in vtiles.py),
 printed by #print_map of vgprint.py to a PDF without images, fitted to the extent of the data."""
 import os
+import sys
 from functools import partial
 from pathlib import Path
 import geopandas as gpd
@@ -9,7 +10,9 @@ import pandas as pd
 from shapely import wkb
 from pymeos import *
 from vtiles import VectorTiles
-from vgprint import print_map
+from vgprint import MM_PER_PX, print_map
+sys.path.append(str(Path(__file__).resolve().parents[2] / 'chapter7' / 'figures'))
+from pdf_simplify import simplify_printed  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 D = Path(os.environ.get('CH2_DATA', HERE / 'data'))  # input data, see README.md
@@ -29,14 +32,23 @@ m = communes.explore(color=communes["color"], tiles=None, tooltip="name",
     style_kwds={"color": "#1f77b4", "weight": 1, "fillOpacity": 0.1})
 trajectories = gpd.GeoSeries(trips["trip"].apply(lambda tr: tr.to_shapely_geometry()), crs=3857)
 trajectories.explore(m=m, color="blue", style_kwds={"weight": 1})
-VectorTiles("positron").add_to(m)
+VectorTiles("positron-city").add_to(m)
 # ------------------------------------------------------------------------------------------
 
-w, h, dpi = 653, 678, 143.9926          # the size of the figure in px at dpi
+# The map is laid out at its printed size, 5.6 cm high (\includegraphics of chapter2.tex) with the
+# shape w x h, in mm / MM_PER_PX, the scale of the maps of fig_delhi.py, fitted to the extent of the
+# data, and simplified below half a printed pixel by #simplify_printed of
+# chapter7/figures/pdf_simplify.py
+w, h = 653, 678                         # the shape of the figure
+height_mm = 56
+width_mm = height_mm * w / h
+css_w = round(width_mm / MM_PER_PX)
+css_h = round(css_w * h / w)
 b = gpd.GeoSeries(list(trajectories) + list(communes.geometry), crs=3857).to_crs(4326).total_bounds
 html = f'{OUT}/pymeosbmod2_b.html'
 m.save(html)
-info = print_map(html, f'{OUT}/pymeosbmod2_b.pdf', (w + 1) // 2, (h + 1) // 2,
-                 round(w / dpi, 4), round(h / dpi, 4), bounds=(b[1], b[0], b[3], b[2]))
+info = print_map(html, f'{OUT}/pymeosbmod2_b.pdf', css_w, css_h, round(width_mm / 25.4, 4),
+                 round(height_mm / 25.4, 4), bounds=(b[1], b[0], b[3], b[2]))
+simplify_printed(f'{OUT}/pymeosbmod2_b.pdf', width_mm)
 print('bounds', b, 'zoom', round(info['zoom'], 3), 'tiles', info['tiles'])
 pymeos_finalize()
