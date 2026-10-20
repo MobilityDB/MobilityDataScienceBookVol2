@@ -48,12 +48,12 @@ def _style(ax, map_, lw, ms):
     for line in ax.get_lines():
         if line.get_linewidth() > lw:
             line.set_linewidth(lw)
-        if line.get_markersize() > ms:
+        if ms is not None and line.get_markersize() > ms:
             line.set_markersize(ms)
     for c in ax.collections:
         if isinstance(c, LineCollection):
             c.set_linewidth(min(lw, max(c.get_linewidth(), default=lw)))
-        elif isinstance(c, PathCollection):
+        elif isinstance(c, PathCollection) and ms is not None:
             c.set_sizes([ms ** 2])
     leg = ax.get_legend()
     if leg:

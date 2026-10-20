@@ -45,7 +45,7 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 | 2.30 | Trajectories overlaid with Brussels' municipalities | `pymeosbmod2_a.pdf`, `pymeosbmod2_b.pdf` | `chapter2/figures/bmod_listings.py` (a), `chapter2/figures/fig_pymeosbmod2_b.py` (b) |
 | 2.31 | Trajectories inside (a) and outside (b) Brussels | `pymeosbmod3_a.pdf`, `pymeosbmod3_b.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.32 | Trajectories clipped to each municipality in Brussels | `pymeosbmod4.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.33 | First five trajectories | `pymeossimplifications-firstfive.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.33 | The first trajectory (in gray) with its DP simplification (a, red) and its SED simplification (b, blue) | `pymeossimplifications-first.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.34 | Original trajectories (a); Trajectories simplified with DP (b); Trajectories simplified with SED (c) | `pymeossimplifications_a.pdf`, `pymeossimplifications_b.pdf`, `pymeossimplifications_c.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.35 | Bulk aggregation: spatial (a) and temporal (b) | `pymeosbmod9_a.pdf`, `pymeosbmod9_b.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.36 | Bulk aggregation as in Fig. 2.35, considering four hours of trajectories | `pymeosbmod5_a.pdf`, `pymeosbmod5_b.pdf` | `chapter2/figures/bmod_listings.py` |

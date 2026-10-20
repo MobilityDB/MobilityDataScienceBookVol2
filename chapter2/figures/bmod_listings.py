@@ -36,7 +36,6 @@ BMOD2_B = (653, 678)  # the size of the map pymeosbmod2_b of fig_pymeosbmod2_b.p
 PANELS = {
     'pymeosbmod2_a': (H56 * BMOD2_B[0] / BMOD2_B[1], H56, True, 0.3),
     'pymeosbmod3_a': (PAIR, H56, True, 0.4), 'pymeosbmod3_b': (PAIR, H56, True, 0.4),
-    'pymeossimplifications-firstfive': (0.8 * TEXTWIDTH, 0.42 * TEXTWIDTH, True, 0.6),
     'pymeossimplifications_a': (0.3 * TEXTWIDTH, 0.345 * TEXTWIDTH, True, 0.25),
     'pymeossimplifications_b': (0.3 * TEXTWIDTH, 0.345 * TEXTWIDTH, True, 0.25),
     'pymeossimplifications_c': (0.3 * TEXTWIDTH, 0.345 * TEXTWIDTH, True, 0.25),
@@ -47,11 +46,12 @@ PANELS = {
 }
 
 
-def save_panels(fig, axes, names):
-    """Prints each axes as its panel by #print_panel of print_panels.py, at the size of PANELS."""
+def save_panels(fig, axes, names, ms=1.5):
+    """Prints each axes as its panel by #print_panel of print_panels.py, at the size of PANELS, its
+    markers at most ms points (None: as drawn)."""
     for ax, name in zip(axes, names):
         width, height, map_, lw = PANELS[name]
-        print_panel(fig, ax, f'{OUT}/{name}.pdf', width, height, map_=map_, lw=lw, ms=1.5)
+        print_panel(fig, ax, f'{OUT}/{name}.pdf', width, height, map_=map_, lw=lw, ms=ms)
     plt.close(fig)
 
 
@@ -164,18 +164,19 @@ simplifications["dp"] = simplifications["trip"].apply(
     lambda tr: tr.simplify_douglas_peucker(tolerance))
 simplifications["sed"] = simplifications["trip"].apply(
     lambda tr: tr.simplify_douglas_peucker(tolerance, synchronized=True))
-# pymeossimplifications-firstfive: original (grey), DP (red), SED (blue) of the first five trips
-fig, ax = plt.subplots(figsize=(20, 10))
-for i in range(5):
-    s = simplifications.iloc[i]
-    ax.plot(*zip(*[(p.x, p.y) for p in s["trip"].values()]), color='grey', lw=1,
-            label='Original' if i == 0 else None)
-    ax.plot(*zip(*[(p.x, p.y) for p in s["sed"].values()]), 's', color='blue', ms=3,
-            label='SED' if i == 0 else None)
-    ax.plot(*zip(*[(p.x, p.y) for p in s["dp"].values()]), 'o', color='red', ms=4,
-            label='DP' if i == 0 else None)
-ax.legend(loc="lower right")
-save_panels(fig, [ax], ['pymeossimplifications-firstfive'])
+# pymeossimplifications-first: the first trip, in grey, under each simplification drawn as a line
+# through the instants it keeps, DP in red (a) and SED in blue (b), the text width wide
+fig, axes = plt.subplots(1, 2, figsize=(20, 10))
+first = simplifications.iloc[0]
+for ax, key, color, name in ((axes[0], "dp", "red", "DP"), (axes[1], "sed", "blue", "SED")):
+    xy = list(zip(*[(p.x, p.y) for p in first["trip"].values()]))
+    ax.plot(*xy, color='0.75', lw=2.4, solid_capstyle='round')
+    xy = list(zip(*[(p.x, p.y) for p in first[key].values()]))
+    ax.plot(*xy, color=color, lw=0.5, marker='o', ms=1.6, mew=0)
+    ax.set_title(f'{name}: {first[key].num_instants():,} of {first["trip"].num_instants():,} instants')
+print_grid(fig, list(axes), f'{OUT}/pymeossimplifications-first.pdf', 2, TEXTWIDTH,
+           0.36 * TEXTWIDTH, lw=2.4)
+plt.close(fig)
 fig, axes = plt.subplots(1, 3, figsize=(30, 10))
 for _, trip in simplifications.iterrows():
     trip["trip"].plot(axes=axes[0])
