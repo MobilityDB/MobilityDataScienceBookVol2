@@ -127,7 +127,7 @@ def print_panel(fig, ax, path, width, height, map_=False, lw=0.5, ms=2):
 
 def wrap(fig, text, width):
     """Breaks text into lines no wider than width inches at FS: the French and the Dutch name of
-    a bilingual name ('Forest - Vorst') on lines of their own, each broken after hyphens."""
+    a name of several words broken between them, and after its hyphens ('Berchem-Sainte-Agathe')."""
     r = fig.canvas.get_renderer()
     tokens = []
     for i, part in enumerate(text.split(' - ')):

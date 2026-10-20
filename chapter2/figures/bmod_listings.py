@@ -142,7 +142,7 @@ TemporalPointSequencePlotter.plot_sequences_xy(
     trips["trip"], axes=axes[0][0], show_markers=False, show_grid=False)
 for i, commune in communes.iterrows():
     ax = axes[(i + 1) // 5][(i + 1) % 5]
-    ax.set_title(commune["name"])
+    ax.set_title(commune["name"].split(" - ")[0])  # the French name
     if isinstance(commune["geom"], shp.Polygon):
         ax.fill(*commune["geom"].exterior.xy, color=commune["color"], alpha=0.4)
     else:
