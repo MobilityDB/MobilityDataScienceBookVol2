@@ -45,7 +45,7 @@ def draw(name, groups):
     for extent, color in extents:
         box = shp.box(extent.xmin(), extent.ymin(), extent.xmax(), extent.ymax())
         gpd.GeoSeries([box], crs=3857).explore(m=m, color=color,
-            style_kwds={"fill": False, "weight": 3})
+            style_kwds={"fill": False, "weight": 2})
     # ------------------------------------------------------------------------------------------
     print('700 trips:', total_extent)
     b = gpd.GeoSeries([shp.box(total_extent.xmin(), total_extent.ymin(), total_extent.xmax(),
