@@ -127,6 +127,39 @@ def print_map(html, pdf, css_w, css_h, page_w_in=None, page_h_in=None, view=None
     return info
 
 
+_PAD = """import sys, pikepdf
+pdf, under, above = sys.argv[1], float(sys.argv[2]), float(sys.argv[3])
+with pikepdf.open(pdf, allow_overwriting_input=True) as p:
+    for page in p.pages:
+        x0, y0, x1, y1 = [float(v) for v in page.mediabox]
+        page.mediabox = [x0, y0 - under, x1, y1 + above]
+        if '/CropBox' in page.obj:
+            del page.obj['/CropBox']
+    p.save(pdf)
+"""
+
+
+def page_size_in(pdf):
+    """The width and the height in inches of the first page of pdf as Chrome printed it, which can
+    differ by a fraction of a millimeter from the size #print_map asks for, read by pdfinfo."""
+    import re
+    import subprocess
+    out = subprocess.run(['pdfinfo', pdf], capture_output=True, text=True, check=True).stdout
+    w, h = re.search(r'Page size:\s+([\d.]+) x ([\d.]+) pts', out).groups()
+    return float(w) / 72, float(h) / 72
+
+
+def pad_page(pdf, under_in, above_in):
+    """Adds white space of under_in and above_in inches under and above the page of the map pdf, so
+    that the map is set beside a chart whose box has the height of the map and whose labels lie under
+    and above it (#print_panel_box of print_panels.py), with the Python of PIKEPDF_PY when the Python
+    of the figure script has no pikepdf, as #simplify_printed of pdf_simplify.py does."""
+    import subprocess
+    import sys
+    py = os.environ.get('PIKEPDF_PY', sys.executable)
+    subprocess.run([py, '-c', _PAD, pdf, str(under_in * 72), str(above_in * 72)], check=True)
+
+
 def categorical_legend(html):
     """(title, [(label, colour)]) of the categorical legend of geopandas `explore` in a saved map."""
     import re

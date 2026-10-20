@@ -16,7 +16,7 @@ import matplotlib
 matplotlib.use('Agg')
 matplotlib.rcParams['pdf.fonttype'] = 42
 import matplotlib.pyplot as plt
-from print_panels import CM, TEXTWIDTH, print_panel, print_grid
+from print_panels import CM, TEXTWIDTH, print_aligned, print_panel, print_grid
 import distinctipy
 import geopandas as gpd
 import pandas as pd
@@ -60,13 +60,21 @@ TZ = 'Europe/Brussels'
 
 
 def save_panels(fig, axes, names, ms=1.5):
-    """Prints each axes as its panel by #print_panel of print_panels.py, at the size of PANELS, its
-    markers at most ms points (None: as drawn)."""
+    """Prints each axes as its panel at the size of PANELS, its markers at most ms points (None: as
+    drawn): the panels of one figure, which have one page size, by #print_aligned of
+    print_panels.py, so that their boxes have the same size and are aligned at the top, and a single
+    panel by #print_panel."""
+    panels = []
     for ax, name in zip(axes, names):
         width, height, map_, lw = PANELS[name]
-        print_panel(fig, ax, f'{OUT}/{name}.pdf', width, height, map_=map_, lw=lw, ms=ms,
-                    frame=name not in FRAMELESS, margin=MARGIN.get(name, 0.03),
-                    emphasis=EMPHASIS.get(name), tz=TZ)
+        panels.append((ax, f'{OUT}/{name}.pdf', width, height,
+                       dict(map_=map_, lw=lw, ms=ms, frame=name not in FRAMELESS,
+                            margin=MARGIN.get(name, 0.03), emphasis=EMPHASIS.get(name), tz=TZ)))
+    if len(panels) > 1:
+        print_aligned(fig, panels)
+    else:
+        ax, path, width, height, style = panels[0]
+        print_panel(fig, ax, path, width, height, **style)
     plt.close(fig)
 
 

@@ -8,6 +8,7 @@ print size. #print_grid does the same for a grid of maps with titles, which it w
 width of a panel."""
 import matplotlib
 import matplotlib.dates as mdates
+from dateutil.tz import gettz
 from matplotlib.colors import to_hex
 from matplotlib.lines import Line2D
 from matplotlib.collections import LineCollection, PathCollection
@@ -88,11 +89,18 @@ def _style(ax, map_, lw, ms, frame=True, margin=0.03, emphasis=None, tz=None):
             isinstance(ax.xaxis.get_major_locator(), mdates.DateLocator):
         loc = mdates.AutoDateLocator(minticks=3, maxticks=5, tz=tz)
         ax.xaxis.set_major_locator(loc)
-        # A day is labelled by its number, the first of a month too, since the offset under the
-        # axis names the month ('2020-Jun')
+        # A day is labelled by its number, the first of a month too, and the axis carries no
+        # offset line naming the month or the day ('2020-Jun'), which the caption and the text give
         ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(
             loc, tz=tz, formats=['%Y', '%b', '%-d', '%H:%M', '%H:%M', '%S.%f'],
-            zero_formats=['', '%Y', '%-d', '%b-%-d', '%H:%M', '%H:%M']))
+            zero_formats=['', '%Y', '%-d', '%b-%-d', '%H:%M', '%H:%M'],
+            offset_formats=[''] * 6))
+        # An axis of several days starts at the midnight of the day of its first value, so that
+        # this day is labelled too, and no day before it
+        lo, hi = ax.get_xlim()
+        if hi - lo >= 1.5:
+            first = mdates.num2date(ax.dataLim.x0, tz=gettz(tz) if tz else None)
+            ax.set_xlim(mdates.date2num(first.replace(hour=0, minute=0, second=0, microsecond=0)), hi)
         for t in ax.get_xticklabels():
             t.set_rotation(0); t.set_ha('center')
     for t in _texts(ax):
@@ -137,6 +145,63 @@ def print_panel(fig, ax, path, width, height, map_=False, lw=0.5, ms=2, frame=Tr
         a.set_visible(v)
     for t, v in texts:
         t.set_visible(v)
+
+
+def print_aligned(fig, panels):
+    """Saves each (ax, path, width, height, style) of panels alone as a page of width x height inches,
+    styled by the keyword arguments style of #_style as #print_panel styles it, the axes of every
+    panel in one box: the one that clears the text of all of them, so that the boxes of the panels
+    have the same size and the same place on their pages, and two panels set side by side are
+    aligned at the top. The pages of the panels have one size."""
+    width, height = panels[0][2], panels[0][3]
+    if any((w, h) != (width, height) for _, _, w, h, _ in panels):
+        raise ValueError('the panels of print_aligned have pages of different sizes')
+    shown = [(a, a.get_visible()) for a in fig.axes] + [(t, t.get_visible()) for t in fig.texts]
+    for t in fig.texts:
+        t.set_visible(False)
+    boxes = []
+    for ax, _, _, _, style in panels:
+        for a in fig.axes:
+            a.set_visible(a is ax)
+        _style(ax, **style)
+        _fit(fig, [(ax, (0, 0, width, height))], width, height)
+        boxes.append(ax.get_position())
+    box = [max(b.x0 for b in boxes), max(b.y0 for b in boxes)]
+    box += [min(b.x1 for b in boxes) - box[0], min(b.y1 for b in boxes) - box[1]]
+    for ax, path, _, _, _ in panels:
+        for a in fig.axes:
+            a.set_visible(a is ax)
+        ax.set_position(box)
+        fig.savefig(path, backend='pgf')
+    for a, v in shown:
+        a.set_visible(v)
+
+
+def print_panel_box(fig, ax, path, width, box_h, map_=False, lw=0.5, ms=2, tz=None):
+    """Saves ax alone as a page width inches wide whose axes box is box_h inches high, the page as
+    high as the box and the text above and under it, which #print_panel would fit inside a page of
+    that height; returns the margins under and above the box, in inches, so that a panel beside it
+    (a map printed by #print_map of vgprint.py) can be padded to the same page and the two boxes set
+    side by side at the same height."""
+    others = [(a, a.get_visible()) for a in fig.axes if a is not ax]
+    texts = [(t, t.get_visible()) for t in fig.texts]
+    for a, _ in others:
+        a.set_visible(False)
+    for t, _ in texts:
+        t.set_visible(False)
+    _style(ax, map_, lw, ms, tz=tz)
+    _fit(fig, [(ax, (0, 0, width, box_h))], width, box_h)
+    pos = ax.get_position()
+    under, above = pos.y0 * box_h, (1 - pos.y1) * box_h
+    height = box_h + under + above
+    fig.set_size_inches(width, height)
+    ax.set_position([pos.x0, under / height, pos.width, box_h / height])
+    fig.savefig(path, backend='pgf')
+    for a, v in others:
+        a.set_visible(v)
+    for t, v in texts:
+        t.set_visible(v)
+    return under, above
 
 
 def wrap(fig, text, width):

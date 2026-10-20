@@ -15,7 +15,7 @@ from pymeos import *
 from pymeos.db.psycopg import MobilityDB
 import movingpandas as mpd
 from vtiles import VectorTiles
-from vgprint import MM_PER_PX, print_map
+from vgprint import MM_PER_PX, pad_page, page_size_in, print_map
 
 pymeos_initialize()
 connection = MobilityDB.connect(host=os.environ.get("PGHOST", "localhost"),
@@ -40,7 +40,7 @@ sog.plot(axes=ax)
 # --- end of the listing
 # Panel (a) the map over the extent of the trip, at the print scale of the maps of fig_delhi.py
 # (MM_PER_PX); panel (b) the SOG chart. Both are printed 6 cm high, side by side.
-from print_panels import CM, TEXTWIDTH, print_panel
+from print_panels import CM, TEXTWIDTH, print_panel_box
 html = f"{OUT}/pymeosais2_a.html"
 m.save(html)
 box = trajectory.to_geometric().bounding_box()
@@ -50,5 +50,10 @@ width_mm, height_mm = 0.48 * TEXTWIDTH * 25.4, 60
 print_map(html, f"{OUT}/pymeosais2_a.pdf", round(width_mm / MM_PER_PX), round(height_mm / MM_PER_PX),
           round(width_mm / 25.4, 4), round(height_mm / 25.4, 4),
           bounds=(box.ymin() - dy, box.xmin() - dx, box.ymax() + dy, box.xmax() + dx))
-print_panel(fig, ax, f"{OUT}/pymeosais2_b.pdf", 0.44 * TEXTWIDTH, 6 * CM, lw=0.5, ms=1.5)
+# The box of the chart is as high as the page of the map as Chrome printed it, and the page of the
+# map is padded with the margins of the labels of the chart, so that the two boxes have one height
+# and are aligned at the top
+under, above = print_panel_box(fig, ax, f"{OUT}/pymeosais2_b.pdf", 0.44 * TEXTWIDTH,
+                               page_size_in(f"{OUT}/pymeosais2_a.pdf")[1], lw=0.5, ms=1.5)
+pad_page(f"{OUT}/pymeosais2_a.pdf", under, above)
 pymeos_finalize()
