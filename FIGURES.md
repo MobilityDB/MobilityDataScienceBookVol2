@@ -15,9 +15,9 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 |---|---|---|---|
 | 2.1 | Four bus trajectories in Delhi | `mpandas2-delhitrips.pdf` | `chapter2/figures/fig_delhi.py` |
 | 2.2 | Speeds of the four trajectories of Fig. 2.1 | `mpandas2-delhispeeds.pdf` | `chapter2/figures/fig_delhi.py` |
-| 2.3 | Second trajectory of Fig. 2.1 | `mpandas2-delhitraj.pdf` | `chapter2/figures/fig_delhi.py` |
+| 2.3 | First trajectory of Fig. 2.1, the second of the collection tc | `mpandas2-delhitraj.pdf` | `chapter2/figures/fig_delhi.py` |
 | 2.4 | Speeds of the five trajectories resulting from splitting the trajectory in Fig. 2.3 | `mpandas2-delhisplits.pdf` | `chapter2/figures/fig_charts_print.py` |
-| 2.5 | Speeds of the second leg of the five trajectories in Fig. 2.4 | `mpandas2-splits-detail.pdf` | `chapter2/figures/fig_delhi.py` |
+| 2.5 | Speeds of the second of the five trajectories in Fig. 2.4 | `mpandas2-splits-detail.pdf` | `chapter2/figures/fig_delhi.py` |
 | 2.6 | (a): Original trajectory; (b): DP generalization; (c): Top-Down Time Ratio generalization | `mpandas2-generalization_a.pdf`, `mpandas2-generalization_b.pdf`, `mpandas2-generalization_c.pdf`, `mpandas2-generalization_cbar.pdf` | `chapter2/figures/fig_charts_print.py` |
 | 2.7 | (a): Stops computed for the third leg of the split trajectory (center trajectory in Fig. 2.4); (b): Segments corresponding to those stops | `mpandas2-stops.pdf`, `mpandas2-segments.pdf` | `chapter2/figures/fig_delhi.py` |
 | 2.8 | Stops of a collection of four trajectories | `mpandas2-stops-collect.pdf` | `chapter2/figures/fig_delhi.py` |
@@ -52,7 +52,7 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 | 2.37 | Streaming aggregation of the spatial extent: the extent of the first 40 trips (a) and of the first 80 trips (b), within the extent of all the trips | `pymeosbmod6_a.pdf`, `pymeosbmod6_b.pdf` | `chapter2/figures/fig_pymeosbmod6.py` |
 | 2.38 | Portion of the result of the space and speed tiling | `pymeosbmod10.pdf` | `chapter2/figures/fig_bmod_outputs.py` |
 | 2.39 | Trajectory tilings (a); Speed tilings (b) | `pymeosbmod11_a.pdf`, `pymeosbmod11_b.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.40 | Coloring of trajectories within a tile, one colour per tile (a); coloring of speeds within a tile (b) | `pymeosbmod7_a.pdf`, `pymeosbmod7_b.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.40 | Coloring of trajectories within a tile, one color per tile (a); coloring of speeds within a tile (b) | `pymeosbmod7_a.pdf`, `pymeosbmod7_b.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.41 | Aggregation of trajectories per tile (a); Aggregation of speed per tile (b) | `pymeosbmod12_a.pdf`, `pymeosbmod12_b.pdf` | `chapter2/figures/fig_bmod_outputs.py` |
 
 ### Chapter 3
