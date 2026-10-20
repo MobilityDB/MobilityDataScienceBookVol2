@@ -30,6 +30,13 @@ smoothing maps below half a pixel of the page as the book prints it; it needs `p
 no text: its labels and legends are TikZ overlays (`<figure>_overlay.tex`) set in the font of the
 captions. The scripts write into `figures/out`.
 
+The figures drawn with matplotlib have the size at which the book prints them, so that their text
+reads as the captions do: `print_panels.py` lays each panel of the listings of the PyMEOS section
+out again at that size, with its text in Latin Modern at 8 points through the PGF backend
+(`pdflatex` and the `lmodern` package), as `fig_charts_print.py` does for the MovingPandas section;
+a map keeps its frame and loses its coordinates. `fig_bmod_outputs.py` sets the printed outputs in
+DejaVu Sans at 6.67 points, the size whose x-height is that of the captions.
+
 1. Install the Python packages (the figures of the book are drawn with these versions) and the
    Chromium of Playwright:
    `pip install movingpandas==0.23.0 pymeos==1.2.1 pymeos_cffi==1.2.0 geopandas==1.2.0 pandas==2.3.3 shapely==2.2.0 matplotlib==3.11.2 folium==0.20.0 branca==0.8.2 mapclassify==2.11.0 stonesoup==1.9.1 scikit-learn==1.9.1 distinctipy==1.3.4 pyarrow==26.0.0 psycopg==3.3.6 pillow==12.3.0 playwright==1.63.0`

@@ -33,11 +33,9 @@ trajectory.plot(axes=axes[0])
 sog.plot(axes=axes[1])
 plt.suptitle(f"Ship {mmsi}")
 fig.savefig(f"{OUT}/pymeosais2_full.png", dpi=72)
-r = fig.canvas.get_renderer()
-for i, ax in enumerate(axes):
-    ext = ax.get_tightbbox(r).transformed(fig.dpi_scale_trans.inverted())
-    fig.savefig(f"{OUT}/pymeosais2_{'ab'[i]}.png",
-                bbox_inches=ext.expanded(1.02, 1.02), dpi=72)
-    fig.savefig(f"{OUT}/pymeosais2_{'ab'[i]}.pdf",
-                bbox_inches=ext.expanded(1.02, 1.02))
+# Each panel at the size at which the book prints it, 6 cm high, two side by side: the trajectory
+# a map, the SOG a chart
+from print_panels import CM, TEXTWIDTH, print_panel
+print_panel(fig, axes[0], f"{OUT}/pymeosais2_a.pdf", 0.44 * TEXTWIDTH, 6 * CM, map_=True, lw=0.8)
+print_panel(fig, axes[1], f"{OUT}/pymeosais2_b.pdf", 0.44 * TEXTWIDTH, 6 * CM, lw=0.5, ms=1.5)
 pymeos_finalize()

@@ -16,6 +16,7 @@ import matplotlib
 matplotlib.use('Agg')
 matplotlib.rcParams['pdf.fonttype'] = 42
 import matplotlib.pyplot as plt
+from print_panels import CM, TEXTWIDTH, print_panel, print_grid
 import distinctipy
 import geopandas as gpd
 import pandas as pd
@@ -25,16 +26,32 @@ from pymeos import *
 from pymeos.plotters import TemporalPointSequenceSetPlotter, TemporalPointSequencePlotter
 
 D = DATA
-DPI = 144
-PDF_DPI = 300  # resolution of the rasterized dense layers inside the vector PDFs
 
 
-def save_panels(fig, axes, names, pad=1.02):
-    r = fig.canvas.get_renderer()
+# The size at which the book prints each panel (\includegraphics of chapter2.tex), whether it is a
+# map, and the width of its lines: two panels side by side 6 cm high (5.6 cm for Figs. 2.30 and
+# 2.31), the three simplifications 0.3 of the text width, the first five trips 0.8 of it
+H6, H56, PAIR = 6 * CM, 5.6 * CM, 0.44 * TEXTWIDTH
+BMOD2_B = (653, 678)  # the size of the map pymeosbmod2_b of fig_pymeosbmod2_b.py, in CSS px
+PANELS = {
+    'pymeosbmod2_a': (H56 * BMOD2_B[0] / BMOD2_B[1], H56, True, 0.3),
+    'pymeosbmod3_a': (PAIR, H56, True, 0.4), 'pymeosbmod3_b': (PAIR, H56, True, 0.4),
+    'pymeossimplifications-firstfive': (0.8 * TEXTWIDTH, 0.42 * TEXTWIDTH, True, 0.6),
+    'pymeossimplifications_a': (0.3 * TEXTWIDTH, 0.345 * TEXTWIDTH, True, 0.25),
+    'pymeossimplifications_b': (0.3 * TEXTWIDTH, 0.345 * TEXTWIDTH, True, 0.25),
+    'pymeossimplifications_c': (0.3 * TEXTWIDTH, 0.345 * TEXTWIDTH, True, 0.25),
+    'pymeosbmod9_a': (PAIR, H6, True, 0.3), 'pymeosbmod9_b': (PAIR, H6, False, 0.5),
+    'pymeosbmod5_a': (PAIR, H6, True, 0.4), 'pymeosbmod5_b': (PAIR, H6, False, 0.5),
+    'pymeosbmod11_a': (PAIR, H6, True, 0.3), 'pymeosbmod11_b': (PAIR, H6, False, 0.3),
+    'pymeosbmod7_a': (PAIR, H6, True, 0.3), 'pymeosbmod7_b': (PAIR, H6, False, 0.3),
+}
+
+
+def save_panels(fig, axes, names):
+    """Prints each axes as its panel by #print_panel of print_panels.py, at the size of PANELS."""
     for ax, name in zip(axes, names):
-        ext = ax.get_tightbbox(r).transformed(fig.dpi_scale_trans.inverted())
-        fig.savefig(f'{OUT}/{name}.pdf', bbox_inches=ext.expanded(pad, pad), format='pdf', dpi=PDF_DPI)
-        fig.savefig(f'{OUT}/{name}.png', bbox_inches=ext.expanded(pad, pad), dpi=72)
+        width, height, map_, lw = PANELS[name]
+        print_panel(fig, ax, f'{OUT}/{name}.pdf', width, height, map_=map_, lw=lw, ms=1.5)
     plt.close(fig)
 
 
@@ -69,6 +86,10 @@ fig, axes = plt.subplots(1, 2, figsize=(20, 10))
 communes.plot(color=communes["color"], ax=axes[0], alpha=0.4)
 TemporalPointSequencePlotter.plot_sequences_xy(
     trips["trip"], axes=axes[0], show_markers=False, show_grid=False)
+# the extent of the map pymeosbmod2_b: the trajectories and the communes
+bounds = gpd.GeoSeries(list(trips["trip"].apply(lambda tr: tr.to_shapely_geometry()))
+    + list(communes.geometry)).total_bounds
+axes[0].set_xlim(bounds[0], bounds[2]); axes[0].set_ylim(bounds[1], bounds[3])
 save_panels(fig, axes[:1], ['pymeosbmod2_a'])
 
 # Clipping
@@ -130,13 +151,9 @@ for i, commune in communes.iterrows():
     trajs = commune_trajectories[f'{commune["name"]}-trajectory'].dropna()
     for traj in trajs:
         TemporalPointSequenceSetPlotter.plot_xy(traj, axes=ax, show_markers=False, show_grid=False)
-# the figure shows the first two rows (the region and nine communes)
-r = fig.canvas.get_renderer()
-from matplotlib.transforms import Bbox
-bb = Bbox.union([a.get_tightbbox(r) for a in list(axes[0]) + list(axes[1])]).transformed(
-    fig.dpi_scale_trans.inverted())
-fig.savefig(f'{OUT}/pymeosbmod4.pdf', bbox_inches=bb.expanded(1.01, 1.01), format='pdf')
-fig.savefig(f'{OUT}/pymeosbmod4.png', bbox_inches=bb.expanded(1.01, 1.01), dpi=24)
+# the figure shows the first two rows (the region and nine communes), at the text width
+print_grid(fig, list(axes[0]) + list(axes[1]), f'{OUT}/pymeosbmod4.pdf', 5, TEXTWIDTH,
+           0.19 * TEXTWIDTH, lw=0.3)
 plt.close(fig)
 del commune_trajectories
 
@@ -151,11 +168,13 @@ simplifications["sed"] = simplifications["trip"].apply(
 fig, ax = plt.subplots(figsize=(20, 10))
 for i in range(5):
     s = simplifications.iloc[i]
-    ax.plot(*zip(*[(p.x, p.y) for p in s["trip"].values()]), color='grey', lw=1, label=f'Original {i}')
-    ax.plot(*zip(*[(p.x, p.y) for p in s["sed"].values()]), 's', color='blue', ms=3, label=f'SED {i}')
-    ax.plot(*zip(*[(p.x, p.y) for p in s["dp"].values()]), 'o', color='red', ms=4, label=f'DP {i}')
-ax.grid(True); ax.legend(ncol=2, fontsize=8)
-ax.tick_params(axis='x', rotation=45)
+    ax.plot(*zip(*[(p.x, p.y) for p in s["trip"].values()]), color='grey', lw=1,
+            label='Original' if i == 0 else None)
+    ax.plot(*zip(*[(p.x, p.y) for p in s["sed"].values()]), 's', color='blue', ms=3,
+            label='SED' if i == 0 else None)
+    ax.plot(*zip(*[(p.x, p.y) for p in s["dp"].values()]), 'o', color='red', ms=4,
+            label='DP' if i == 0 else None)
+ax.legend(loc="lower right")
 save_panels(fig, [ax], ['pymeossimplifications-firstfive'])
 fig, axes = plt.subplots(1, 3, figsize=(30, 10))
 for _, trip in simplifications.iterrows():
