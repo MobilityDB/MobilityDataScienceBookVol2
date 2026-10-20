@@ -193,8 +193,14 @@ running application of the notebook:
 
     python figures/history_server.py <application id> figs
 
+`sparkArq.tex` is the TikZ source of the figure of the Spark SQL components; pdflatex writes
+`sparkArq.pdf`:
+
+    pdflatex figures/sparkArq.tex
+
 | Figure | Script, output |
 |---|---|
+| The Spark SQL components | `sparkArq.tex`, `sparkArq.pdf` |
 | The applications and the jobs in the History Server | `history_server.py`, `incomplete.png`, `incomplete2.png`, `thesparkapp.png`, `completedquery.png` |
 | The distance between the two closest aircraft | `flights_dashboard2_maps.py`, `flightsDashboard2_distance.pdf` |
 | The position reports and the altitudes of the two closest aircraft | `flights_dashboard2_maps.py`, `flightsDashboard2_map.pdf`, `flightsDashboard2_altitude.pdf` |
