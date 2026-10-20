@@ -37,7 +37,6 @@ m = traj.explore(tiles=None, color="blue", style_kwds={"weight": 4})
 VectorTiles("liberty").add_to(m)
 fig, ax = plt.subplots(figsize=(10, 10))
 sog.plot(axes=ax)
-plt.suptitle(f"Ship {mmsi}")
 # --- end of the listing
 # Panel (a) the map over the extent of the trip, at the print scale of the maps of fig_delhi.py
 # (MM_PER_PX); panel (b) the SOG chart. Both are printed 6 cm high, side by side.

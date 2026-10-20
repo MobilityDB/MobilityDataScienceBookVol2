@@ -48,12 +48,12 @@ PANELS = {
 }
 
 
-# The extent aggregations (Figs. 2.35 and 2.36): the map without a frame, so that the red rectangle
-# of the spatial extent is its only box, and the chart with room on both sides of the two red lines
-# of the temporal extent
-FRAMELESS = {'pymeosbmod9_a', 'pymeosbmod5_a'}
+# The extent aggregations (Figs. 2.35 and 2.36) and the tiles of Fig. 2.40: the map without a frame,
+# so that the blue rectangle of the spatial extent, or the grid of the tiles, is its only box, and the chart with room on both sides of the two red lines
+# of the temporal extent; each panel names its lines in a legend under it
+FRAMELESS = {'pymeosbmod9_a', 'pymeosbmod5_a', 'pymeosbmod7_a'}
 MARGIN = {'pymeosbmod9_b': 0.08, 'pymeosbmod5_b': 0.08}
-EMPHASIS = {'pymeosbmod9_a': 'red', 'pymeosbmod9_b': 'red', 'pymeosbmod5_a': 'red',
+EMPHASIS = {'pymeosbmod9_a': 'blue', 'pymeosbmod9_b': 'red', 'pymeosbmod5_a': 'blue',
             'pymeosbmod5_b': 'red'}
 # The trips are timestamped in the time zone of Brussels (+02 in June): the time axes are labelled in it
 TZ = 'Europe/Brussels'
@@ -117,14 +117,12 @@ brussels_inout_trajectories["outside"] = brussels_inout_trajectories["trip"].app
 head('inside/outside non-null', (brussels_inout_trajectories["inside"].notna().sum(),
                                   brussels_inout_trajectories["outside"].notna().sum()))
 fig, axes = plt.subplots(1, 2, figsize=(20, 10))
-axes[0].set_title("Inside Brussels")
 brussels.plot(ax=axes[0], alpha=0.4)
 for traj in brussels_inout_trajectories["inside"].dropna():
     if isinstance(traj, TGeomPointSeq):
         TemporalPointSequencePlotter.plot_xy(traj, axes=axes[0], show_markers=False, show_grid=False)
     else:
         TemporalPointSequenceSetPlotter.plot_xy(traj, axes=axes[0], show_markers=False, show_grid=False)
-axes[1].set_title("Outside Brussels")
 brussels.plot(ax=axes[1], alpha=0.4)
 for traj in brussels_inout_trajectories["outside"].dropna():
     if isinstance(traj, TGeomPointSeq):
@@ -218,15 +216,14 @@ head('extent_bulk', extent_bulk)
 head('tcount_bulk', str(tcount_bulk)[:700])
 head('tcount_bulk max', tcount_bulk.max_value())
 fig, axes = plt.subplots(1, 2, figsize=(20, 10))
-extent_bulk.plot_xy(axes=axes[0], color="red", draw_filling=False, label="Spatial Extent")
+extent_bulk.plot_xy(axes=axes[0], color="blue", draw_filling=False, label="Spatial Extent")
 for _, trip in trips.iterrows():
     trip["trip"].plot(axes=axes[0], show_markers=False)
-axes[0].set_title("Spatial Extent")
 tcount_bulk.plot(axes=axes[1], label="Temporal Count", color="g")
 axes[1].axvline(extent_bulk.tmin(), color="red", label="Temporal Extent")
 axes[1].axvline(extent_bulk.tmax(), color="red")
-axes[1].set_title("Temporal Count + Temporal Extent")
-plt.legend()
+axes[0].legend()
+axes[1].legend()
 save_panels(fig, axes, ['pymeosbmod9_a', 'pymeosbmod9_b'])
 
 day_trips = (trips["trip"]
@@ -239,15 +236,14 @@ head('day_extent', day_extent)
 head('day_tcount', str(day_tcount)[:700])
 head('day_tcount max', day_tcount.max_value())
 fig, axes = plt.subplots(1, 2, figsize=(20, 10))
-day_extent.plot_xy(axes=axes[0], color="red", draw_filling=False, label="Spatial Extent")
+day_extent.plot_xy(axes=axes[0], color="blue", draw_filling=False, label="Spatial Extent")
 for trip in day_trips:
     trip.plot(axes=axes[0], show_markers=False)
-axes[0].set_title("Spatial Extent")
 day_tcount.plot(axes=axes[1], label="Temporal Count", color="g")
 axes[1].axvline(day_extent.tmin(), color="red", label="Temporal Extent")
 axes[1].axvline(day_extent.tmax(), color="red")
-axes[1].set_title("Temporal Count + Temporal Extent")
-plt.legend()
+axes[0].legend()
+axes[1].legend()
 save_panels(fig, axes, ['pymeosbmod5_a', 'pymeosbmod5_b'])
 
 extent_aggregator = TemporalPointExtentAggregator.start_aggregation()
@@ -275,11 +271,9 @@ fig, axes = plt.subplots(1, 2, figsize=(20, 10))
 for tiled_trip in tiled_trips:
     for traj in tiled_trip:
         traj.plot(axes=axes[0], show_markers=False, rasterized=True)
-axes[0].set_title("Tiled Trajectories")
 for tiled_speed in tiled_speeds:
     for traj in tiled_speed:
         traj.plot(axes=axes[1], show_markers=False, rasterized=True)
-axes[1].set_title("Tiled Speeds")
 save_panels(fig, axes, ['pymeosbmod11_a', 'pymeosbmod11_b'])
 del tiled_trips, tiled_speeds
 
@@ -295,14 +289,12 @@ for tile, color in zip(extent_tiles, distinctipy.get_colors(len(extent_tiles), r
         trip_in_tile = trip.at(tile)
         if trip_in_tile is not None:
             trip_in_tile.plot(axes=axes[0], color=color, show_markers=False, rasterized=True)
-axes[0].set_title("Tiled Trajectories")
 for tile, color in zip(speed_tiles, distinctipy.get_colors(len(speed_tiles), rng=0)):
     tile.plot(axes=axes[1], color="black", draw_filling=False)
     for speed in speeds:
         speed_in_tile = speed.at(tile)
         if speed_in_tile is not None:
             speed_in_tile.plot(axes=axes[1], color=color, show_markers=False, rasterized=True)
-axes[1].set_title("Tiled Speeds")
 save_panels(fig, axes, ['pymeosbmod7_a', 'pymeosbmod7_b'])
 
 data = []

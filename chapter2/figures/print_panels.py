@@ -74,7 +74,7 @@ def _style(ax, map_, lw, ms, frame=True, margin=0.03, emphasis=None, tz=None):
     ax.margins(margin)
     ax.set_frame_on(frame)
     ax.autoscale_view()
-    if leg and not map_:
+    if leg:
         # Under the axes, clear of the data
         leg.set_loc('upper center')
         leg.set_bbox_to_anchor((0.5, -0.17), transform=ax.transAxes)
@@ -88,7 +88,11 @@ def _style(ax, map_, lw, ms, frame=True, margin=0.03, emphasis=None, tz=None):
             isinstance(ax.xaxis.get_major_locator(), mdates.DateLocator):
         loc = mdates.AutoDateLocator(minticks=3, maxticks=5, tz=tz)
         ax.xaxis.set_major_locator(loc)
-        ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc, tz=tz))
+        # A day is labelled by its number, the first of a month too, since the offset under the
+        # axis names the month ('2020-Jun')
+        ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(
+            loc, tz=tz, formats=['%Y', '%b', '%-d', '%H:%M', '%H:%M', '%S.%f'],
+            zero_formats=['', '%Y', '%-d', '%b-%-d', '%H:%M', '%H:%M']))
         for t in ax.get_xticklabels():
             t.set_rotation(0); t.set_ha('center')
     for t in _texts(ax):
