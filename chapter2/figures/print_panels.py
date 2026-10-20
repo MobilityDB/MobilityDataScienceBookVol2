@@ -11,6 +11,7 @@ import matplotlib.dates as mdates
 from dateutil.tz import gettz
 from matplotlib.colors import to_hex
 from matplotlib.lines import Line2D
+from matplotlib.transforms import offset_copy
 from matplotlib.collections import LineCollection, PathCollection
 
 PT = 1 / 72.27                     # inches per TeX point
@@ -40,6 +41,7 @@ def _texts(ax):
 
 
 EMPHASIS_LW = 1.0                  # points: the lines of the emphasis colour stand out of the data
+LEGEND_GAP = 2 + 1.5 + FS + 2      # points: tick length, label pad, label height and a white gap
 
 
 def _style(ax, map_, lw, ms, frame=True, margin=0.03, emphasis=None, tz=None):
@@ -82,9 +84,12 @@ def _style(ax, map_, lw, ms, frame=True, margin=0.03, emphasis=None, tz=None):
             c.set_clip_on(False)
     ax.autoscale_view()
     if leg:
-        # Under the axes, clear of the data
+        # Under the axes, just under the labels of the ticks of a chart (LEGEND_GAP points), so that
+        # the legends of two panels side by side are at one height whatever their boxes
         leg.set_loc('upper center')
-        leg.set_bbox_to_anchor((0.5, -0.17), transform=ax.transAxes)
+        leg.set_bbox_to_anchor((0.5, 0), transform=offset_copy(
+            ax.transAxes, ax.figure, y=-LEGEND_GAP, units='points'))
+        leg.borderaxespad = 0
         leg.set_ncols(2)
         leg.set_frame_on(False)
     if map_:
