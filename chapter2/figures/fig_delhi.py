@@ -26,7 +26,9 @@ def delhitrips():
 
 
 def delhispeeds():
-    m = my_trajs.explore(tiles=None, style_kwds={"weight": 4}, column="speed")
+    my_trajs.add_speed(overwrite=True)
+    m = my_trajs.to_line_gdf().explore(tiles=None, style_kwds={"weight": 4},
+                                       column="speed", vmin=0, vmax=20)
     VectorTiles("liberty-city").add_to(m)
     return m
 
@@ -38,8 +40,10 @@ def delhitraj():
 
 
 def splits_detail():
-    m = my_traj_split.trajectories[1].explore(
-        tiles=None, style_kwds={"weight": 4}, column="speed")
+    detail = my_traj_split.trajectories[1]
+    detail.add_speed(overwrite=True)
+    m = detail.to_line_gdf().explore(
+        tiles=None, style_kwds={"weight": 4}, column="speed", vmin=0, vmax=20)
     VectorTiles("liberty-city").add_to(m)
     return m
 
