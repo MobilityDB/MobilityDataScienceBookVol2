@@ -21,8 +21,8 @@ CTRL = ('.leaflet-control-zoom', '.leaflet-control-scale', '.leaflet-control-lay
 
 
 def delhitrips():
-    m = my_trajs.explore(column="deviceId", cmap="tab10", tiles=None,
-                         style_kwds={"weight": 4})
+    m = my_trajs.to_traj_gdf().explore(column="deviceId", cmap="tab10", tiles=None,
+                                       style_kwds={"weight": 4})
     VectorTiles("liberty-city").add_to(m)
     return m
 
