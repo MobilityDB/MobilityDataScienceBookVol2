@@ -24,9 +24,10 @@ The folder `figures` draws the figures of the chapter drawn from data and recomp
 that the chapter prints. The maps are drawn with the `explore()` code of the chapter over the
 OpenMapTiles vector tiles of OpenFreeMap drawn by Leaflet.VectorGrid (`vtiles.py`, styles in
 `omtstyle.py`), printed to vector PDF by headless Chromium (`vgprint.py`); these three helpers are
-those of chapter 7. `pdf_simplify.py` of `chapter7/figures` simplifies the paths of the four
-smoothing maps below half a pixel of the page as the book prints it; it needs `pikepdf` and
-`shapely`, in the Python of the scripts or in the Python named by `PIKEPDF_PY`. A map PDF carries
+those of chapter 7. `pdf_simplify.py` of `chapter7/figures` simplifies the paths of every map
+below half a pixel of the page as the book prints it, and paints each area of the basemaps of the
+three maps of Fig. 2.5, which Chromium fills and then strokes, in one operator; it needs `pikepdf`
+and `shapely`, in the Python of the scripts or in the Python named by `PIKEPDF_PY`. A map PDF carries
 no text: its labels and legends are TikZ overlays (`<figure>_overlay.tex`) set in the font of the
 captions. The scripts write into `figures/out`.
 
