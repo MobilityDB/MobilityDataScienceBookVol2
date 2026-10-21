@@ -159,6 +159,28 @@ inputs as its three subfloats:
 |---|---|
 | The segments, the planar graph, and the walk along the outer boundary of the area an L-shaped body traverses | `planar_graph.py`, `planar_graph_segments.tex`, `planar_graph_graph.tex`, `planar_graph_walk.tex` |
 
+`figures/traversed_area_figures.py` draws the figures of the traversed areas of
+two moving regions and of the three types of holes in a traversed area, and
+`figures/distance_figures.py` the outer Voronoi diagram of a convex polygon and
+the decomposition of a cross into convex parts. They need only `shapely`. The
+first computes each traversed area in the three steps of Sect. 4.5.5: the
+movement is sampled at poses at most 0.05 radians apart, every edge sweeps the
+convex hull of its placements at two consecutive poses, and the pieces and the
+placements are merged; it prints the area and the number of holes of each
+traversed area on the standard error. The second checks that the parts of the
+cross are convex and that their union is the cross. Both write TikZ pictures,
+which the chapter inputs:
+
+    OUT=out python3 figures/traversed_area_figures.py
+    OUT=out python3 figures/distance_figures.py
+
+| Figure | Script, output |
+|---|---|
+| Traversed area of two moving regions | `traversed_area_figures.py`, `traversed_area_example.tex` |
+| Three types of holes in the traversed area of a moving region | `traversed_area_figures.py`, `hole_1.tex`, `hole_2.tex`, `hole_3.tex` |
+| Outer Voronoi diagram of a convex polygon | `distance_figures.py`, `outer_voronoi_diagram_polygon.tex` |
+| A non-convex object and its decomposition into three convex parts | `distance_figures.py`, `convex_object.tex`, `convex_decomposition_1.tex` |
+
 ### Checking the Text
 
 `text_numbers.sql` computes the numbers the text of the AIS use case quotes and
