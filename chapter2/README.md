@@ -56,8 +56,8 @@ DejaVu Sans at 6.67 points, the size whose x-height is that of the captions.
 3. MovingPandas, on `../2021-01-30_all.csv`: `delhi_check.py` prints every output of
    the section, `mp_toy_check.py` the toy trajectories; `fig_delhi.py` draws the maps
    `mpandas2-*` (it takes the names of the figures to draw, by default all of them), and
-   `fig_charts_print.py` the plots `mpandas2-delhisplits` and `mpandas2-generalization_*` at the
-   width they are printed at. `delhi_common.py` holds the statements they share.
+   `fig_charts_print.py` the speed colour bar `mpandas2-generalization_cbar` that the three maps
+   `mpandas2-generalization_*` share. `delhi_common.py` holds the statements they share.
 4. PyMEOS on AIS data, run with `TZ=UTC` (the timestamps of the reports are in UTC):
    `ais_load.py` reads `aisclean-2026-01-20.csv` as the complete example of the chapter and
    writes `ais_filtered.parquet`; `ais_make_input.py` writes `aisinput.csv`, the records of the

@@ -15,45 +15,43 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 |---|---|---|---|
 | 2.1 | Four bus trajectories in Delhi | `mpandas2-delhitrips.pdf` | `chapter2/figures/fig_delhi.py` |
 | 2.2 | Speeds of the four trajectories of Fig. 2.1 | `mpandas2-delhispeeds.pdf` | `chapter2/figures/fig_delhi.py` |
-| 2.3 | First trajectory of Fig. 2.1, the second of the collection tc | `mpandas2-delhitraj.pdf` | `chapter2/figures/fig_delhi.py` |
-| 2.4 | Speeds of the five trajectories resulting from splitting the trajectory in Fig. 2.3 | `mpandas2-delhisplits.pdf` | `chapter2/figures/fig_charts_print.py` |
-| 2.5 | Speeds of the second of the five trajectories in Fig. 2.4 | `mpandas2-splits-detail.pdf` | `chapter2/figures/fig_delhi.py` |
-| 2.6 | (a) Original trajectory; (b) DP generalization; (c) Top-Down Time Ratio generalization | `mpandas2-generalization_a.pdf`, `mpandas2-generalization_b.pdf`, `mpandas2-generalization_c.pdf`, `mpandas2-generalization_cbar.pdf` | `chapter2/figures/fig_charts_print.py` |
-| 2.7 | (a) Stops computed for the third leg of the split trajectory (center trajectory in Fig. 2.4); (b) Segments corresponding to those stops | `mpandas2-stops.pdf`, `mpandas2-segments.pdf` | `chapter2/figures/fig_delhi.py` |
-| 2.8 | Stops of a collection of four trajectories | `mpandas2-stops-collect.pdf` | `chapter2/figures/fig_delhi.py` |
-| 2.9 | Trajectory aggregation | `mpandas2-stops-agg.pdf` | `chapter2/figures/fig_delhi.py` |
-| 2.10 | (a) Original trajectories; (b) Smoothed trajectories | `mpandas2-smooth_a.pdf`, `mpandas2-smooth_b.pdf` | `chapter2/figures/fig_delhi.py` |
-| 2.11 | Smoothing of the speed of an individual trajectory: (a) original trajectory; (b) smoothed trajectory | `mpandas2-smooth-speed_a.pdf`, `mpandas2-smooth-speed_b.pdf` | `chapter2/figures/fig_delhi.py` |
-| 2.12 | Alternative models for storing time-varying information: tuple versus attribute timestamping | `tuple_attribute.pdf` | Drawing of the book |
-| 2.13 | A temporal sequence with (a) discrete, (b) linear, and (c) step interpolation | `tsequence_disc`, `tsequence_linear`, `tsequence_step` | Drawing of the book |
-| 2.14 | A temporal sequence set with (a) linear and (b) step interpolation | `tsequenceset_linear`, `tsequenceset_step` | Drawing of the book |
-| 2.15 | Set and span types | `setspan_types` | Drawing of the book |
-| 2.16 | Set and span data structures | `setspan_struct` | Drawing of the book |
-| 2.17 | Bounding box types | `boxes` | Drawing of the book |
-| 2.18 | Temporal type hierarchy | `temporal_types` | Drawing of the book |
-| 2.19 | Temporal data structures | `temp_struct` | Drawing of the book |
-| 2.20 | Normalizing a temporal sequence with (a) linear and (b) step interpolation | `norm_seq_linear`, `norm_seq_step` | Drawing of the book |
-| 2.21 | Normalizing a temporal sequence set with (a) linear and (b) step interpolation | `norm_seqset_linear`, `norm_seqset_step` | Drawing of the book |
-| 2.22 | Skip list data structure | `skiplist` | Drawing of the book |
-| 2.23 | Modifying a skip list: (a) delete and (b) insert | `skiplist_delete`, `skiplist_insert` | Drawing of the book |
-| 2.24 | Insert operation for temporal values | `temporal_insert` | Drawing of the book |
-| 2.25 | Update operation for temporal values | `temporal_update` | Drawing of the book |
-| 2.26 | Delete operation for temporal values | `temporal_delete` | Drawing of the book |
-| 2.27 | Modification operations for temporal tables in SQL | `modif_sql` | Drawing of the book |
-| 2.28 | (a) A simplified trajectory using PyMEOS; (b) Same trajectory after exporting it to MovingPandas | `pymeosais1_a.pdf`, `pymeosais1_b.pdf` | `chapter2/figures/pymeos_ais1.py`, `chapter2/figures/fig_pymeosais1.py` |
-| 2.29 | (a) A MobilityDB trajectory obtained after loading from PyMEOS; (b) The SOG values | `pymeosais2_a.pdf`, `pymeosais2_b.pdf` | `chapter2/figures/pymeos_ais2.py`, `chapter2/figures/pymeos_ais2_plot.py` |
-| 2.30 | Trajectories overlaid with Brussels' municipalities | `pymeosbmod2_a.pdf`, `pymeosbmod2_b.pdf` | `chapter2/figures/bmod_listings.py` (a), `chapter2/figures/fig_pymeosbmod2_b.py` (b) |
-| 2.31 | Trajectories (a) inside and (b) outside Brussels | `pymeosbmod3_a.pdf`, `pymeosbmod3_b.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.32 | Trajectories clipped to each municipality in Brussels | `pymeosbmod4.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.33 | The first trajectory, in gray, with (a) its DP simplification, in red; (b) its SED simplification, in blue | `pymeossimplifications-first_a.pdf`, `pymeossimplifications-first_b.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.34 | (a) Original trajectories; (b) Trajectories simplified with DP; (c) Trajectories simplified with SED | `pymeossimplifications_a.pdf`, `pymeossimplifications_b.pdf`, `pymeossimplifications_c.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.35 | Bulk aggregation: (a) the spatial extent of the trips, the blue rectangle; (b) the number of trips under way at each instant, with the temporal extent between the two red lines | `pymeosbmod9_a.pdf`, `pymeosbmod9_b.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.36 | Bulk aggregation as in Fig. 2.35, considering four hours of trajectories: (a) the spatial extent, the blue rectangle; (b) the number of trips under way, with the temporal extent between the two red lines | `pymeosbmod5_a.pdf`, `pymeosbmod5_b.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.37 | Streaming aggregation of the spatial extent, within the extent of all the trips, in red: (a) the extent of the first 40 trips, in blue; (b) the extent of the first 80 trips, in green | `pymeosbmod6_a.pdf`, `pymeosbmod6_b.pdf` | `chapter2/figures/fig_pymeosbmod6.py` |
-| 2.38 | Portion of the result of the space and speed tiling | `pymeosbmod10.pdf` | `chapter2/figures/fig_bmod_outputs.py` |
-| 2.39 | (a) Trajectory tilings; (b) Speed tilings | `pymeosbmod11_a.pdf`, `pymeosbmod11_b.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.40 | (a) Coloring of trajectories within a tile, one color per tile; (b) Coloring of speeds within a tile | `pymeosbmod7_a.pdf`, `pymeosbmod7_b.pdf` | `chapter2/figures/bmod_listings.py` |
-| 2.41 | (a) Aggregation of trajectories per tile; (b) Aggregation of speed per tile | `pymeosbmod12_a.pdf`, `pymeosbmod12_b.pdf` | `chapter2/figures/fig_bmod_outputs.py` |
+| 2.3 | First trajectory of Fig. 2.1, the second of the collection tc, colored by its speed, with the start of each of its five parts | `mpandas2-delhitraj.pdf` | `chapter2/figures/fig_delhi.py` |
+| 2.4 | (a) Original trajectory, the second part of the trajectory in Fig. 2.3; (b) DP generalization; (c) Top-Down Time Ratio generalization | `mpandas2-generalization_a.pdf`, `mpandas2-generalization_b.pdf`, `mpandas2-generalization_c.pdf`, `mpandas2-generalization_cbar.pdf` | `chapter2/figures/fig_delhi.py`, `chapter2/figures/fig_charts_print.py` (colour bar) |
+| 2.5 | (a) Stops computed for the third leg of the split trajectory (part 3 in Fig. 2.3); (b) Segments corresponding to those stops | `mpandas2-stops.pdf`, `mpandas2-segments.pdf` | `chapter2/figures/fig_delhi.py` |
+| 2.6 | Stops of a collection of four trajectories | `mpandas2-stops-collect.pdf` | `chapter2/figures/fig_delhi.py` |
+| 2.7 | Trajectory aggregation | `mpandas2-stops-agg.pdf` | `chapter2/figures/fig_delhi.py` |
+| 2.8 | (a) Original trajectories; (b) Smoothed trajectories | `mpandas2-smooth_a.pdf`, `mpandas2-smooth_b.pdf` | `chapter2/figures/fig_delhi.py` |
+| 2.9 | Smoothing of the speed of an individual trajectory: (a) original trajectory; (b) smoothed trajectory | `mpandas2-smooth-speed_a.pdf`, `mpandas2-smooth-speed_b.pdf` | `chapter2/figures/fig_delhi.py` |
+| 2.10 | Alternative models for storing time-varying information: tuple versus attribute timestamping | `tuple_attribute.pdf` | Drawing of the book |
+| 2.11 | A temporal sequence with (a) discrete, (b) linear, and (c) step interpolation | `tsequence_disc`, `tsequence_linear`, `tsequence_step` | Drawing of the book |
+| 2.12 | A temporal sequence set with (a) linear and (b) step interpolation | `tsequenceset_linear`, `tsequenceset_step` | Drawing of the book |
+| 2.13 | Set and span types | `setspan_types` | Drawing of the book |
+| 2.14 | Set and span data structures | `setspan_struct` | Drawing of the book |
+| 2.15 | Bounding box types | `boxes` | Drawing of the book |
+| 2.16 | Temporal type hierarchy | `temporal_types` | Drawing of the book |
+| 2.17 | Temporal data structures | `temp_struct` | Drawing of the book |
+| 2.18 | Normalizing a temporal sequence with (a) linear and (b) step interpolation | `norm_seq_linear`, `norm_seq_step` | Drawing of the book |
+| 2.19 | Normalizing a temporal sequence set with (a) linear and (b) step interpolation | `norm_seqset_linear`, `norm_seqset_step` | Drawing of the book |
+| 2.20 | Skip list data structure | `skiplist` | Drawing of the book |
+| 2.21 | Modifying a skip list: (a) delete and (b) insert | `skiplist_delete`, `skiplist_insert` | Drawing of the book |
+| 2.22 | Insert operation for temporal values | `temporal_insert` | Drawing of the book |
+| 2.23 | Update operation for temporal values | `temporal_update` | Drawing of the book |
+| 2.24 | Delete operation for temporal values | `temporal_delete` | Drawing of the book |
+| 2.25 | Modification operations for temporal tables in SQL | `modif_sql` | Drawing of the book |
+| 2.26 | (a) A simplified trajectory using PyMEOS; (b) Same trajectory after exporting it to MovingPandas | `pymeosais1_a.pdf`, `pymeosais1_b.pdf` | `chapter2/figures/pymeos_ais1.py`, `chapter2/figures/fig_pymeosais1.py` |
+| 2.27 | (a) A MobilityDB trajectory obtained after loading from PyMEOS; (b) The SOG values | `pymeosais2_a.pdf`, `pymeosais2_b.pdf` | `chapter2/figures/pymeos_ais2.py`, `chapter2/figures/pymeos_ais2_plot.py` |
+| 2.28 | Trajectories overlaid with Brussels' municipalities | `pymeosbmod2_a.pdf`, `pymeosbmod2_b.pdf` | `chapter2/figures/bmod_listings.py` (a), `chapter2/figures/fig_pymeosbmod2_b.py` (b) |
+| 2.29 | Trajectories (a) inside and (b) outside Brussels | `pymeosbmod3_a.pdf`, `pymeosbmod3_b.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.30 | Trajectories clipped to each municipality in Brussels | `pymeosbmod4.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.31 | The first trajectory, in gray, with (a) its DP simplification, in red; (b) its SED simplification, in blue | `pymeossimplifications-first_a.pdf`, `pymeossimplifications-first_b.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.32 | (a) Original trajectories; (b) Trajectories simplified with DP; (c) Trajectories simplified with SED | `pymeossimplifications_a.pdf`, `pymeossimplifications_b.pdf`, `pymeossimplifications_c.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.33 | Bulk aggregation: (a) the spatial extent of the trips, the blue rectangle; (b) the number of trips under way at each instant, with the temporal extent between the two red lines | `pymeosbmod9_a.pdf`, `pymeosbmod9_b.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.34 | Bulk aggregation as in Fig. 2.33, considering four hours of trajectories: (a) the spatial extent, the blue rectangle; (b) the number of trips under way, with the temporal extent between the two red lines | `pymeosbmod5_a.pdf`, `pymeosbmod5_b.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.35 | Streaming aggregation of the spatial extent, within the extent of all the trips, in red: (a) the extent of the first 40 trips, in blue; (b) the extent of the first 80 trips, in green | `pymeosbmod6_a.pdf`, `pymeosbmod6_b.pdf` | `chapter2/figures/fig_pymeosbmod6.py` |
+| 2.36 | Portion of the result of the space and speed tiling | `pymeosbmod10.pdf` | `chapter2/figures/fig_bmod_outputs.py` |
+| 2.37 | (a) Trajectory tilings; (b) Speed tilings | `pymeosbmod11_a.pdf`, `pymeosbmod11_b.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.38 | (a) Coloring of trajectories within a tile, one color per tile; (b) Coloring of speeds within a tile | `pymeosbmod7_a.pdf`, `pymeosbmod7_b.pdf` | `chapter2/figures/bmod_listings.py` |
+| 2.39 | (a) Aggregation of trajectories per tile; (b) Aggregation of speed per tile | `pymeosbmod12_a.pdf`, `pymeosbmod12_b.pdf` | `chapter2/figures/fig_bmod_outputs.py` |
 
 ### Chapter 3
 

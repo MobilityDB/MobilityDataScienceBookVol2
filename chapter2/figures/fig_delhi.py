@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 from delhi_common import *  # noqa: F401,F403  (tc, my_trajs, my_traj, my_traj_split, ...)
 import folium
+import geopandas as gpd
+from shapely.geometry import LineString
 import matplotlib
 from matplotlib.colors import ListedColormap, to_hex
 from vtiles import VectorTiles
@@ -33,19 +35,71 @@ def delhispeeds():
     return m
 
 
+def split_marks(parts, half=400):
+    """A bar of 2 * half meters across the start of each part, in UTM zone 43N."""
+    bars = []
+    for part in parts:
+        p = part.to_point_gdf().geometry.to_crs(32643)
+        q = next(q for q in p.iloc[1:] if q.distance(p.iloc[0]) > 50)
+        (x0, y0), (x1, y1) = p.iloc[0].coords[0], q.coords[0]
+        d = math.hypot(x1 - x0, y1 - y0)
+        nx, ny = (y0 - y1) / d * half, (x1 - x0) / d * half
+        bars.append(LineString([(x0 + nx, y0 + ny), (x0 - nx, y0 - ny)]))
+    return gpd.GeoDataFrame({"part": range(1, len(bars) + 1)}, geometry=bars,
+                            crs=32643)
+
+
 def delhitraj():
-    m = my_traj.explore(tiles=None, style_kwds={"weight": 4})
+    my_traj.add_speed(overwrite=True)
+    m = my_traj.to_line_gdf().explore(tiles=None, style_kwds={"weight": 4},
+                                      column="speed", vmin=0, vmax=20)
+    split_marks(my_traj_split).explore(m=m, color="red", style_kwds={"weight": 4})
     VectorTiles("liberty-city").add_to(m)
     return m
 
 
-def splits_detail():
-    detail = my_traj_split.trajectories[1]
-    detail.add_speed(overwrite=True)
-    m = detail.to_line_gdf().explore(
-        tiles=None, style_kwds={"weight": 4}, column="speed", vmin=0, vmax=20)
+def delhitraj_places():
+    """The number of each part beside the end of its bar farther from the trajectory, the numbers of
+    the parts that start at one place joined: the labels of #print_map, anchored away from the bar."""
+    bars = split_marks(my_traj_split)
+    route = my_traj.to_line_gdf().geometry.to_crs(32643).union_all()
+    places = []
+    for part, bar in zip(bars["part"], bars.geometry):
+        (xa, ya), (xb, yb) = bar.coords
+        cx, cy = (xa + xb) / 2, (ya + yb) / 2
+        x, y = max([(xa, ya), (xb, yb)],
+                   key=lambda e: route.distance(gpd.points_from_xy([e[0]], [e[1]])[0]))
+        ang = math.degrees(math.atan2(y - cy, x - cx)) % 360
+        anchor = ['west', 'south west', 'south', 'south east', 'east', 'north east', 'north',
+                  'north west'][round(ang / 45) % 8]
+        lon, lat = gpd.GeoSeries(gpd.points_from_xy([x], [y]), crs=32643).to_crs(4326).iloc[0].coords[0]
+        for pl in places:
+            if abs(pl[1] - lat) < 0.002 and abs(pl[2] - lon) < 0.002:
+                pl[0] += f", {part}"
+                break
+        else:
+            places.append([str(part), lat, lon, anchor])
+    return [tuple(pl) for pl in places]
+
+
+def speed_map(traj):
+    traj.add_speed(overwrite=True)
+    m = traj.to_line_gdf().explore(tiles=None, style_kwds={"weight": 4},
+                                   column="speed", vmin=0, vmax=20, legend=False)
     VectorTiles("liberty-city").add_to(m)
     return m
+
+
+def generalization(which):
+    """Fig. 2.4: the second part of the split trajectory, and its DP and TDTR generalizations."""
+    original_traj = my_traj_split.trajectories[1]
+    if which == "a":
+        return speed_map(original_traj)
+    if which == "b":
+        return speed_map(mpd.DouglasPeuckerGeneralizer(original_traj).generalize(
+            tolerance=0.001))
+    return speed_map(mpd.TopDownTimeRatioGeneralizer(original_traj).generalize(
+        tolerance=0.001))
 
 
 def _stops():
@@ -192,9 +246,13 @@ FIGS = {
     'mpandas2-delhitrips': (delhitrips, 1724, 1032, 143.9926, ('view', 28.579, 77.221, 12),
                             ('.leaflet-control-layers',)),
     'mpandas2-delhispeeds': (delhispeeds, 1422, 1026, 143.9926, ('view', 28.559, 77.248, 12), CTRL),
-    'mpandas2-delhitraj': (delhitraj, 1188, 984, 143.9926, ('view', 28.5677, 77.2227, 12), CTRL),
-    'mpandas2-splits-detail': (splits_detail, 1706, 690, 143.9926, ('view', 28.5657, 77.2246, 15),
-                               CTRL),
+    # Fig. 2.3: the whole trajectory, its splits and its speeds
+    'mpandas2-delhitraj': (delhitraj, 1000, 1060, 143.9926,
+                           ('bounds', 28.4834, 77.1133, 28.6753, 77.3154), CTRL),
+    # Fig. 2.4: three maps of one shape over the ground of the second part of the trajectory
+    **{f'mpandas2-generalization_{p}': (lambda p=p: generalization(p), 1706, 800, 143.9926,
+                                        ('bounds', 28.5371, 77.1952, 28.5720, 77.2849), CTRL)
+       for p in 'abc'},
     'mpandas2-stops': (stops, 574, 478, 143.9926, ('bounds', 28.530, 77.166, 28.6205, 77.290),
                        CTRL),
     'mpandas2-segments': (segments, 572, 474, 143.9926,
@@ -215,13 +273,13 @@ FIGS = {
 
 # name -> overlay of the text the map image does not carry: ('legend', anchor) for the categorical
 # legend of explore(), ('colorbar', title, width in cm[, anchor]) for its colour bar; and the
-# \\includegraphics options of the figure in the chapter. Figs. 2.1, 2.2, 2.5 and 2.8 place their legend
+# \\includegraphics options of the figure in the chapter. Figs. 2.1, 2.2, 2.3 and 2.6 place their legend
 # in the bottom left corner, which no trip crosses, in the 8 pt the colour bar of Fig. 2.4 is set in
 # (FS of fig_charts_print.py).
 OVERLAY = {
     'mpandas2-delhitrips': (('legend', 'south west'), 'width=0.8\\textwidth'),
     'mpandas2-delhispeeds': (('colorbar', 'Speed (m/s)', 3.5, 'south west'), 'width=0.8\\textwidth'),
-    'mpandas2-splits-detail': (('colorbar', 'Speed (m/s)', 3.5, 'south west'), 'width=1.\\textwidth'),
+    'mpandas2-delhitraj': (('colorbar', 'Speed (m/s)', 3.5, 'south west'), 'width=0.8\\textwidth'),
     'mpandas2-stops-collect': (('legend', 'south west'), 'width=0.8\\textwidth'),
     'mpandas2-smooth-speed_a': (('colorbar', 'Speed (m/s)', 2.6), 'height=7.4cm'),
     'mpandas2-smooth-speed_b': (('colorbar', 'Speed (m/s)', 2.6), 'height=7.4cm'),
@@ -233,11 +291,11 @@ PRINTED = {
     'mpandas2-delhitrips': ('width', 0.8 * TEXTWIDTH_MM),
     'mpandas2-delhispeeds': ('width', 0.8 * TEXTWIDTH_MM),
     'mpandas2-delhitraj': ('width', 0.8 * TEXTWIDTH_MM),
-    'mpandas2-splits-detail': ('width', TEXTWIDTH_MM),
+    **{f'mpandas2-generalization_{p}': ('width', 0.8 * TEXTWIDTH_MM) for p in 'abc'},
     'mpandas2-stops': ('width', 0.42 * TEXTWIDTH_MM), 'mpandas2-segments': ('width', 0.42 * TEXTWIDTH_MM),
     'mpandas2-stops-collect': ('width', 0.8 * TEXTWIDTH_MM),
     'mpandas2-stops-agg': ('width', 0.6 * TEXTWIDTH_MM),
-    # Fig. 2.10: the two maps side by side over the width of the text, one shape, one ground
+    # Fig. 2.8: the two maps side by side over the width of the text, one shape, one ground
     'mpandas2-smooth_a': ('width', 0.48 * TEXTWIDTH_MM), 'mpandas2-smooth_b': ('width', 0.48 * TEXTWIDTH_MM),
     'mpandas2-smooth-speed_a': ('height', 74), 'mpandas2-smooth-speed_b': ('height', 74),
 }
@@ -272,7 +330,10 @@ def shown_bounds(ext, css_w, css_h):
     return s, w, n, e
 
 
-FONT_8PT = {'mpandas2-delhitrips', 'mpandas2-delhispeeds', 'mpandas2-splits-detail',
+# name -> the places of #print_map, the labels its overlay draws
+PLACES = {'mpandas2-delhitraj': delhitraj_places}
+
+FONT_8PT = {'mpandas2-delhitrips', 'mpandas2-delhispeeds', 'mpandas2-delhitraj',
             'mpandas2-stops-collect'}
 
 names = sys.argv[1:] or list(FIGS)
@@ -288,7 +349,8 @@ for name in names:
     css_h = round(css_w * h / w)
     bounds = shown_bounds(ext, (w + 1) // 2, (h + 1) // 2)
     info = print_map(html, f'{OUT}/{name}.pdf', css_w, css_h, round(width_mm / 25.4, 4),
-                     round(width_mm * h / w / 25.4, 4), bounds=bounds, hide=hide)
+                     round(width_mm * h / w / 25.4, 4), bounds=bounds, hide=hide,
+                     places=PLACES[name]() if name in PLACES else ())
     if name in SIMPLIFIED:
         simplify_printed(f'{OUT}/{name}.pdf', width_mm)
     print(name, 'zoom', round(info['zoom'], 3), 'tiles', info['tiles'])
@@ -307,4 +369,5 @@ for name in names:
         if name in FONT_8PT:
             args['font'] = r'\fontsize{8}{9.5}\selectfont'
         write_overlay(f'{OUT}/{name}_overlay.tex', f'figs/chap2/{name}.pdf', incl, pfx,
+                      labels=info['labels'] if name in PLACES else (),
                       comment='fig_delhi.py', **args)
