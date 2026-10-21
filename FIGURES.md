@@ -26,15 +26,15 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 | 2.11 | Alternative models for storing time-varying information: tuple versus attribute timestamping | `tuple_attribute.pdf` | Drawing of the book |
 | 2.12 | A temporal sequence with (a) discrete, (b) linear, and (c) step interpolation | `tsequence_disc`, `tsequence_linear`, `tsequence_step` | Drawing of the book |
 | 2.13 | A temporal sequence set with (a) linear and (b) step interpolation | `tsequenceset_linear`, `tsequenceset_step` | Drawing of the book |
-| 2.14 | Set and span types | `setspan_types` | Drawing of the book |
-| 2.15 | Set and span data structures | `setspan_struct` | Drawing of the book |
+| 2.14 | Set and span types | `setspan_types` | Visio source `chapter2/figures/meos.vsdx` |
+| 2.15 | Set and span data structures | `setspan_struct` | Visio source `chapter2/figures/meos.vsdx` |
 | 2.16 | Bounding box types | `boxes` | Drawing of the book |
-| 2.17 | Temporal type hierarchy | `temporal_types` | Drawing of the book |
-| 2.18 | Temporal data structures | `temp_struct` | Drawing of the book |
+| 2.17 | Temporal type hierarchy | `temporal_types` | Visio source `chapter2/figures/meos.vsdx` |
+| 2.18 | Temporal data structures | `temp_struct` | Visio source `chapter2/figures/meos.vsdx` |
 | 2.19 | Normalizing a temporal sequence with (a) linear and (b) step interpolation | `norm_seq_linear`, `norm_seq_step` | Drawing of the book |
 | 2.20 | Normalizing a temporal sequence set with (a) linear and (b) step interpolation | `norm_seqset_linear`, `norm_seqset_step` | Drawing of the book |
-| 2.21 | Skip list data structure | `skiplist` | Drawing of the book |
-| 2.22 | Modifying a skip list: (a) delete and (b) insert | `skiplist_delete`, `skiplist_insert` | Drawing of the book |
+| 2.21 | Skip list data structure | `skiplist` | Visio source `chapter2/figures/meos.vsdx` |
+| 2.22 | Modifying a skip list: (a) delete and (b) insert | `skiplist_delete`, `skiplist_insert` | Visio source `chapter2/figures/meos.vsdx` |
 | 2.23 | Insert operation for temporal values | `temporal_insert` | Drawing of the book |
 | 2.24 | Update operation for temporal values | `temporal_update` | Drawing of the book |
 | 2.25 | Delete operation for temporal values | `temporal_delete` | Drawing of the book |
