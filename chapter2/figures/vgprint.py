@@ -234,8 +234,8 @@ def write_overlay(path, graphic, incl, pfx, labels=(), legend=None, colorbar=Non
                 t = rf'\textbf{{{t}}}'
             if lb.get('place'):
                 if not lb.get('dot', True):
-                    # A name beside a mark that the map draws itself
-                    body.append(rf'\node[anchor={lb["place"]}, inner sep=1pt] at '
+                    # A name beside a mark that the map draws itself, in its colour, 2 points clear of it
+                    body.append(rf'\node[anchor={lb["place"]}, inner sep=2pt, text={col(lb["color"])}] at '
                                 rf'({lb["x0"]:.4f}, {1 - lb["y0"]:.4f}) {{{t}}};')
                     continue
                 name = rf' node[anchor={lb["place"]}, inner sep=1.5pt] {{{t}}}' if t else ''

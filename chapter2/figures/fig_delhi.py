@@ -7,7 +7,7 @@ from pathlib import Path
 from delhi_common import *  # noqa: F401,F403  (tc, my_trajs, my_traj, my_traj_split, ...)
 import folium
 import geopandas as gpd
-from shapely.geometry import LineString
+from shapely.geometry import box
 import matplotlib
 from matplotlib.colors import ListedColormap, to_hex
 from vtiles import VectorTiles
@@ -18,6 +18,9 @@ from pdf_simplify import simplify_printed  # noqa: E402
 OUT = Path(__file__).resolve().parent / 'out'
 OUT.mkdir(exist_ok=True)
 CTRL = ('.leaflet-control-zoom', '.leaflet-control-scale', '.leaflet-control-layers')
+# The colours of the four parts of the split trajectory, those of their boxes in Fig. 2.3 and of their maps in
+# Fig. 2.4, given to the numbers of the parts in the overlay of Fig. 2.3
+PART_COLORS = ["#1f77b4", "#2ca02c", "#ff7f0e", "#d62728"]
 
 
 def delhitrips():
@@ -35,70 +38,54 @@ def delhispeeds():
     return m
 
 
-def label_bars(parts, half=250):
-    """A bar of 2 * half meters across the start of each part, in UTM zone 43N, at whose end
-    #delhitraj_places sets the number of the part."""
-    bars = []
-    for part in parts:
-        p = part.to_point_gdf().geometry.to_crs(32643)
-        q = next(q for q in p.iloc[1:] if q.distance(p.iloc[0]) > 50)
-        (x0, y0), (x1, y1) = p.iloc[0].coords[0], q.coords[0]
-        d = math.hypot(x1 - x0, y1 - y0)
-        nx, ny = (y0 - y1) / d * half, (x1 - x0) / d * half
-        bars.append(LineString([(x0 + nx, y0 + ny), (x0 - nx, y0 - ny)]))
-    return gpd.GeoDataFrame({"part": range(1, len(bars) + 1)}, geometry=bars,
-                            crs=32643)
-
-
 def delhitraj():
     my_traj.add_speed(overwrite=True)
     m = my_traj.to_line_gdf().explore(tiles=None, style_kwds={"weight": 4},
                                       column="speed", vmin=0, vmax=20)
-    starts = gpd.GeoDataFrame(
-        {"part": range(1, len(my_traj_split) + 1)},
-        geometry=[part.get_start_location() for part in my_traj_split], crs=4326)
-    starts.explore(m=m, color="red", marker_kwds={"radius": 5},
-                   style_kwds={"fillOpacity": 1})
+    colors = ["#1f77b4", "#2ca02c", "#ff7f0e", "#d62728"]
+    for part, color in zip(my_traj_split, colors):
+        gpd.GeoSeries([box(*part.get_bbox())], crs=4326).explore(
+            m=m, color=color, style_kwds={"fill": False, "weight": 2})
     VectorTiles("liberty-city").add_to(m)
     return m
 
 
 def delhitraj_places():
-    """The number of each part at the end of its bar of #label_bars farther from the trajectory, the
-    numbers of the parts that start at one place joined: the labels of #print_map, drawn without a
-    dot of their own beside the red dot of the start of the part."""
-    bars = label_bars(my_traj_split)
-    route = my_traj.to_line_gdf().geometry.to_crs(32643).union_all()
+    """The number of each part of the split trajectory inside the north-east corner of its bounding
+    box, which the trajectory does not cross; a number whose corner holds one already (the boxes of
+    parts 1 and 3 nearly coincide) is set under it, a line of 3.5 mm lower: the labels of #print_map,
+    drawn without a dot in the colour of the box by #write_overlay of vgprint.py."""
+    s, _, n, _ = shown_bounds(('bounds',) + traj_bounds(), 500, 530)
+    deg_per_mm = (n - s) / (0.8 * TEXTWIDTH_MM * 1060 / 1000)
     places = []
-    for part, bar in zip(bars["part"], bars.geometry):
-        (xa, ya), (xb, yb) = bar.coords
-        cx, cy = (xa + xb) / 2, (ya + yb) / 2
-        x, y = max([(xa, ya), (xb, yb)],
-                   key=lambda e: route.distance(gpd.points_from_xy([e[0]], [e[1]])[0]))
-        ang = math.degrees(math.atan2(y - cy, x - cx)) % 360
-        anchor = ['west', 'south west', 'south', 'south east', 'east', 'north east', 'north',
-                  'north west'][round(ang / 45) % 8]
-        lon, lat = gpd.GeoSeries(gpd.points_from_xy([x], [y]), crs=32643).to_crs(4326).iloc[0].coords[0]
-        for pl in places:
-            if abs(pl[1] - lat) < 0.002 and abs(pl[2] - lon) < 0.002:
-                pl[0] += f", {part}"
-                break
-        else:
-            places.append([str(part), lat, lon, anchor])
-    return [tuple(pl) for pl in places]
+    for i, part in enumerate(my_traj_split):
+        _, _, east, north = part.get_bbox()
+        near = [p[1] for p in places
+                if abs(p[1] - north) < 3.5 * deg_per_mm and abs(p[2] - east) < 3.5 * deg_per_mm]
+        if near:
+            north = min(near) - 3.5 * deg_per_mm
+        places.append((str(i + 1), north, east, 'north east'))
+    return places
 
 
 def split_part(i):
-    """Fig. 2.4: the part i of the split trajectory in its colour, over the whole trajectory in
-    light gray, the map fitted to the part."""
+    """Fig. 2.4: the part i of the split trajectory in its colour, the map fitted to the part."""
     part = my_traj_split.trajectories[i]
-    m = my_traj.explore(tiles=None, color="lightgray", style_kwds={"weight": 3})
-    part.explore(m=m, color=["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"][i],
-                 style_kwds={"weight": 4})
+    m = part.explore(tiles=None, color=PART_COLORS[i],
+                     style_kwds={"weight": 4})
     w, s, e, n = part.get_bbox()
     m.fit_bounds([[s, w], [n, e]])
     VectorTiles("liberty-city").add_to(m)
     return m
+
+
+def traj_bounds(margin=0.06, under=0.15):
+    """The (south, west, north, east) of the whole trajectory, with a margin of its extent, `under` of
+    it under the trajectory: the ground of Fig. 2.3, on which the boxes of the parts stay clear of the
+    edges of the map and its colour bar is set under them."""
+    w, s, e, n = my_traj.get_bbox()
+    dx, dy = (e - w) * margin, (n - s) * margin
+    return (s - (n - s) * under, w - dx, n + dy, e + dx)
 
 
 def part_bounds(i, margin=0.04):
@@ -275,7 +262,7 @@ FIGS = {
     'mpandas2-delhispeeds': (delhispeeds, 1422, 1026, 143.9926, ('view', 28.559, 77.248, 12), CTRL),
     # Fig. 2.3: the whole trajectory, its splits and its speeds
     'mpandas2-delhitraj': (delhitraj, 1000, 1060, 143.9926,
-                           ('bounds', 28.4834, 77.1133, 28.6753, 77.3154), CTRL),
+                           ('bounds',) + traj_bounds(), CTRL),
     # Fig. 2.4: four square maps, each fitted to its part
     **{f'mpandas2-splits_{p}': (lambda i=i: split_part(i), 1000, 1000, 143.9926,
                                 ('bounds',) + part_bounds(i), CTRL)
@@ -403,5 +390,6 @@ for name in names:
         if name in FONT_8PT:
             args['font'] = r'\fontsize{8}{9.5}\selectfont'
         write_overlay(f'{OUT}/{name}_overlay.tex', f'figs/chap2/{name}.pdf', incl, pfx,
-                      labels=[dict(lb, dot=False) for lb in info['labels']] if name in PLACES else (),
+                      labels=[dict(lb, dot=False, color=PART_COLORS[int(lb['text']) - 1])
+                              for lb in info['labels']] if name in PLACES else (),
                       comment='fig_delhi.py', **args)
