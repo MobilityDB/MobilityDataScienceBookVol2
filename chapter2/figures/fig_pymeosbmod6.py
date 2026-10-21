@@ -61,7 +61,7 @@ def draw(name, groups):
     print_map(html, f'{OUT}/{name}.pdf', css_w, css_h, W_IN, round(W_IN * css_h / css_w, 4),
               bounds=(b[1], b[0], b[3], b[2]))
     # below half a printed pixel, by #simplify_printed of chapter7/figures/pdf_simplify.py
-    simplify_printed(f'{OUT}/{name}.pdf', W_IN * 25.4)
+    simplify_printed(f'{OUT}/{name}.pdf', W_IN * 25.4, squeezed=True)
 
 
 draw('pymeosbmod6_a', 1)

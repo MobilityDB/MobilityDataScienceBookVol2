@@ -66,7 +66,7 @@ for panel, key in zip("abc", maps):
     maps[key].save(html)
     info = print_map(html, f'{OUT}/{name}.pdf', css_w, css_h, round(width_mm / 25.4, 4),
                      round(height_mm / 25.4, 4), bounds=(s, w, n, e))
-    simplify_printed(f'{OUT}/{name}.pdf', width_mm)
+    simplify_printed(f'{OUT}/{name}.pdf', width_mm, squeezed=True)
     print(name, round(width_mm, 1), 'x', round(height_mm, 1), 'mm zoom', round(info['zoom'], 3),
           'tiles', info['tiles'])
 pymeos_finalize()

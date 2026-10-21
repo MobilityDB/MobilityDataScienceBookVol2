@@ -49,6 +49,6 @@ html = f'{OUT}/pymeosbmod2_b.html'
 m.save(html)
 info = print_map(html, f'{OUT}/pymeosbmod2_b.pdf', css_w, css_h, round(width_mm / 25.4, 4),
                  round(height_mm / 25.4, 4), bounds=(b[1], b[0], b[3], b[2]))
-simplify_printed(f'{OUT}/pymeosbmod2_b.pdf', width_mm)
+simplify_printed(f'{OUT}/pymeosbmod2_b.pdf', width_mm, squeezed=True)
 print('bounds', b, 'zoom', round(info['zoom'], 3), 'tiles', info['tiles'])
 pymeos_finalize()

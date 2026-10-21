@@ -332,13 +332,10 @@ PRINTED = {
     'mpandas2-smooth-speed_a': ('height', 74), 'mpandas2-smooth-speed_b': ('height', 74),
 }
 # The maps whose paths #simplify_printed of chapter7/figures/pdf_simplify.py simplifies below half a
-# printed pixel: all of them, since every vertex closer than a printed pixel costs a viewer time to
-# draw and none of them shows
+# printed pixel and whose page it then rewrites by #squeeze: all of them, since every vertex closer than
+# a printed pixel and every area that Chromium fills and then strokes as a second path cost a viewer
+# time to draw and none of them shows
 SIMPLIFIED = set(FIGS)
-# The maps whose page #simplify_printed then rewrites by #squeeze of the same file: the three of Fig. 2.5,
-# whose page draws one ground three times at zoom 13.4, with the areas of its basemap that Chromium fills
-# and strokes as two paths each
-SQUEEZED = {f'mpandas2-generalization_{p}' for p in 'abc'}
 
 
 def shown_bounds(ext, css_w, css_h):
@@ -389,7 +386,7 @@ for name in names:
                      round(width_mm * h / w / 25.4, 4), bounds=bounds, hide=hide,
                      places=PLACES[name]() if name in PLACES else ())
     if name in SIMPLIFIED:
-        simplify_printed(f'{OUT}/{name}.pdf', width_mm, squeezed=name in SQUEEZED)
+        simplify_printed(f'{OUT}/{name}.pdf', width_mm, squeezed=True)
     print(name, 'zoom', round(info['zoom'], 3), 'tiles', info['tiles'])
     if name in OVERLAY:
         (kind, *a), incl = OVERLAY[name]

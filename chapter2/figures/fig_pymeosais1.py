@@ -58,7 +58,7 @@ for name in ('pymeosais1_a', 'pymeosais1_b'):
                      round(height_mm / MM_PER_PX), round(width_mm / 25.4, 4),
                      round(height_mm / 25.4, 4), view=view, bounds=None if view else bounds,
                      places=PLACES)
-    simplify_printed(f'{OUT}/{name}.pdf', width_mm)
+    simplify_printed(f'{OUT}/{name}.pdf', width_mm, squeezed=True)
     print(name, 'zoom', round(info['zoom'], 3), 'tiles', info['tiles'])
     write_overlay(f'{OUT}/{name}_overlay.tex', f'figs/chap2/{name}.pdf', 'width=0.48\\textwidth',
                   'ov' + ''.join(c for c in name if c.isalpha()), labels=info['labels'],
