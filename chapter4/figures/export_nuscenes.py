@@ -171,8 +171,9 @@ PLACE = {  # channel: (anchor, dx, dy, ha, va, text)
     'RADAR_FRONT_RIGHT': ('tip', 3, 0, 'left', 'center', 'RADAR\nFRONT RIGHT'),
 }
 # An arrow shows a direction, so its length is free: the lidar's, 0.9 m long, would pass over the
-# dot and the arrow of the rear right camera
-LENGTH = {'LIDAR_TOP': 0.3}
+# dot and the arrow of the rear right camera; at 0.38 m it ends 0.12 m from that dot, the clearance
+# that the check below requires of every arrow
+LENGTH = {'LIDAR_TOP': 0.38}
 arrows, texts = {}, {}
 for ch, x, y, *q in rig:
     look = rotate(q, (0, 0, 1) if ch.startswith('CAM') else (1, 0, 0))
