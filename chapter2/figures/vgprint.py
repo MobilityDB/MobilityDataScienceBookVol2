@@ -233,6 +233,11 @@ def write_overlay(path, graphic, incl, pfx, labels=(), legend=None, colorbar=Non
             if lb.get('bold'):
                 t = rf'\textbf{{{t}}}'
             if lb.get('place'):
+                if not lb.get('dot', True):
+                    # A name beside a mark that the map draws itself
+                    body.append(rf'\node[anchor={lb["place"]}, inner sep=1pt] at '
+                                rf'({lb["x0"]:.4f}, {1 - lb["y0"]:.4f}) {{{t}}};')
+                    continue
                 name = rf' node[anchor={lb["place"]}, inner sep=1.5pt] {{{t}}}' if t else ''
                 body.append(rf'\fill ({lb["x0"]:.4f}, {1 - lb["y0"]:.4f}) circle (0.8pt){name};')
                 continue

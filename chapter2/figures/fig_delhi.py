@@ -35,8 +35,9 @@ def delhispeeds():
     return m
 
 
-def split_marks(parts, half=400):
-    """A bar of 2 * half meters across the start of each part, in UTM zone 43N."""
+def label_bars(parts, half=250):
+    """A bar of 2 * half meters across the start of each part, in UTM zone 43N, at whose end
+    #delhitraj_places sets the number of the part."""
     bars = []
     for part in parts:
         p = part.to_point_gdf().geometry.to_crs(32643)
@@ -53,15 +54,20 @@ def delhitraj():
     my_traj.add_speed(overwrite=True)
     m = my_traj.to_line_gdf().explore(tiles=None, style_kwds={"weight": 4},
                                       column="speed", vmin=0, vmax=20)
-    split_marks(my_traj_split).explore(m=m, color="red", style_kwds={"weight": 4})
+    starts = gpd.GeoDataFrame(
+        {"part": range(1, len(my_traj_split) + 1)},
+        geometry=[part.get_start_location() for part in my_traj_split], crs=4326)
+    starts.explore(m=m, color="red", marker_kwds={"radius": 5},
+                   style_kwds={"fillOpacity": 1})
     VectorTiles("liberty-city").add_to(m)
     return m
 
 
 def delhitraj_places():
-    """The number of each part beside the end of its bar farther from the trajectory, the numbers of
-    the parts that start at one place joined: the labels of #print_map, anchored away from the bar."""
-    bars = split_marks(my_traj_split)
+    """The number of each part at the end of its bar of #label_bars farther from the trajectory, the
+    numbers of the parts that start at one place joined: the labels of #print_map, drawn without a
+    dot of their own beside the red dot of the start of the part."""
+    bars = label_bars(my_traj_split)
     route = my_traj.to_line_gdf().geometry.to_crs(32643).union_all()
     places = []
     for part, bar in zip(bars["part"], bars.geometry):
@@ -369,5 +375,5 @@ for name in names:
         if name in FONT_8PT:
             args['font'] = r'\fontsize{8}{9.5}\selectfont'
         write_overlay(f'{OUT}/{name}_overlay.tex', f'figs/chap2/{name}.pdf', incl, pfx,
-                      labels=info['labels'] if name in PLACES else (),
+                      labels=[dict(lb, dot=False) for lb in info['labels']] if name in PLACES else (),
                       comment='fig_delhi.py', **args)
