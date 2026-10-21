@@ -8,8 +8,8 @@ SET TimeZone = 'UTC';
 SET client_min_messages = warning;
 
 \echo == the vessel: reported draught, reports, and length of its trip (14.9 m, 512 km)
-SELECT MMSI, max(Draught) AS Draught, min(T) AS FirstReport, max(T) AS LastReport,
-  count(*) AS Reports
+SELECT MMSI, MAX(Draught) AS Draught, MIN(T) AS FirstReport, MAX(T) AS LastReport,
+  COUNT(*) AS Reports
 FROM AISClean WHERE MMSI = 273277840 GROUP BY MMSI;
 SELECT round((length(Trip) / 1000)::numeric, 1) AS Km FROM Ships WHERE MMSI = 273277840;
 
@@ -33,7 +33,7 @@ Runs AS (
     SUM(CASE WHEN Shallow IS DISTINCT FROM PrevShallow THEN 1 ELSE 0 END)
       OVER (ORDER BY T) AS Run
   FROM Flags )
-SELECT min(T) AS FirstReport, max(T) AS LastReport
+SELECT MIN(T) AS FirstReport, MAX(T) AS LastReport
 FROM Runs
 WHERE Shallow
 GROUP BY Run

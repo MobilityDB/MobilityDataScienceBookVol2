@@ -45,8 +45,8 @@ WHERE NOT p.InGap;
 ALTER TABLE PointContext ADD PRIMARY KEY (GapId, PointIdx);
 ANALYZE PointContext;
 
-SELECT count(*) AS Positions, count(SOG) AS WithSOG, count(Heading) AS WithHeading,
-  count(Depth) AS WithDepth, count(Waves) AS WithWaves, count(SeaArea) AS WithSeaArea,
-  count(EEZ) AS WithEEZ, count(*) FILTER (WHERE InTSS) AS InTSS,
-  count(*) FILTER (WHERE InProtected) AS InProtected
+SELECT COUNT(*) AS Positions, COUNT(SOG) AS WithSOG, COUNT(Heading) AS WithHeading,
+  COUNT(Depth) AS WithDepth, COUNT(Waves) AS WithWaves, COUNT(SeaArea) AS WithSeaArea,
+  COUNT(EEZ) AS WithEEZ, COUNT(*) FILTER (WHERE InTSS) AS InTSS,
+  COUNT(*) FILTER (WHERE InProtected) AS InProtected
 FROM PointContext;

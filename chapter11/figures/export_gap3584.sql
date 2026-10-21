@@ -33,7 +33,7 @@ WHERE GapId = 3584 AND ((Task = 'recovery' AND PointIdx = 12) OR Task = 'predict
 ORDER BY Task DESC, PointIdx, Model;
 
 \echo The median recovery error of the masked positions before and after the gap (meters)
-SELECT Model, CASE WHEN PointIdx < 16 THEN 'before' ELSE 'after' END AS Side, count(*) AS Positions,
+SELECT Model, CASE WHEN PointIdx < 16 THEN 'before' ELSE 'after' END AS Side, COUNT(*) AS Positions,
   round(percentile_cont(0.5) WITHIN GROUP (ORDER BY Err)::numeric) AS MedianErr
 FROM Errors
 WHERE GapId = 3584 AND Task = 'recovery'
@@ -45,8 +45,8 @@ WITH Segment AS (
   SELECT ST_MakeLine(a.Geom, b.Geom) AS Geom
   FROM TripPoints a JOIN TripPoints b USING (GapId)
   WHERE GapId = 3584 AND a.PointIdx = 15 AND b.PointIdx = 28 )
-SELECT r.Model, round(min(ST_Distance(r.Geom, s.Geom))::numeric) AS MinDist,
-  round(max(ST_Distance(r.Geom, s.Geom))::numeric) AS MaxDist
+SELECT r.Model, round(MIN(ST_Distance(r.Geom, s.Geom))::numeric) AS MinDist,
+  round(MAX(ST_Distance(r.Geom, s.Geom))::numeric) AS MaxDist
 FROM Reconstructed r, Segment s
 WHERE r.GapId = 3584 AND r.Task = 'gap'
 GROUP BY r.Model

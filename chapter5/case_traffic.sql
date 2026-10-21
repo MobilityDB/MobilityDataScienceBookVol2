@@ -15,8 +15,8 @@ SET client_min_messages = warning;
    871f2414cffffff |      42 |       572.4 */
 DROP TABLE IF EXISTS CellTraffic;
 CREATE TABLE CellTraffic AS
-SELECT u.value AS Cell, count(DISTINCT s.MMSI) AS Vessels,
-  sum(duration(u.time)) AS VesselTime
+SELECT u.value AS Cell, COUNT(DISTINCT s.MMSI) AS Vessels,
+  SUM(duration(u.time)) AS VesselTime
 FROM Ships s, unnest(th3index(s.TripLonLat, 7)) AS u
 GROUP BY u.value;
 SELECT Cell, Vessels,
@@ -25,33 +25,33 @@ FROM CellTraffic
 ORDER BY VesselTime DESC
 LIMIT 3;
 \echo == cells crossed and vessel-hours (25990 | 38965)
-SELECT count(*) AS Cells, round(EXTRACT(EPOCH FROM sum(VesselTime)) / 3600) AS VesselHours
+SELECT COUNT(*) AS Cells, round(EXTRACT(EPOCH FROM SUM(VesselTime)) / 3600) AS VesselHours
 FROM CellTraffic;
 
 \echo == Query: vessel-hours of resolution 5 computed from the trips and rolled up from resolution 7
 -- 1238 | 35 | 437 | 1137 | 38965 | 38965
 DROP TABLE IF EXISTS CellTraffic5;
 CREATE TABLE CellTraffic5 AS
-SELECT u.value AS Cell, count(DISTINCT s.MMSI) AS Vessels,
-  sum(duration(u.time)) AS VesselTime
+SELECT u.value AS Cell, COUNT(DISTINCT s.MMSI) AS Vessels,
+  SUM(duration(u.time)) AS VesselTime
 FROM Ships s, unnest(th3index(s.TripLonLat, 5)) AS u
 GROUP BY u.value;
 WITH RollUp AS (
-  SELECT cellToParent(Cell, 5) AS Cell, sum(VesselTime) AS VesselTime,
-    sum(Vessels) AS VesselsSum
+  SELECT cellToParent(Cell, 5) AS Cell, SUM(VesselTime) AS VesselTime,
+    SUM(Vessels) AS VesselsSum
   FROM CellTraffic
   GROUP BY 1 )
-SELECT count(*) AS Cells,
-  count(*) FILTER (WHERE r.Cell IS NULL OR d.Cell IS NULL) AS OneSide,
-  count(*) FILTER (WHERE abs(EXTRACT(EPOCH FROM d.VesselTime -
+SELECT COUNT(*) AS Cells,
+  COUNT(*) FILTER (WHERE r.Cell IS NULL OR d.Cell IS NULL) AS OneSide,
+  COUNT(*) FILTER (WHERE abs(EXTRACT(EPOCH FROM d.VesselTime -
     r.VesselTime)) > 0.05 * EXTRACT(EPOCH FROM d.VesselTime)) AS Differ,
-  count(*) FILTER (WHERE r.VesselsSum > d.Vessels) AS Overcount,
-  round(EXTRACT(EPOCH FROM sum(d.VesselTime)) / 3600) AS DirectHours,
-  round(EXTRACT(EPOCH FROM sum(r.VesselTime)) / 3600) AS RolledHours
+  COUNT(*) FILTER (WHERE r.VesselsSum > d.Vessels) AS Overcount,
+  round(EXTRACT(EPOCH FROM SUM(d.VesselTime)) / 3600) AS DirectHours,
+  round(EXTRACT(EPOCH FROM SUM(r.VesselTime)) / 3600) AS RolledHours
 FROM CellTraffic5 d FULL JOIN RollUp r USING (Cell);
 \echo == among the cells whose two values differ by more than 100 vessel-hours, the largest ratio (851f26d3fffffff: 11.4 against 469.0)
 WITH RollUp AS (
-  SELECT cellToParent(Cell, 5) AS Cell, sum(VesselTime) AS VesselTime
+  SELECT cellToParent(Cell, 5) AS Cell, SUM(VesselTime) AS VesselTime
   FROM CellTraffic
   GROUP BY 1 )
 SELECT Cell, round(EXTRACT(EPOCH FROM d.VesselTime) / 3600, 1) AS DirectHours,
@@ -95,13 +95,13 @@ SELECT CASE WHEN (d.Depth).count IS NULL OR (d.Depth).count = 0
     WHEN (d.Depth).mean < 20 THEN '10-20 m'
     WHEN (d.Depth).mean < 50 THEN '20-50 m'
     ELSE '>= 50 m' END AS MeanDepth,
-  count(*) AS Cells,
-  round(sum(EXTRACT(EPOCH FROM t.VesselTime)) / 3600) AS VesselHours
+  COUNT(*) AS Cells,
+  round(SUM(EXTRACT(EPOCH FROM t.VesselTime)) / 3600) AS VesselHours
 FROM CellTraffic t LEFT JOIN CellDepth d USING (Cell)
 GROUP BY 1
-ORDER BY min(COALESCE((d.Depth).mean, 1e9));
+ORDER BY MIN(COALESCE((d.Depth).mean, 1e9));
 \echo == cells with a mean depth of less than 10 m that meet a port area, and their vessel-hours (169 | 10400)
-SELECT count(*) AS Cells, round(sum(EXTRACT(EPOCH FROM t.VesselTime)) / 3600) AS VesselHours
+SELECT COUNT(*) AS Cells, round(SUM(EXTRACT(EPOCH FROM t.VesselTime)) / 3600) AS VesselHours
 FROM CellTraffic t JOIN CellDepth d USING (Cell) JOIN CellZones z USING (Cell)
 WHERE (d.Depth).mean < 10 AND EXISTS (SELECT 1 FROM Port p WHERE ST_Intersects(p.Geom, z.Geom));
 \echo == mean depth of the three busiest cells (6.3, 3.3, 8.4)

@@ -51,7 +51,7 @@ FROM Depth;
 \set ON_ERROR_STOP 1
 
 \echo == Listing: a tiled raster read along every trip (number of vessels read)
-SELECT count(*) AS Vessels FROM (
+SELECT COUNT(*) AS Vessels FROM (
   SELECT s.MMSI, mergeAgg(rasterValue(s.Trip, b.Rast))
   FROM Ships s, Bathymetry b
   WHERE ST_Intersects(b.Rast, trajectory(s.Trip))

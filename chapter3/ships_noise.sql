@@ -219,4 +219,4 @@ WHERE s.MMSI = u.MMSI AND u.Trip IS NOT NULL;
 -- UPDATE 1499
 VACUUM ANALYZE Ships;
 
-SELECT count(*) AS Ships, count(Noise) AS Noisy FROM Ships;
+SELECT COUNT(*) AS Ships, COUNT(Noise) AS Noisy FROM Ships;

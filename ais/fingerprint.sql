@@ -5,12 +5,12 @@
 --
 --   psql -d ais -At -f fingerprint.sql
 
-SELECT 'clean', count(*), md5(string_agg(
+SELECT 'clean', COUNT(*), md5(string_agg(
   MMSI || ',' || (EXTRACT(EPOCH FROM T) * 1000000)::bigint || ',' || Piece, ';'
   ORDER BY MMSI, T))
 FROM AISClean;
 
-SELECT 'segments', count(*), md5(string_agg(
+SELECT 'segments', COUNT(*), md5(string_agg(
   MMSI || ',' || Piece || ',' || SegmentType || ',' ||
   (EXTRACT(EPOCH FROM TStart) * 1000000)::bigint || ',' ||
   (EXTRACT(EPOCH FROM TEnd) * 1000000)::bigint || ',' || NoPoints, ';'

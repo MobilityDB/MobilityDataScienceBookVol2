@@ -14,9 +14,9 @@
 \set ON_ERROR_STOP on
 SET TimeZone = 'UTC';
 
-\copy (SELECT Model, Task, GapId, avg(Err) AS Err FROM Errors WHERE Model IN ('linear', 'coordinates', 'crossdomain') GROUP BY Model, Task, GapId ORDER BY Task, GapId, Model) TO 'perwindow.csv' CSV HEADER
+\copy (SELECT Model, Task, GapId, AVG(Err) AS Err FROM Errors WHERE Model IN ('linear', 'coordinates', 'crossdomain') GROUP BY Model, Task, GapId ORDER BY Task, GapId, Model) TO 'perwindow.csv' CSV HEADER
 
-\copy (SELECT GapId, (sum(d) / nullif(sum(dt), 0)) * 1.9438445 AS Kn FROM ( SELECT GapId, ST_Distance(Geom, lag(Geom) OVER w) AS d, extract(epoch FROM T - lag(T) OVER w) AS dt FROM TripPoints WHERE NOT InGap WINDOW w AS (PARTITION BY GapId ORDER BY T) ) x GROUP BY GapId ORDER BY GapId) TO 'winspeed.csv' CSV HEADER
+\copy (SELECT GapId, (SUM(d) / nullif(SUM(dt), 0)) * 1.9438445 AS Kn FROM ( SELECT GapId, ST_Distance(Geom, lag(Geom) OVER w) AS d, extract(epoch FROM T - lag(T) OVER w) AS dt FROM TripPoints WHERE NOT InGap WINDOW w AS (PARTITION BY GapId ORDER BY T) ) x GROUP BY GapId ORDER BY GapId) TO 'winspeed.csv' CSV HEADER
 
 CREATE TEMP TABLE Isolation AS
 WITH Visible AS (
@@ -25,7 +25,7 @@ WITH Visible AS (
   WHERE NOT p.InGap AND NOT EXISTS (
     SELECT 1 FROM EvalMasks m WHERE m.Task = 'recovery' AND
       m.GapId = p.GapId AND m.PointIdx = p.PointIdx ) )
-SELECT m.GapId, m.PointIdx, min(abs(m.PointIdx - v.PointIdx)) AS Steps
+SELECT m.GapId, m.PointIdx, MIN(abs(m.PointIdx - v.PointIdx)) AS Steps
 FROM EvalMasks m JOIN Visible v USING (GapId)
 WHERE m.Task = 'recovery'
 GROUP BY m.GapId, m.PointIdx;
@@ -33,7 +33,7 @@ GROUP BY m.GapId, m.PointIdx;
 
 CREATE TEMP TABLE Horizon AS
 SELECT m.GapId, m.PointIdx, m.PointIdx - (
-  SELECT max(i.PointIdx) FROM ModelInput i
+  SELECT MAX(i.PointIdx) FROM ModelInput i
   WHERE i.Task = 'prediction' AND i.GapId = m.GapId AND NOT i.Masked ) AS Horizon
 FROM EvalMasks m
 WHERE m.Task = 'prediction';

@@ -204,7 +204,7 @@ FROM SampleAnnotation a
   JOIN Instance i ON i.InstanceId = a.InstanceId
   JOIN Category c ON c.CategoryId = i.CategoryId
 GROUP BY s.SceneId, a.InstanceId, c.Name, a.Length, a.Width
-HAVING count(*) > 1;
+HAVING COUNT(*) > 1;
 
 -- The mounting pose of each instrument, in the body frame of the vehicle.
 -- A calibration is per scene, so the channel alone does not identify a row.
@@ -223,10 +223,10 @@ ORDER BY s.SceneId, se.Channel;
 -- 4. Checks
 -------------------------------------------------------------------------------
 
-SELECT 'scenes' AS Item, count(*) FROM Scene
-UNION ALL SELECT 'ego trips', count(*) FROM EgoTrip
-UNION ALL SELECT 'object trips', count(*) FROM ObjectTrip
-UNION ALL SELECT 'sensor mounts', count(*) FROM SensorMount;
+SELECT 'scenes' AS Item, COUNT(*) FROM Scene
+UNION ALL SELECT 'ego trips', COUNT(*) FROM EgoTrip
+UNION ALL SELECT 'object trips', COUNT(*) FROM ObjectTrip
+UNION ALL SELECT 'sensor mounts', COUNT(*) FROM SensorMount;
 
 -- A vehicle is normally longer than it is wide, so this counts the exceptions
 -- rather than demanding none. Reading size as [length, width, height] would
@@ -235,14 +235,14 @@ UNION ALL SELECT 'sensor mounts', count(*) FROM SensorMount;
 -- vehicle annotations, and all 19 are one detached box trailer measuring
 -- 2.166 by 1.787 -- which is really wider than it is long. A result in the
 -- thousands means the components were unpacked in the wrong order.
-SELECT count(*) FILTER (WHERE a.Width > a.Length) AS WiderThanLong,
-  count(*) AS VehicleAnnotations
+SELECT COUNT(*) FILTER (WHERE a.Width > a.Length) AS WiderThanLong,
+  COUNT(*) AS VehicleAnnotations
 FROM SampleAnnotation a JOIN Instance i USING (InstanceId)
   JOIN Category c ON c.CategoryId = i.CategoryId
 WHERE c.Name LIKE 'vehicle%';
 
 -- Every stored quaternion should have unit norm.
-SELECT count(*) AS NonUnitQuaternions
+SELECT COUNT(*) AS NonUnitQuaternions
 FROM SampleAnnotation
 WHERE abs(sqrt(QW * QW + QX * QX + QY * QY + QZ * QZ) - 1) > 1e-6;
 
@@ -268,8 +268,8 @@ WITH Diff(Category, D) AS (
   SELECT Category,
     abs(degrees(yaw(Trip)) - (90 - degrees(azimuth(tgeompoint(Trip)))))
   FROM ObjectTrip WHERE length(tgeompoint(Trip)) > 5 )
-SELECT count(*) AS MovingObjects,
-  count(*) FILTER (WHERE atSpanset(D, floatspanset '{(5, 355), (365, 720)}')
+SELECT COUNT(*) AS MovingObjects,
+  COUNT(*) FILTER (WHERE atSpanset(D, floatspanset '{(5, 355), (365, 720)}')
     IS NOT NULL) AS OrientationDiffersFromCourse
 FROM Diff;
 

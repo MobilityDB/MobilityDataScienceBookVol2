@@ -22,7 +22,7 @@ UPDATE Turbines SET Geom = ST_Transform(ST_Point(Lon, Lat, 4326), 25832);
 
 -- The location of the farm and its extent, as the figure of the chapter draws
 -- them: the centroid of the turbines, and their convex and concave hulls
-SELECT count(*) AS Turbines,
+SELECT COUNT(*) AS Turbines,
   round(ST_Area(ST_ConvexHull(ST_Collect(Geom))) / 1e6, 1) AS ConvexKm2,
   round(ST_Area(ST_ConcaveHull(ST_Collect(Geom), 0.3)) / 1e6, 1) AS ConcaveKm2
 FROM Turbines;

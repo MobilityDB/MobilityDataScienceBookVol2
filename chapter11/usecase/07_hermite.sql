@@ -50,11 +50,11 @@ FROM Steps;
 
 \echo The gaps in which the curve departs from the straight segment, and by how much (meters)
 WITH PerGap AS (
-  SELECT r.GapId, max(ST_Distance(r.Geom, ST_LineInterpolatePoint(ST_MakeLine(g.PStart, g.PEnd),
+  SELECT r.GapId, MAX(ST_Distance(r.Geom, ST_LineInterpolatePoint(ST_MakeLine(g.PStart, g.PEnd),
     extract(epoch FROM p.T - g.TStart) / extract(epoch FROM g.TEnd - g.TStart)))) AS Sep
   FROM Reconstructed r JOIN TripPoints p USING (GapId, PointIdx) JOIN Gaps g USING (GapId)
   WHERE r.Model = 'hermite' AND r.Task = 'gap'
   GROUP BY r.GapId )
-SELECT count(*) AS Gaps, count(*) FILTER (WHERE Sep > 0) AS Curved,
-  count(*) FILTER (WHERE Sep > 100) AS Over100, count(*) FILTER (WHERE Sep > 500) AS Over500
+SELECT COUNT(*) AS Gaps, COUNT(*) FILTER (WHERE Sep > 0) AS Curved,
+  COUNT(*) FILTER (WHERE Sep > 100) AS Over100, COUNT(*) FILTER (WHERE Sep > 500) AS Over500
 FROM PerGap;

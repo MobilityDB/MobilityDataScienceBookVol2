@@ -44,8 +44,8 @@ WHERE n.Realm <> 'Terrestrial' AND stbox(n.Geom) && stbox(v.Noise)
   AND eIntersects(n.Geom, v.Noise);
 -- SELECT 3936
 
-SELECT n.NameEng, count(DISTINCT e.MMSI) AS Vessels,
-  round((sum(extract(epoch FROM duration(e.Heard))) / 3600)::numeric, 1)
+SELECT n.NameEng, COUNT(DISTINCT e.MMSI) AS Vessels,
+  round((SUM(extract(epoch FROM duration(e.Heard))) / 3600)::numeric, 1)
     AS VesselHours
 FROM Exposure e JOIN NaturalAreas n ON n.Id = e.AreaId
 GROUP BY n.Id, n.NameEng
@@ -70,7 +70,7 @@ ORDER BY MinutesQuiet, n.NameEng LIMIT 3;
 -- Nordvestlige Kattegat | 0.0
 -- Schultz og Hastens Grund samt Briseis Flak | 0.0
 
-SELECT n.NameEng, count(DISTINCT e.MMSI) AS Vessels
+SELECT n.NameEng, COUNT(DISTINCT e.MMSI) AS Vessels
 FROM Exposure e JOIN Ships v USING (MMSI)
   JOIN NaturalAreas n ON n.Id = e.AreaId
 WHERE NOT eIntersects(v.Trip, n.Geom)

@@ -14,7 +14,7 @@ WITH k AS (
   WHERE eintersects(t.trip, m.MunicipalityGeo)
   GROUP BY m.MunicipalityName)
 (SELECT * FROM k ORDER BY km LIMIT 1) UNION ALL (SELECT * FROM k ORDER BY km DESC LIMIT 1);
-SELECT count(*) AS pairs FROM (
+SELECT COUNT(*) AS pairs FROM (
 SELECT DISTINCT t1.VehicleId, t1.TripId, t2.VehicleId, t2.TripId
 FROM (SELECT * FROM trips t1 ORDER BY TripId LIMIT 1000) t1,
   (SELECT * FROM trips t2 ORDER BY TripId LIMIT 1000) t2

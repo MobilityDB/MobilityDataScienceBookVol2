@@ -17,7 +17,7 @@ SELECT 'noise',
   geometry(valueAtTimestamp(v.Noise, p.T))
 FROM Exposure e JOIN Ships v USING (MMSI), Peak p
 WHERE e.AreaId = 122 AND e.Heard @> p.T;
-SELECT Name, count(*) FROM Layer GROUP BY Name ORDER BY Name;
+SELECT Name, COUNT(*) FROM Layer GROUP BY Name ORDER BY Name;
 \o :out/exposure_w.geojson
 SELECT json_build_object('type','FeatureCollection','features', json_agg(json_build_object(
   'type','Feature','properties', json_build_object('layer', Name),

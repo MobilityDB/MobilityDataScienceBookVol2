@@ -9,19 +9,19 @@
 --   DATA=<directory of data> duckdb < report_delay.sql
 SET memory_limit='4GB'; SET threads=4; SET temp_directory='duckdb_spill';
 CREATE TABLE rep AS
-SELECT icao24, lastposupdate AS lpu, min(time) AS first_t
+SELECT icao24, lastposupdate AS lpu, MIN(time) AS first_t
 FROM read_parquet(getenv('DATA') || '/flights/parquet/*/*.parquet', hive_partitioning=true)
 WHERE time % 10 = 0 AND squawk IS NOT NULL AND lat IS NOT NULL AND lon IS NOT NULL
   AND lastposupdate IS NOT NULL
 GROUP BY icao24, lastposupdate;
-SELECT 'reports' AS k, count(*) AS n, count(DISTINCT icao24) AS aircraft FROM rep;
-SELECT 'delay' AS k, quantile_cont(first_t - lpu, [0.5, 0.9, 0.99, 0.999]) AS q, max(first_t - lpu) AS mx,
-  count(*) FILTER (WHERE first_t - lpu > 10) AS gt10, count(*) FILTER (WHERE first_t - lpu > 20) AS gt20,
-  count(*) FILTER (WHERE first_t - lpu > 60) AS gt60, count(*) FILTER (WHERE first_t - lpu < 0) AS neg
+SELECT 'reports' AS k, COUNT(*) AS n, COUNT(DISTINCT icao24) AS aircraft FROM rep;
+SELECT 'delay' AS k, quantile_cont(first_t - lpu, [0.5, 0.9, 0.99, 0.999]) AS q, MAX(first_t - lpu) AS mx,
+  COUNT(*) FILTER (WHERE first_t - lpu > 10) AS gt10, COUNT(*) FILTER (WHERE first_t - lpu > 20) AS gt20,
+  COUNT(*) FILTER (WHERE first_t - lpu > 60) AS gt60, COUNT(*) FILTER (WHERE first_t - lpu < 0) AS neg
 FROM rep;
-SELECT 'outoforder' AS k, count(*) FILTER (WHERE lpu < prev) AS n FROM (
-  SELECT lpu, max(lpu) OVER (PARTITION BY icao24 ORDER BY first_t, lpu
+SELECT 'outoforder' AS k, COUNT(*) FILTER (WHERE lpu < prev) AS n FROM (
+  SELECT lpu, MAX(lpu) OVER (PARTITION BY icao24 ORDER BY first_t, lpu
     ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS prev FROM rep);
-SELECT 'lateness' AS k, count(*) FILTER (WHERE late > 10) AS gt10, count(*) FILTER (WHERE late > 30) AS gt30,
-  count(*) FILTER (WHERE late > 60) AS gt60, count(*) FILTER (WHERE late > 300) AS gt300, max(late) AS mx FROM (
-  SELECT max(lpu) OVER (ORDER BY first_t RANGE BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) - lpu AS late FROM rep);
+SELECT 'lateness' AS k, COUNT(*) FILTER (WHERE late > 10) AS gt10, COUNT(*) FILTER (WHERE late > 30) AS gt30,
+  COUNT(*) FILTER (WHERE late > 60) AS gt60, COUNT(*) FILTER (WHERE late > 300) AS gt300, MAX(late) AS mx FROM (
+  SELECT MAX(lpu) OVER (ORDER BY first_t RANGE BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) - lpu AS late FROM rep);

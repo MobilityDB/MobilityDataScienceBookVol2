@@ -28,7 +28,7 @@ LIMIT 3;
 -- 129 | N                           | 07:05:57.769052
 
 \echo == 1.3 vessels whose noise reaches area 14 while their trajectory does not enter it
-SELECT count(*) AS Vessels
+SELECT COUNT(*) AS Vessels
 FROM Ships v, NaturalAreas n
 WHERE n.Id = 14 AND v.Noise && stbox(n.Geom)
   AND eIntersects(n.Geom, v.Noise) AND NOT eIntersects(n.Geom, v.Trip);
@@ -93,7 +93,7 @@ WHERE MMSI = 220323000;
 -- 1923 | 187
 
 \echo == 4.2 vessels whose noise reaches the most marine and coastal protected areas
-SELECT e.MMSI, s.Name, s.ShipType, count(*) AS Areas
+SELECT e.MMSI, s.Name, s.ShipType, COUNT(*) AS Areas
 FROM Exposure e JOIN Vessels s USING (MMSI)
 GROUP BY e.MMSI, s.Name, s.ShipType
 ORDER BY Areas DESC, e.MMSI LIMIT 3;

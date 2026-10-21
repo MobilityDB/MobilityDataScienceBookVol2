@@ -20,7 +20,7 @@ WHERE NOT InGap AND abs(hashtext(format('%s/%s', GapId, PointIdx))) % 100 < 50;
 INSERT INTO EvalMasks
 SELECT GapId, PointIdx, 'prediction'
 FROM ( SELECT p.GapId, p.PointIdx,
-         count(*) OVER (PARTITION BY p.GapId) AS N,
+         COUNT(*) OVER (PARTITION BY p.GapId) AS N,
          row_number() OVER (PARTITION BY p.GapId
            ORDER BY p.PointIdx DESC) AS K
        FROM TripPoints p JOIN Gaps g USING (GapId)
@@ -73,5 +73,5 @@ FROM Tasks t JOIN WindowZone z USING (GapId)
   LEFT JOIN PointContext c ON c.GapId = t.GapId AND c.PointIdx = t.PointIdx
   LEFT JOIN PointEmbedding e ON e.GapId = t.GapId AND e.PointIdx = t.PointIdx;
 
-SELECT Task, count(*) AS Positions, count(DISTINCT GapId) AS Windows
+SELECT Task, COUNT(*) AS Positions, COUNT(DISTINCT GapId) AS Windows
 FROM EvalMasks GROUP BY Task ORDER BY Task;

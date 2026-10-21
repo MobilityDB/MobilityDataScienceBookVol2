@@ -67,9 +67,9 @@ FROM (
 ALTER TABLE TripPoints ADD PRIMARY KEY (GapId, PointIdx);
 ANALYZE Gaps, TripPoints;
 
-SELECT count(*) AS Gaps, count(DISTINCT MMSI) AS Vessels,
-  min(TEnd - TStart) AS Shortest, max(TEnd - TStart) AS Longest
+SELECT COUNT(*) AS Gaps, COUNT(DISTINCT MMSI) AS Vessels,
+  MIN(TEnd - TStart) AS Shortest, MAX(TEnd - TStart) AS Longest
 FROM Gaps;
-SELECT count(*) AS Positions, count(*) FILTER (WHERE InGap) AS InGap,
-  max(PointIdx) + 1 AS LongestWindow
+SELECT COUNT(*) AS Positions, COUNT(*) FILTER (WHERE InGap) AS InGap,
+  MAX(PointIdx) + 1 AS LongestWindow
 FROM TripPoints;

@@ -61,5 +61,5 @@ CREATE INDEX IF NOT EXISTS PortGeomGix ON Port USING GIST (Geom);
 CREATE INDEX IF NOT EXISTS NaturalAreasGeomGist ON NaturalAreas USING GIST (Geom);
 ANALYZE Port;
 ANALYZE NaturalAreas;
-SELECT count(*) AS ports FROM Port;
-SELECT Realm, count(*) FROM NaturalAreas GROUP BY Realm ORDER BY 2 DESC;
+SELECT COUNT(*) AS ports FROM Port;
+SELECT Realm, COUNT(*) FROM NaturalAreas GROUP BY Realm ORDER BY 2 DESC;

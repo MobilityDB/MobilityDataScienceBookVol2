@@ -25,11 +25,11 @@ SELECT s.MMSI, mergeAgg(rasterValue(atTime(s.Trip, w.ValidTime), w.Rast)
 FROM Ships s, WaveHeight w
 WHERE s.Trip && w.ValidTime AND ST_Intersects(w.Rast, trajectory(s.Trip))
 GROUP BY s.MMSI;
-SELECT count(*) AS Vessels,
-  count(*) FILTER (WHERE maxValue(WaveHeight) >= 1) AS Over1,
-  count(*) FILTER (WHERE maxValue(WaveHeight) >= 1.5) AS Over15,
-  count(*) FILTER (WHERE maxValue(WaveHeight) >= 2) AS Over2,
-  round(max(maxValue(WaveHeight))::numeric, 2) AS MaxHs
+SELECT COUNT(*) AS Vessels,
+  COUNT(*) FILTER (WHERE maxValue(WaveHeight) >= 1) AS Over1,
+  COUNT(*) FILTER (WHERE maxValue(WaveHeight) >= 1.5) AS Over15,
+  COUNT(*) FILTER (WHERE maxValue(WaveHeight) >= 2) AS Over2,
+  round(MAX(maxValue(WaveHeight))::numeric, 2) AS MaxHs
 FROM SeaState;
 /* MMSI      | MaxHs | Over2
    257243000 |  2.65 | 05:29:41
@@ -42,12 +42,12 @@ WHERE maxValue(WaveHeight) >= 2
 ORDER BY duration(whenTrue(WaveHeight #>= 2)) DESC
 LIMIT 3;
 \echo == the 29 vessels that met waves of at least 2 m: longitudes of their highest waves, and how many after 20:00 (3.2 | 7.3 | 24)
-SELECT count(*) AS Vessels,
-  round(min(ST_X(valueAtTimestamp(s.TripLonLat, startTimestamp(atMax(w.WaveHeight)))))::numeric, 1)
+SELECT COUNT(*) AS Vessels,
+  round(MIN(ST_X(valueAtTimestamp(s.TripLonLat, startTimestamp(atMax(w.WaveHeight)))))::numeric, 1)
     AS MinLon,
-  round(max(ST_X(valueAtTimestamp(s.TripLonLat, startTimestamp(atMax(w.WaveHeight)))))::numeric, 1)
+  round(MAX(ST_X(valueAtTimestamp(s.TripLonLat, startTimestamp(atMax(w.WaveHeight)))))::numeric, 1)
     AS MaxLon,
-  count(*) FILTER (WHERE startTimestamp(atMax(w.WaveHeight)) >= '2026-01-20 20:00+00')
+  COUNT(*) FILTER (WHERE startTimestamp(atMax(w.WaveHeight)) >= '2026-01-20 20:00+00')
     AS After20
 FROM SeaState w JOIN Ships s USING (MMSI)
 WHERE maxValue(w.WaveHeight) >= 2;
@@ -74,11 +74,11 @@ SELECT r.MMSI, s.ShipType,
   duration(whenTrue(r.WaveHeight #>= 1.5) * whenTrue(s.SOG #> 3)) AS TimeHigh,
   duration(whenTrue(r.WaveHeight #< 1.5) * whenTrue(s.SOG #> 3)) AS TimeLow
 FROM Rough r JOIN Speed s USING (MMSI);
-SELECT ShipType, count(*) AS Vessels,
-  round(avg(SogHigh)::numeric, 1) AS SogHigh,
-  round(avg(SogLow)::numeric, 1) AS SogLow,
-  count(*) FILTER (WHERE SogHigh < 0.9 * SogLow) AS Slower,
-  count(*) FILTER (WHERE SogHigh > 1.1 * SogLow) AS Faster
+SELECT ShipType, COUNT(*) AS Vessels,
+  round(AVG(SogHigh)::numeric, 1) AS SogHigh,
+  round(AVG(SogLow)::numeric, 1) AS SogLow,
+  COUNT(*) FILTER (WHERE SogHigh < 0.9 * SogLow) AS Slower,
+  COUNT(*) FILTER (WHERE SogHigh > 1.1 * SogLow) AS Faster
 FROM SpeedWaves
 WHERE TimeHigh >= interval '30 minutes' AND TimeLow >= interval '30 minutes'
 GROUP BY ROLLUP (ShipType)
@@ -91,14 +91,14 @@ CREATE TABLE WaveMax AS
 SELECT ST_Union(Rast, 'MAX') AS Rast
 FROM WaveHeight
 GROUP BY ST_UpperLeftX(Rast), ST_UpperLeftY(Rast);
-SELECT count(*) AS Vessels,
-  count(*) FILTER (WHERE maxValue(Hs) >= 1) AS Over1,
-  count(*) FILTER (WHERE maxValue(Hs) >= 1.5) AS Over15,
-  count(*) FILTER (WHERE maxValue(Hs) >= 2) AS Over2
+SELECT COUNT(*) AS Vessels,
+  COUNT(*) FILTER (WHERE maxValue(Hs) >= 1) AS Over1,
+  COUNT(*) FILTER (WHERE maxValue(Hs) >= 1.5) AS Over15,
+  COUNT(*) FILTER (WHERE maxValue(Hs) >= 2) AS Over2
 FROM (
   SELECT s.MMSI, mergeAgg(rasterValue(s.Trip, w.Rast)) AS Hs
   FROM Ships s, WaveMax w
   WHERE ST_Intersects(w.Rast, trajectory(s.Trip))
   GROUP BY s.MMSI ) t;
 \echo == tiles of the table WaveMax (48)
-SELECT count(*) AS Tiles FROM WaveMax;
+SELECT COUNT(*) AS Tiles FROM WaveMax;

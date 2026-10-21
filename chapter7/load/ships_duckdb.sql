@@ -22,4 +22,4 @@ SELECT COUNT(*) FROM ships;
 ALTER TABLE ships ADD column trajectory geometry;
 UPDATE ships set trajectory = trajectory(trip);
 CREATE INDEX rtree_trip ON Ships USING RTREE(trajectory);
-SELECT count(*), count(trajectory), sum(numInstants(Trip)) FROM ships;
+SELECT COUNT(*), COUNT(trajectory), SUM(numInstants(Trip)) FROM ships;

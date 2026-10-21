@@ -19,13 +19,13 @@
 -- Q1. The mean formed at the time of the query against the stored mean
 
 WITH stored AS (
-  SELECT TripId, CellId, avg(Pm25) AS pm FROM TripCells GROUP BY TripId, CellId ),
+  SELECT TripId, CellId, AVG(Pm25) AS pm FROM TripCells GROUP BY TripId, CellId ),
 formed AS (
   SELECT TripId, CellId, twAvg(Pm25) AS pm FROM TripTiles GROUP BY TripId, CellId, Pm25 )
-SELECT count(*) AS pairs,
-  round(avg(abs(stored.pm - formed.pm))::numeric, 4) AS mean_abs_diff,
-  round((avg(abs(stored.pm - formed.pm)) / avg(stored.pm) * 100)::numeric, 3) AS pct_of_mean,
-  round(max(abs(stored.pm - formed.pm))::numeric, 3) AS max_diff,
+SELECT COUNT(*) AS pairs,
+  round(AVG(abs(stored.pm - formed.pm))::numeric, 4) AS mean_abs_diff,
+  round((AVG(abs(stored.pm - formed.pm)) / AVG(stored.pm) * 100)::numeric, 3) AS pct_of_mean,
+  round(MAX(abs(stored.pm - formed.pm))::numeric, 3) AS max_diff,
   round(corr(stored.pm, formed.pm)::numeric, 6) AS correlation
 FROM stored JOIN formed USING (TripId, CellId);
 
@@ -43,11 +43,11 @@ FROM stored JOIN formed USING (TripId, CellId);
 
 -- Q2. What forming the mean at the time of the query costs
 
-SELECT CellId, avg(Pm25) FROM TripCells GROUP BY CellId;
+SELECT CellId, AVG(Pm25) FROM TripCells GROUP BY CellId;
 
 -- Time: 37.839 ms, 30.556 ms, 27.748 ms
 
-SELECT CellId, avg(twAvg(Pm25)) FROM TripTiles GROUP BY CellId;
+SELECT CellId, AVG(twAvg(Pm25)) FROM TripTiles GROUP BY CellId;
 
 -- Time: 877.442 ms, 727.294 ms, 685.296 ms
 
@@ -66,7 +66,7 @@ SELECT CellId, avg(twAvg(Pm25)) FROM TripTiles GROUP BY CellId;
 -- TripCells keeps Pm25 as one double precision per visit, so a query reaches
 -- the mean of the visit and nothing else of what was measured during it.
 
-SELECT CellId, round(max(maxValue(Pm25))::numeric, 1) AS peak_pm25
+SELECT CellId, round(MAX(maxValue(Pm25))::numeric, 1) AS peak_pm25
 FROM TripTiles GROUP BY CellId ORDER BY peak_pm25 DESC LIMIT 3;
 
 --  47  1672.0
@@ -95,13 +95,13 @@ FROM TripTiles GROUP BY CellId ORDER BY peak_pm25 DESC LIMIT 3;
 -- The span sets of TripTiles are unnested below, so that a visit is compared
 -- with a visit rather than with the whole of a trip in a cell.
 
-SELECT count(*) AS only_temporal
+SELECT COUNT(*) AS only_temporal
 FROM (SELECT TripId, CellId FROM TripTiles
       EXCEPT SELECT TripId, CellId FROM TripCells) a;
 
 -- 93
 
-SELECT count(*) AS only_aggregated
+SELECT COUNT(*) AS only_aggregated
 FROM (SELECT TripId, CellId FROM TripCells
       EXCEPT SELECT TripId, CellId FROM TripTiles) b;
 
@@ -111,25 +111,25 @@ FROM (SELECT TripId, CellId FROM TripCells
 -- cell between two observations. The cells of the aggregated model are a subset
 -- of those of the temporal one.
 
-SELECT 'aggregated' AS model, sum(EndTime - StartTime) AS total, count(*) AS visits
+SELECT 'aggregated' AS model, SUM(EndTime - StartTime) AS total, COUNT(*) AS visits
 FROM TripCells
 UNION ALL
-SELECT 'temporal', sum(upper(sp) - lower(sp)), count(*)
+SELECT 'temporal', SUM(upper(sp) - lower(sp)), COUNT(*)
 FROM (SELECT unnest(spans(AtTime)) AS sp FROM TripTiles) s;
 
 -- aggregated  5906:55:06  70881
 -- temporal    6008:52:33  71278
 
 WITH a AS (
-  SELECT TripId, CellId, sum(EndTime - StartTime) AS dur
+  SELECT TripId, CellId, SUM(EndTime - StartTime) AS dur
   FROM TripCells GROUP BY TripId, CellId ),
 t AS (
-  SELECT TripId, CellId, sum(upper(sp) - lower(sp)) AS dur
+  SELECT TripId, CellId, SUM(upper(sp) - lower(sp)) AS dur
   FROM (SELECT TripId, CellId, unnest(spans(AtTime)) AS sp FROM TripTiles) x
   GROUP BY TripId, CellId )
-SELECT count(*) FILTER (WHERE a.dur < t.dur) AS aggregated_shorter,
-  count(*) FILTER (WHERE a.dur = t.dur) AS equal,
-  count(*) FILTER (WHERE a.dur > t.dur) AS aggregated_longer
+SELECT COUNT(*) FILTER (WHERE a.dur < t.dur) AS aggregated_shorter,
+  COUNT(*) FILTER (WHERE a.dur = t.dur) AS equal,
+  COUNT(*) FILTER (WHERE a.dur > t.dur) AS aggregated_longer
 FROM a JOIN t USING (TripId, CellId);
 
 -- 28962  21726  0

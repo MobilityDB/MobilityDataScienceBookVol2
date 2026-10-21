@@ -25,7 +25,7 @@ FROM Ships a, Ships b,
   generate_series(timestamptz '2026-01-20 05:00+00', '2026-01-20 17:00+00', interval '30 minutes') t
 WHERE a.MMSI = 220323000 AND b.MMSI = 219000407
   AND atTime(a.Noise, t) IS NOT NULL AND atTime(b.Noise, t) IS NOT NULL;
-SELECT Name, count(*), string_agg(Id, ',' ORDER BY Id) FROM Layer GROUP BY Name ORDER BY Name;
+SELECT Name, COUNT(*), string_agg(Id, ',' ORDER BY Id) FROM Layer GROUP BY Name ORDER BY Name;
 \o :out/uwn_layers.geojson
 SELECT json_build_object('type','FeatureCollection','features', json_agg(json_build_object(
   'type','Feature','properties', json_build_object('layer', Name, 'id', Id),

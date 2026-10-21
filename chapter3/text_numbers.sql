@@ -20,7 +20,7 @@ SET TimeZone = 'UTC';
 -- period under way of the fishing vessel
 -------------------------------------------------------------------------------
 
-SELECT count(*) AS Ships, count(Noise) AS Noisy FROM Ships;
+SELECT COUNT(*) AS Ships, COUNT(Noise) AS Noisy FROM Ships;
 
 SELECT round((length(atTime(Trip, getTime(Noise))) / 1000)::numeric, 1) AS Km,
   startTimestamp(Noise), endTimestamp(Noise)
@@ -52,7 +52,7 @@ FROM Ships v, NaturalAreas n
 WHERE stbox(n.Geom) && stbox(v.Noise) AND eIntersects(n.Geom, v.Noise)
   AND NOT eIntersects(n.Geom, v.Trip);
 
-SELECT count(DISTINCT MMSI) AS Vessels, count(DISTINCT AreaId) AS Areas
+SELECT COUNT(DISTINCT MMSI) AS Vessels, COUNT(DISTINCT AreaId) AS Areas
 FROM ExposureAll;
 
 -------------------------------------------------------------------------------
@@ -61,12 +61,12 @@ FROM ExposureAll;
 -- vessels whose noise reaches an area their trajectories do not enter
 -------------------------------------------------------------------------------
 
-SELECT count(DISTINCT MMSI) AS VesselsHeard,
-  count(DISTINCT AreaId) AS AreasReached
+SELECT COUNT(DISTINCT MMSI) AS VesselsHeard,
+  COUNT(DISTINCT AreaId) AS AreasReached
 FROM Exposure;
-SELECT count(*) AS MarineCoastalAreas FROM NaturalAreas WHERE Realm <> 'Terrestrial';
+SELECT COUNT(*) AS MarineCoastalAreas FROM NaturalAreas WHERE Realm <> 'Terrestrial';
 
-SELECT count(DISTINCT e.MMSI) AS Vessels, count(DISTINCT e.AreaId) AS Areas
+SELECT COUNT(DISTINCT e.MMSI) AS Vessels, COUNT(DISTINCT e.AreaId) AS Areas
 FROM Exposure e JOIN Ships v USING (MMSI)
   JOIN NaturalAreas n ON n.Id = e.AreaId
 WHERE NOT eIntersects(v.Trip, n.Geom);
@@ -83,11 +83,11 @@ WITH Heard AS (
 Q AS (
   SELECT AreaId, 1440 - extract(epoch FROM duration(Heard)) / 60 AS MinutesQuiet
   FROM Heard )
-SELECT count(*) AS Areas,
-  count(*) FILTER (WHERE MinutesQuiet < 3) AS Below3,
-  count(*) FILTER (WHERE MinutesQuiet < 60) AS Below60,
-  count(*) FILTER (WHERE MinutesQuiet > 23 * 60) AS Above23h,
-  round(max(MinutesQuiet)::numeric, 1) AS MaxMinutesQuiet
+SELECT COUNT(*) AS Areas,
+  COUNT(*) FILTER (WHERE MinutesQuiet < 3) AS Below3,
+  COUNT(*) FILTER (WHERE MinutesQuiet < 60) AS Below60,
+  COUNT(*) FILTER (WHERE MinutesQuiet > 23 * 60) AS Above23h,
+  round(MAX(MinutesQuiet)::numeric, 1) AS MaxMinutesQuiet
 FROM Q;
 
 -------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ FROM Q;
 -- trajectories never come closer than 5 kilometers
 -------------------------------------------------------------------------------
 
-SELECT count(*) AS Pairs, count(*) FILTER (WHERE TripDist > 5000) AS Far
+SELECT COUNT(*) AS Pairs, COUNT(*) FILTER (WHERE TripDist > 5000) AS Far
 FROM Encounter;
 
 -------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ FROM Encounter;
 -- kilometers: how many pairs, and the median length of an encounter
 -------------------------------------------------------------------------------
 
-SELECT count(*) AS Pairs,
+SELECT COUNT(*) AS Pairs,
   round(percentile_cont(0.5) WITHIN GROUP
     (ORDER BY extract(epoch FROM duration(Overlap)) / 60)::numeric, 1) AS MedianMinutes
 FROM Encounter

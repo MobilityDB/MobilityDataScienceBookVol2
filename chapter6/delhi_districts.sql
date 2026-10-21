@@ -202,7 +202,7 @@ instant is a property of the movement, not of the observations, and it is not
 in the data: over the 7087619 observations of the 27114 trips, the number that
 lie on a district boundary is
 
-  SELECT count(*) FROM TripPoints p, Districts d
+  SELECT COUNT(*) FROM TripPoints p, Districts d
   WHERE ST_Intersects(d.Boundary, p.Geom);
   -- 0
 

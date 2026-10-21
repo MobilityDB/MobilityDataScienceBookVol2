@@ -99,7 +99,7 @@ END;
 $$ LANGUAGE plpgsql STRICT;
 
 /*
-select random_int(1,7), count(*)
+select random_int(1,7), COUNT(*)
 from generate_series(1, 1e3)
 group by 1
 order by 1
@@ -131,7 +131,7 @@ $$ LANGUAGE plpgsql STRICT;
 with data as (
   select random_binomial(100,0.5) AS r from generate_series(1,1e5) t
 )
-select min(r), max(r), avg(r)
+select MIN(r), MAX(r), AVG(r)
 from data;
 -- Successfully run. Total query runtime: 40 secs 876 msec.
 */
@@ -159,7 +159,7 @@ $$ LANGUAGE plpgsql STRICT;
 with data as (
   select random_exp(1) AS r from generate_series(1,1e5) t
 )
-select min(r), max(r), avg(r)
+select MIN(r), MAX(r), AVG(r)
 from data;
 -- Successfully run. Total query runtime: 6 min 18 secs.
 */
@@ -185,7 +185,7 @@ $$ LANGUAGE plpgsql STRICT;
 with data as (
   select t, random_gauss(100,15)::int score from generate_series(1,1000000) t
 )
-select score, sum(1), repeat('=',sum(1)::int/500) bar
+select score, SUM(1), repeat('=',SUM(1)::int/500) bar
 from data
 where score between 60 and 140
 group by score
@@ -236,7 +236,7 @@ select CreatePause()
 from generate_series(1, 1e5)
 order by 1
 )
-select min(t), max(t) from test
+select MIN(t), MAX(t) from test
 */
 
 -- Creates a random non-zero duration of length [2ms, N min - 4ms]
@@ -255,7 +255,7 @@ select CreatePauseN(1)
 from generate_series(1, 1e5)
 order by 1
 )
-select min(t), max(t) from test
+select MIN(t), MAX(t) from test
 */
 
 -- Creates a normally distributed duration within [-Rhours h, +Rhours h]
@@ -282,7 +282,7 @@ select CreateDurationRhoursNormal(12)
 from generate_series(1, 1e5)
 order by 1
 )
-select min(t), max(t) from test
+select MIN(t), MAX(t) from test
 */
 
 -------------------------------------------------------------------------------
@@ -739,7 +739,7 @@ with SampledHomeNodes(node) as (
 select berlinmod_selectHomeNode()
 from generate_series(1, 1e5)
 )
-select region, count(*)
+select region, COUNT(*)
 from SampledHomeNodes T, homenodes N
 where t.node = id
 group by region order by region;
@@ -774,7 +774,7 @@ with SampledWorkNodes(node) as (
 select berlinmod_selectWorkNode()
 from generate_series(1, 1e5)
 )
-select region, count(*)
+select region, COUNT(*)
 from SampledWorkNodes T, homenodes N
 where t.node = id
 group by region order by region;

@@ -9,20 +9,20 @@
 --   duckdb -unsigned hanoi.duckdb -c "LOAD spatial" -c "LOAD '<mobilityduck extension>'" \
 --     -c ".read load/hanoi_fingerprint.sql"
 
-SELECT 'trips', count(*), sum(numInstants(Trip)), md5(string_agg(
+SELECT 'trips', COUNT(*), SUM(numInstants(Trip)), md5(string_agg(
   CAST(TripId AS text) || ',' || CAST(VehicleId AS text) || ',' ||
   CAST(CAST(EXTRACT(EPOCH FROM startTimestamp(Trip)) * 1000000 AS bigint) AS text) || ',' ||
   CAST(CAST(EXTRACT(EPOCH FROM endTimestamp(Trip)) * 1000000 AS bigint) AS text) || ',' ||
   CAST(numInstants(Trip) AS text), ';' ORDER BY TripId))
 FROM Trips;
 
-SELECT 'municipalities', count(*), md5(string_agg(
+SELECT 'municipalities', COUNT(*), md5(string_agg(
   CAST(MunicipalityId AS text) || ',' ||
   CAST(CAST(round(ST_Area(MunicipalityGeo) * 1000) AS bigint) AS text), ';'
   ORDER BY MunicipalityId))
 FROM Municipalities;
 
-SELECT 'socson', count(*), round(CAST(sum(ST_Length(ST_Intersection(t.Trajectory,
+SELECT 'socson', COUNT(*), round(CAST(SUM(ST_Length(ST_Intersection(t.Trajectory,
   m.MunicipalityGeo))) / 1000 AS numeric), 3)
 FROM Trips t, Municipalities m
 WHERE m.MunicipalityName = 'Huyện Sóc Sơn' AND ST_Intersects(t.Trajectory, m.MunicipalityGeo);

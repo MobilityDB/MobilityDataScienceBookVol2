@@ -30,8 +30,8 @@ WITH SL AS (
 SELECT s.MMSI, tgeompoint(s.Noise) AS Trip, atTime(l.SL, getTime(s.Noise)) AS SL
 FROM Ships s JOIN SL l USING (MMSI)
 WHERE s.Noise IS NOT NULL;
-SELECT count(*) AS Noisy, round(min(minValue(SL))::numeric, 1) AS MinSL,
-  round(max(maxValue(SL))::numeric, 1) AS MaxSL
+SELECT COUNT(*) AS Noisy, round(MIN(minValue(SL))::numeric, 1) AS MinSL,
+  round(MAX(maxValue(SL))::numeric, 1) AS MaxSL
 FROM ShipNoise;
 \echo == the vessels with the smallest and the largest source level: type and length (Pleasure | 7 | 106.4, Pilot | 12 | 191.7)
 (SELECT v.ShipType, v.Length, round(minValue(s.SL)::numeric, 1) AS SL
@@ -150,19 +150,19 @@ WHERE x.Spherical && stbox(n.Geom) OR x.DepthAware && stbox(n.Geom)
   OR x.DepthWind && stbox(n.Geom);
 
 \echo == vessels, vessels over the bathymetry, and vessels for which the depth law applies at some instant (1499 | 972 | 944)
-SELECT count(*) AS Vessels, count(Depth) AS OverBathy,
-  count(*) FILTER (WHERE ((SL80 #> 20 * log10(10 * Depth)) & (Depth #>= 10)) ?= true) AS DepthMatters
+SELECT COUNT(*) AS Vessels, COUNT(Depth) AS OverBathy,
+  COUNT(*) FILTER (WHERE ((SL80 #> 20 * log10(10 * Depth)) & (Depth #>= 10)) ?= true) AS DepthMatters
 FROM (SELECT n.*, s.SL - 80 AS SL80 FROM NoiseModels n JOIN ShipNoise s USING (MMSI)) t;
 
 \echo == Table: pairs reached under the three models, the pairs and areas the depth adds, the pairs gained and lost with both fields, and the pairs reached with the depth that the wind loses (6628 | 6991 | 6984 | 363 | 146 | 358 | 2 | 7)
-SELECT count(*) FILTER (WHERE Spherical) AS Spherical,
-  count(*) FILTER (WHERE DepthAware) AS DepthAware,
-  count(*) FILTER (WHERE DepthWind) AS DepthWind,
-  count(*) FILTER (WHERE DepthAware AND NOT Spherical) AS DepthGained,
-  count(DISTINCT AreaId) FILTER (WHERE DepthAware AND NOT Spherical) AS DepthGainedAreas,
-  count(*) FILTER (WHERE DepthWind AND NOT Spherical) AS EnvGained,
-  count(*) FILTER (WHERE Spherical AND NOT DepthWind) AS EnvLost,
-  count(*) FILTER (WHERE DepthAware AND NOT DepthWind) AS WindLost
+SELECT COUNT(*) FILTER (WHERE Spherical) AS Spherical,
+  COUNT(*) FILTER (WHERE DepthAware) AS DepthAware,
+  COUNT(*) FILTER (WHERE DepthWind) AS DepthWind,
+  COUNT(*) FILTER (WHERE DepthAware AND NOT Spherical) AS DepthGained,
+  COUNT(DISTINCT AreaId) FILTER (WHERE DepthAware AND NOT Spherical) AS DepthGainedAreas,
+  COUNT(*) FILTER (WHERE DepthWind AND NOT Spherical) AS EnvGained,
+  COUNT(*) FILTER (WHERE Spherical AND NOT DepthWind) AS EnvLost,
+  COUNT(*) FILTER (WHERE DepthAware AND NOT DepthWind) AS WindLost
 FROM NoisePairs;
 
 \echo == the fishing vessel: type, length, period under way, sequences, km, source level, time over the bathymetry, depth (Fishing | 15 | 05:29:12 | 17:16:58 | 5 | 45.2 | 121.0 | 148.5 | 03:14:05.740078 | 0.3 | 60.7)
@@ -214,7 +214,7 @@ SELECT round((ST_SummaryStatsAgg(Rast, 1, true)).mean::numeric, 1) AS MeanWind,
 FROM WindSpeed;
 
 \echo == along the trips: highest wind and ambient noise, and vessels whose ambient noise exceeds 81 dB (14.1 | 82.6 | 181)
-SELECT round(max(maxValue(Wind))::numeric, 1) AS MaxWind,
-  round(max(maxValue(NL))::numeric, 1) AS MaxNL,
-  count(*) FILTER (WHERE maxValue(NL) > 81) AS Over81
+SELECT round(MAX(maxValue(Wind))::numeric, 1) AS MaxWind,
+  round(MAX(maxValue(NL))::numeric, 1) AS MaxNL,
+  COUNT(*) FILTER (WHERE maxValue(NL) > 81) AS Over81
 FROM WindNoise;

@@ -13,23 +13,23 @@ SET client_min_messages = warning;
 -- 103 | 31 | 7 | 6
 DROP TABLE IF EXISTS Draughts, Clearance;
 CREATE TABLE Draughts AS
-SELECT MMSI, max(Draught) AS Draught
+SELECT MMSI, MAX(Draught) AS Draught
 FROM AISClean
 GROUP BY MMSI
-HAVING max(Draught) >= 10;
+HAVING MAX(Draught) >= 10;
 CREATE TABLE Clearance AS
 SELECT s.MMSI, d.Draught,
   mergeAgg(rasterValue(s.Trip, b.Rast)) - d.Draught AS Clearance
 FROM Ships s JOIN Draughts d USING (MMSI), Bathymetry b
 WHERE ST_Intersects(b.Rast, trajectory(s.Trip))
 GROUP BY s.MMSI, d.Draught;
-SELECT count(*) AS Vessels,
-  count(*) FILTER (WHERE minValue(Clearance) < 5) AS Under5,
-  count(*) FILTER (WHERE minValue(Clearance) < 2) AS Under2,
-  count(*) FILTER (WHERE minValue(Clearance) < 0) AS Negative
+SELECT COUNT(*) AS Vessels,
+  COUNT(*) FILTER (WHERE minValue(Clearance) < 5) AS Under5,
+  COUNT(*) FILTER (WHERE minValue(Clearance) < 2) AS Under2,
+  COUNT(*) FILTER (WHERE minValue(Clearance) < 0) AS Negative
 FROM Clearance;
 \echo == vessels that reported a draught of at least 10 m (162)
-SELECT count(*) AS Vessels FROM Draughts;
+SELECT COUNT(*) AS Vessels FROM Draughts;
 
 \echo == the six negative clearances: in a port area at the minimum, and the speed from the positions (m/s)
 SELECT c.MMSI, round(minValue(c.Clearance)::numeric, 1) AS MinClear,
@@ -71,10 +71,10 @@ FROM ClearanceUnderway c JOIN Ships s USING (MMSI)
 ORDER BY minValue(c.Clearance)
 LIMIT 10;
 \echo == vessels under way over the bathymetry, and with less than 5, 2, and 0 m of clearance (99 | 29 | 2 | 0)
-SELECT count(*) AS Vessels,
-  count(*) FILTER (WHERE minValue(Clearance) < 5) AS Under5,
-  count(*) FILTER (WHERE minValue(Clearance) < 2) AS Under2,
-  count(*) FILTER (WHERE minValue(Clearance) < 0) AS Negative
+SELECT COUNT(*) AS Vessels,
+  COUNT(*) FILTER (WHERE minValue(Clearance) < 5) AS Under5,
+  COUNT(*) FILTER (WHERE minValue(Clearance) < 2) AS Under2,
+  COUNT(*) FILTER (WHERE minValue(Clearance) < 0) AS Negative
 FROM ClearanceUnderway;
 \echo == the vessel approaching Aarhus while its clearance is less than 2 m: km sailed and mean reported speed (7.2 | 4.8)
 SELECT round((length(atTime(u.Trip, whenTrue(c.Clearance #< 2))) / 1000)::numeric, 1) AS Km,

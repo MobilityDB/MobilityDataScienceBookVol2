@@ -9,7 +9,7 @@ SET TimeZone = 'UTC';
 SET client_min_messages = warning;
 
 \echo == tiles of the RaQuet file (3526)
-SELECT count(*) AS Tiles FROM BathymetryRaquet;
+SELECT COUNT(*) AS Tiles FROM BathymetryRaquet;
 
 \echo == Query: when did the vessel sail over water less than 20 m deep, according to the RaQuet tiles
 -- 60 | 00:11:04.256184 | 10

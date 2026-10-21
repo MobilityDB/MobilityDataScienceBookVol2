@@ -31,16 +31,16 @@ ORDER BY AvgTemp, s.MMSI
 LIMIT 3;
 
 \echo == 4. distinct vessels per QUADBIN tile of zoom 10 among the first 200 vessels
-SELECT u.value AS Tile, count(DISTINCT s.MMSI) AS Vessels
+SELECT u.value AS Tile, COUNT(DISTINCT s.MMSI) AS Vessels
 FROM Ships200 s, unnest(tquadbin(s.TripLonLat, 10)) AS u
 GROUP BY u.value
 ORDER BY Vessels DESC, Tile
 LIMIT 3;
 
 \echo == 5. cells of H3 resolution 7 crossed by exactly one of the first 200 vessels
-SELECT count(*) AS Cells, count(*) FILTER (WHERE Vessels = 1) AS OneVessel
+SELECT COUNT(*) AS Cells, COUNT(*) FILTER (WHERE Vessels = 1) AS OneVessel
 FROM (
-  SELECT u.value AS Cell, count(DISTINCT s.MMSI) AS Vessels
+  SELECT u.value AS Cell, COUNT(DISTINCT s.MMSI) AS Vessels
   FROM Ships200 s, unnest(th3index(s.TripLonLat, 7)) AS u
   GROUP BY u.value ) t;
 
@@ -55,7 +55,7 @@ FROM Seabed s, ST_ValueCount(ST_Reclass(ST_Clip(ST_MapAlgebra(
 ORDER BY v.value;
 \echo == 7. hours with the largest area of the sea with waves of at least 2 m
 SELECT to_char(lower(ValidTime), 'HH24:MI') AS Hour,
-  sum((ST_SummaryStats(ST_Reclass(Rast, 1, '[2-100]:1', '8BUI', 0))).count) AS Km2
+  SUM((ST_SummaryStats(ST_Reclass(Rast, 1, '[2-100]:1', '8BUI', 0))).count) AS Km2
 FROM WaveHeight
 GROUP BY lower(ValidTime)
 ORDER BY Km2 DESC

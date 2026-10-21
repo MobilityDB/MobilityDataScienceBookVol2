@@ -36,7 +36,7 @@ SELECT b.GapId, n.NameEng,
 FROM Bounds b JOIN GapPaths p USING (GapId), NaturalAreas n
 WHERE ST_DWithin(n.Geom, b.PStart, b.Reach);
 
-SELECT Possible, Reconstructed, count(*) AS Pairs, count(DISTINCT GapId) AS Gaps
+SELECT Possible, Reconstructed, COUNT(*) AS Pairs, COUNT(DISTINCT GapId) AS Gaps
 FROM GapAreas
 GROUP BY Possible, Reconstructed
 ORDER BY Possible, Reconstructed;

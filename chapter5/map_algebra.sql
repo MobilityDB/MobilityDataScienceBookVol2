@@ -102,12 +102,12 @@ SELECT b.rid, ST_MapAlgebra(b.Rast, 1,
    WHEN [rast2] >= 1 THEN 1 ELSE 0 END', '8BUI', 'FIRST') AS Rast
 FROM Bathymetry b, Waves w
 WHERE ST_Intersects(b.Rast, w.Rast);
-SELECT v.value AS Class, round(sum(v.count) * 0.0025, 1) AS Km2
+SELECT v.value AS Class, round(SUM(v.count) * 0.0025, 1) AS Km2
 FROM ShallowRough, ST_ValueCount(Rast) v
 GROUP BY v.value
 ORDER BY v.value;
 \echo == water less than 20 m deep in the whole model (31,346.5 km2)
-SELECT round(sum((ST_SummaryStats(ST_Reclass(Rast, 1, '[0-20):1', '8BUI', 0))).count)
+SELECT round(SUM((ST_SummaryStats(ST_Reclass(Rast, 1, '[0-20):1', '8BUI', 0))).count)
   * 0.0025, 1) AS Shallow20Km2
 FROM Bathymetry;
 
@@ -184,14 +184,14 @@ SELECT rid, ST_MapAlgebra(ARRAY[ROW(Nbr, 1)]::rastbandarg[],
   'ST_Min4ma(double precision[][][], integer[][], text[])'::regprocedure,
   '32BF', 'CUSTOM', Rast, 2, 2) AS Rast
 FROM Neighbors;
-SELECT count(*) AS Tiles FROM BathymetryMin100;
+SELECT COUNT(*) AS Tiles FROM BathymetryMin100;
 
 \echo == Listing: zonal operation with the zones of a raster
 /* Zone | Pixels | MeanDepth
    1    |      4 |      8.00
    2    |      6 |     11.50
    3    |      6 |     15.67 */
-SELECT z.val AS Zone, count(*) AS Pixels, round(avg(d.val)::numeric, 2) AS MeanDepth
+SELECT z.val AS Zone, COUNT(*) AS Pixels, round(AVG(d.val)::numeric, 2) AS MeanDepth
 FROM Depth r
   CROSS JOIN LATERAL ST_PixelAsPoints(ST_Reclass(r.Rast, 1,
     '[0-10):1, [10-14):2, [14-100]:3', '8BUI', 0)) z
@@ -239,7 +239,7 @@ ORDER BY MeanDepth;
    Waters around Læsø              |          1 | 884.6
    Waters around Læsø              |          2 |  96.8
    Waters around Læsø              |          3 |  12.6 */
-SELECT n.NameEng, v.value AS DepthClass, round(sum(v.count) * 0.0025, 1) AS Km2
+SELECT n.NameEng, v.value AS DepthClass, round(SUM(v.count) * 0.0025, 1) AS Km2
 FROM Bathymetry b, NaturalAreas n,
   ST_ValueCount(ST_Reclass(ST_Clip(b.Rast, n.Geom), 1,
     '[0-10):1, [10-20):2, [20-1000]:3', '8BUI', 0)) v
@@ -249,7 +249,7 @@ ORDER BY n.NameEng, v.value;
 
 \echo == Query: stretches of the path of the vessel over water less than 20 m deep
 -- 13 | 3287.0
-SELECT count(*) AS Stretches, round(sum(ST_Length(geom))::numeric, 1) AS Meters
+SELECT COUNT(*) AS Stretches, round(SUM(ST_Length(geom))::numeric, 1) AS Meters
 FROM (
   SELECT (ST_Dump(ST_LineMerge(ST_Union((gv).geom)))).geom
   FROM (

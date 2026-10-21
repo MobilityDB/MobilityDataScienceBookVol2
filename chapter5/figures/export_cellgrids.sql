@@ -54,8 +54,8 @@ SELECT f.Panel, c::text, cellToBoundary(c), cellArea(c)
 FROM Frame f, Track t, unnest(getValues(ts2cell(t.Trip, f.Res))) c WHERE f.Grid = 's2';
 
 -- Panel | cells of the grid drawn | cells crossed | mean area of a crossed cell
-SELECT f.Panel, (SELECT count(*) FROM Grid g WHERE g.Panel = f.Panel) AS GridCells,
-  count(c.*) AS Crossed, avg(c.Area) AS MeanArea
+SELECT f.Panel, (SELECT COUNT(*) FROM Grid g WHERE g.Panel = f.Panel) AS GridCells,
+  COUNT(c.*) AS Crossed, AVG(c.Area) AS MeanArea
 FROM Frame f LEFT JOIN Crossed c USING (Panel) GROUP BY f.Panel ORDER BY f.Panel;
 
 \o :out/cellgrids.geojson

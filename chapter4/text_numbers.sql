@@ -37,7 +37,7 @@ FROM Pairs p JOIN ShipsRigid s1 ON s1.MMSI = p.MMSI1
   JOIN ShipsRigid s2 ON s2.MMSI = p.MMSI2
 WHERE eDwithin(s1.Trip, s2.Trip, 100);
 
-SELECT count(*) AS Pairs FROM Close;
+SELECT COUNT(*) AS Pairs FROM Close;
 
 SELECT * FROM (
   SELECT c.MMSI1, v1.Name AS Name1, c.MMSI2, v2.Name AS Name2,
@@ -64,12 +64,12 @@ SELECT ST_Centroid(ST_Collect(Geom)) AS A, ST_ConvexHull(ST_Collect(Geom)) AS B,
   ST_ConcaveHull(ST_Collect(Geom), 0.3) AS C
 FROM Turbines;
 
-SELECT count(*) AS VesselsWithin10km
+SELECT COUNT(*) AS VesselsWithin10km
 FROM ShipsRigid, Farm WHERE eDwithin(tgeompoint(Trip), B, 10000);
 
-SELECT round(min(nearestApproachDistance(s.Trip, f.A))::numeric) AS HullToA,
-  round(min(nearestApproachDistance(s.Trip, f.B))::numeric) AS HullToB,
-  round(min(nearestApproachDistance(tgeompoint(s.Trip), f.C))::numeric) AS AntennaToC
+SELECT round(MIN(nearestApproachDistance(s.Trip, f.A))::numeric) AS HullToA,
+  round(MIN(nearestApproachDistance(s.Trip, f.B))::numeric) AS HullToB,
+  round(MIN(nearestApproachDistance(tgeompoint(s.Trip), f.C))::numeric) AS AntennaToC
 FROM ShipsRigid s, Farm f WHERE eDwithin(tgeompoint(s.Trip), f.B, 10000);
 
 -------------------------------------------------------------------------------

@@ -57,7 +57,7 @@ FROM AISClean
 GROUP BY MMSI;
 ALTER TABLE Ships ADD PRIMARY KEY (MMSI);
 
-SELECT count(*) AS Ships, count(SOG) AS WithSOG, count(COG) AS WithCOG,
-  count(Heading) AS WithHeading, count(ROT) AS WithROT,
-  sum(numSequences(Trip)) AS Pieces
+SELECT COUNT(*) AS Ships, COUNT(SOG) AS WithSOG, COUNT(COG) AS WithCOG,
+  COUNT(Heading) AS WithHeading, COUNT(ROT) AS WithROT,
+  SUM(numSequences(Trip)) AS Pieces
 FROM Ships;

@@ -5,11 +5,11 @@
 --
 --   duckdb -noheader -list -cmd "SET VARIABLE out = '<dir>'" -f fingerprint_duckdb.sql
 
-SELECT 'clean', count(*), md5(string_agg(
+SELECT 'clean', COUNT(*), md5(string_agg(
   mmsi || ',' || epoch_us(t) || ',' || seq::BIGINT, ';' ORDER BY mmsi, t))
 FROM read_parquet(getvariable('out') || '/clean/*.parquet');
 
-SELECT 'segments', count(*), md5(string_agg(
+SELECT 'segments', COUNT(*), md5(string_agg(
   mmsi || ',' || seq::BIGINT || ',' || segment_type || ',' || epoch_us(t0) || ','
   || epoch_us(t1) || ',' || npoints::BIGINT, ';' ORDER BY mmsi, t0, t1, segment_type))
 FROM read_parquet(getvariable('out') || '/segments/*.parquet');

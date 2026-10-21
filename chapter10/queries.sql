@@ -68,7 +68,7 @@ SELECT COUNT(DISTINCT MMSI) AS NoVessels FROM Strait;
 -- @region belt
 -- Query 4: The total distance traveled in the belt during the window, and how many distinct
 -- vessels and ship types were involved
-SELECT round(sum(length(Trip)) / 1000.0, 1) AS TotalKm,
+SELECT round(SUM(length(Trip)) / 1000.0, 1) AS TotalKm,
   COUNT(DISTINCT MMSI) AS NoVessels, COUNT(DISTINCT ship_type) AS NoTypes
 FROM Strait;
 

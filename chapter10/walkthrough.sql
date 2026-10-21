@@ -29,14 +29,14 @@ CREATE TEMP TABLE Win(T0, T1, D0, D1) AS VALUES
 -- The bounds of every file of a layout, from the statistics of its row groups: what the
 -- manifests of the catalog record for a file, and the footer of the file for a row group
 CREATE TEMP TABLE Files AS
-SELECT Layout, file_name AS File, count(DISTINCT row_group_id) AS RowGroups,
-  sum(row_group_num_rows) FILTER (WHERE path_in_schema = 'trip_xmin') AS NoRows,
-  min(TRY_CAST(stats_min AS DOUBLE)) FILTER (WHERE path_in_schema = 'trip_xmin') AS XMin,
-  max(TRY_CAST(stats_max AS DOUBLE)) FILTER (WHERE path_in_schema = 'trip_xmax') AS XMax,
-  min(TRY_CAST(stats_min AS DOUBLE)) FILTER (WHERE path_in_schema = 'trip_ymin') AS YMin,
-  max(TRY_CAST(stats_max AS DOUBLE)) FILTER (WHERE path_in_schema = 'trip_ymax') AS YMax,
-  min(TRY_CAST(stats_min AS TIMESTAMP)) FILTER (WHERE path_in_schema = 'trip_tmin') AS TMin,
-  max(TRY_CAST(stats_max AS TIMESTAMP)) FILTER (WHERE path_in_schema = 'trip_tmax') AS TMax
+SELECT Layout, file_name AS File, COUNT(DISTINCT row_group_id) AS RowGroups,
+  SUM(row_group_num_rows) FILTER (WHERE path_in_schema = 'trip_xmin') AS NoRows,
+  MIN(TRY_CAST(stats_min AS DOUBLE)) FILTER (WHERE path_in_schema = 'trip_xmin') AS XMin,
+  MAX(TRY_CAST(stats_max AS DOUBLE)) FILTER (WHERE path_in_schema = 'trip_xmax') AS XMax,
+  MIN(TRY_CAST(stats_min AS DOUBLE)) FILTER (WHERE path_in_schema = 'trip_ymin') AS YMin,
+  MAX(TRY_CAST(stats_max AS DOUBLE)) FILTER (WHERE path_in_schema = 'trip_ymax') AS YMax,
+  MIN(TRY_CAST(stats_min AS TIMESTAMP)) FILTER (WHERE path_in_schema = 'trip_tmin') AS TMin,
+  MAX(TRY_CAST(stats_max AS TIMESTAMP)) FILTER (WHERE path_in_schema = 'trip_tmax') AS TMax
 FROM (
   SELECT 'L3' AS Layout, * FROM parquet_metadata('${LAKEHOUSE_RUN}/layouts_daily/L3/day-*/**/*.parquet')
   UNION ALL
@@ -49,8 +49,8 @@ SELECT filename, size FROM read_blob('${LAKEHOUSE_RUN}/L0/year=*/month=*/day-*.p
 
 .print == Step 1: the files of each layout, those whose time bounds meet the window, and those
 .print == whose bounds also meet the box of each port
-SELECT f.Layout, count(*) AS NoFiles,
-  count(*) FILTER (WHERE f.TMin <= w.T1 AND f.TMax >= w.T0) AS InWindow
+SELECT f.Layout, COUNT(*) AS NoFiles,
+  COUNT(*) FILTER (WHERE f.TMin <= w.T1 AND f.TMax >= w.T0) AS InWindow
 FROM Files f, Win w GROUP BY f.Layout ORDER BY f.Layout;
 CREATE TEMP TABLE Kept AS
 SELECT f.Layout, p.Port, f.File, f.RowGroups, f.NoRows
@@ -61,7 +61,7 @@ SELECT k.Layout, k.Port, replace(k.File, '${LAKEHOUSE_RUN}/', '') AS FilePath,
   k.RowGroups, k.NoRows
 FROM Kept k ORDER BY k.Layout, k.Port, k.File;
 .print == The bytes of the files kept, as a share of the bytes of the layout
-SELECT k.Layout, k.Port, round(100.0 * sum(b.Bytes) / (SELECT sum(c.Bytes) FROM FileBytes c
+SELECT k.Layout, k.Port, round(100.0 * SUM(b.Bytes) / (SELECT SUM(c.Bytes) FROM FileBytes c
     WHERE (k.Layout = 'L3') = (c.File LIKE '%/layouts_daily/L3/%')), 2) AS PctBytes
 FROM Kept k JOIN FileBytes b USING (File) GROUP BY k.Layout, k.Port ORDER BY k.Layout, k.Port;
 
@@ -83,15 +83,15 @@ FROM Rows
 WHERE PassMBB AND atStbox(tgeompointFromEWKB(trip), stbox('SRID=25832;STBOX XT(((' ||
   XMin || ',' || YMin || '),(' || XMax || ',' || YMax ||
   ')),[2026-01-15 08:00:00+00,2026-01-16 08:00:00+00])')) IS NOT NULL;
-SELECT r.Layout, r.Port, count(*) AS RowsRead, count(*) FILTER (WHERE PassMBB) AS PassMBB,
-  (SELECT count(*) FROM Refined f WHERE f.Layout = r.Layout AND f.Port = r.Port) AS PassRefinement,
-  (SELECT count(DISTINCT MMSI) FROM Refined f WHERE f.Layout = r.Layout AND f.Port = r.Port)
+SELECT r.Layout, r.Port, COUNT(*) AS RowsRead, COUNT(*) FILTER (WHERE PassMBB) AS PassMBB,
+  (SELECT COUNT(*) FROM Refined f WHERE f.Layout = r.Layout AND f.Port = r.Port) AS PassRefinement,
+  (SELECT COUNT(DISTINCT MMSI) FROM Refined f WHERE f.Layout = r.Layout AND f.Port = r.Port)
     AS NoVessels,
-  (SELECT max(n) FROM (SELECT count(*) AS n FROM Refined f
+  (SELECT MAX(n) FROM (SELECT COUNT(*) AS n FROM Refined f
     WHERE f.Layout = r.Layout AND f.Port = r.Port GROUP BY MMSI)) AS MaxRowsOneVessel
 FROM Rows r GROUP BY r.Layout, r.Port ORDER BY r.Layout, r.Port;
 .print == The answer: the vessels found at both ports
-SELECT a.Layout, count(DISTINCT a.MMSI) AS NoBoth
+SELECT a.Layout, COUNT(DISTINCT a.MMSI) AS NoBoth
 FROM Refined a JOIN Refined b ON a.Layout = b.Layout AND a.MMSI = b.MMSI
 WHERE a.Port = 'Rodby' AND b.Port = 'Puttgarden'
 GROUP BY a.Layout ORDER BY a.Layout;

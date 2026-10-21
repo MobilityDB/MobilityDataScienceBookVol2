@@ -27,8 +27,8 @@ SELECT MMSI, Piece, T, Ts,
     SOG) AS V
 FROM (
   SELECT *,
-    avg(X) OVER Fw AS Xf, avg(Y) OVER Fw AS Yf, avg(Ts) OVER Fw AS Tf, max(Ts) OVER Fw AS TfMax,
-    avg(X) OVER Bw AS Xb, avg(Y) OVER Bw AS Yb, avg(Ts) OVER Bw AS Tb, min(Ts) OVER Bw AS TbMin
+    AVG(X) OVER Fw AS Xf, AVG(Y) OVER Fw AS Yf, AVG(Ts) OVER Fw AS Tf, MAX(Ts) OVER Fw AS TfMax,
+    AVG(X) OVER Bw AS Xb, AVG(Y) OVER Bw AS Yb, AVG(Ts) OVER Bw AS Tb, MIN(Ts) OVER Bw AS TbMin
   FROM (
     SELECT MMSI, Piece, T, EXTRACT(EPOCH FROM T)::float8 AS Ts, ST_X(Geom) AS X, ST_Y(Geom) AS Y,
       SOG
@@ -42,22 +42,22 @@ FROM (
 CREATE TEMP TABLE StopRun AS
 WITH Mk AS (
   SELECT *, CASE WHEN V <= 0.2 THEN true WHEN V >= 0.5 THEN false END AS Mark FROM Speed),
-G AS (SELECT *, count(Mark) OVER (PARTITION BY MMSI, Piece ORDER BY T) AS Grp FROM Mk),
+G AS (SELECT *, COUNT(Mark) OVER (PARTITION BY MMSI, Piece ORDER BY T) AS Grp FROM Mk),
 St AS (
   SELECT *, coalesce(first_value(Mark) OVER (PARTITION BY MMSI, Piece, Grp ORDER BY T), false)
     AS Still
   FROM G),
 I AS (
-  SELECT *, sum(CASE WHEN Still IS DISTINCT FROM PrevStill THEN 1 ELSE 0 END)
+  SELECT *, SUM(CASE WHEN Still IS DISTINCT FROM PrevStill THEN 1 ELSE 0 END)
     OVER (PARTITION BY MMSI, Piece ORDER BY T) AS Run
   FROM (SELECT *, lag(Still) OVER (PARTITION BY MMSI, Piece ORDER BY T) AS PrevStill FROM St) L)
-SELECT MMSI, Piece, min(T) AS TStart, max(T) AS TEnd, count(*) AS NoPoints
+SELECT MMSI, Piece, MIN(T) AS TStart, MAX(T) AS TEnd, COUNT(*) AS NoPoints
 FROM I WHERE Still GROUP BY MMSI, Piece, Run
-HAVING EXTRACT(EPOCH FROM max(T) - min(T)) >= 300;
+HAVING EXTRACT(EPOCH FROM MAX(T) - MIN(T)) >= 300;
 
 -- The time interval of every segment.
 CREATE TEMP TABLE SegInterval AS
-WITH P AS (SELECT MMSI, Piece, min(T) AS P0, max(T) AS P1 FROM AISClean GROUP BY MMSI, Piece),
+WITH P AS (SELECT MMSI, Piece, MIN(T) AS P0, MAX(T) AS P1 FROM AISClean GROUP BY MMSI, Piece),
 S AS (
   SELECT R.*, lag(TEnd) OVER W AS PrevEnd, lead(TStart) OVER W AS NextStart
   FROM StopRun R WINDOW W AS (PARTITION BY MMSI, Piece ORDER BY TStart))
@@ -75,7 +75,7 @@ FROM P WHERE NOT EXISTS (
 
 DROP TABLE IF EXISTS Segments CASCADE;
 CREATE TABLE Segments AS
-SELECT I.MMSI, I.Piece, I.SegmentType, I.T0 AS TStart, I.T1 AS TEnd, count(*) AS NoPoints,
+SELECT I.MMSI, I.Piece, I.SegmentType, I.T0 AS TStart, I.T1 AS TEnd, COUNT(*) AS NoPoints,
   mode() WITHIN GROUP (ORDER BY C.ShipType COLLATE "C") AS ShipType,
   tgeompointSeq(array_agg(tgeompoint(C.Geom, C.T) ORDER BY C.T)) AS Trip,
   tgeompointSeq(array_agg(tgeompoint(ST_Point(C.Longitude, C.Latitude, 4326), C.T) ORDER BY C.T))
@@ -86,5 +86,5 @@ GROUP BY I.MMSI, I.Piece, I.SegmentType, I.T0, I.T1;
 CREATE INDEX ON Segments (MMSI, TStart);
 ANALYZE Segments;
 
-SELECT SegmentType, count(*) AS Segments, count(DISTINCT MMSI) AS Vessels
+SELECT SegmentType, COUNT(*) AS Segments, COUNT(DISTINCT MMSI) AS Vessels
 FROM Segments GROUP BY SegmentType ORDER BY SegmentType;

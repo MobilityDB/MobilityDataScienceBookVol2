@@ -38,7 +38,7 @@ CREATE OR REPLACE TABLE Licences AS
 SELECT * FROM read_csv('${HANOI_DIR}/licences.csv', skip = 1, header = true, columns = {
   'LicenceId': 'INTEGER', 'Licence': 'VARCHAR', 'VehicleId': 'INTEGER'});
 CREATE OR REPLACE VIEW Licences1 AS SELECT * FROM Licences ORDER BY LicenceId LIMIT 10;
-SELECT (SELECT count(*) FROM Trips) AS trips, (SELECT count(*) FROM Municipalities) AS munis,
-  (SELECT count(*) FROM Points) AS points, (SELECT count(*) FROM Vehicles) AS vehicles,
-  (SELECT sum(numInstants(Trip)) FROM Trips) AS instants,
-  (SELECT round(sum(ST_Area(MunicipalityGeo))) FROM Municipalities) AS area;
+SELECT (SELECT COUNT(*) FROM Trips) AS trips, (SELECT COUNT(*) FROM Municipalities) AS munis,
+  (SELECT COUNT(*) FROM Points) AS points, (SELECT COUNT(*) FROM Vehicles) AS vehicles,
+  (SELECT SUM(numInstants(Trip)) FROM Trips) AS instants,
+  (SELECT round(SUM(ST_Area(MunicipalityGeo))) FROM Municipalities) AS area;

@@ -54,7 +54,7 @@ WITH t AS (
   SELECT tgeompoint '[SRID=4326;Point(10.56 57.43)@2025-01-01 08:00,
     SRID=4326;Point(10.70 57.47)@2025-01-01 08:30]' AS Trip )
 SELECT numValues(getValues(th3index(Trip, 8))) AS H3r8Crossed,
-  (SELECT count(DISTINCT latLngToCell(getValue(i), 8)) FROM unnest(instants(Trip)) i)
+  (SELECT COUNT(DISTINCT latLngToCell(getValue(i), 8)) FROM unnest(instants(Trip)) i)
     AS H3r8Positions,
   numValues(getValues(tquadbin(Trip, 13))) AS Quadbin13,
   numValues(getValues(ts2cell(Trip::tgeogpoint, 13))) AS S2Level13
@@ -78,9 +78,9 @@ UPDATE NaturalAreas SET GeomLonLat = ST_Transform(Geom, 4326);
 
 \echo == Listing: cells as a filter for the marine protected areas
 -- 550 | 60 | 119 | 0
-SELECT count(*) AS Pairs, count(*) FILTER (WHERE TripMeets) AS TripMeets,
-  count(*) FILTER (WHERE CellsMeet) AS CellsMeet,
-  count(*) FILTER (WHERE TripMeets AND NOT CellsMeet) AS TripOnly
+SELECT COUNT(*) AS Pairs, COUNT(*) FILTER (WHERE TripMeets) AS TripMeets,
+  COUNT(*) FILTER (WHERE CellsMeet) AS CellsMeet,
+  COUNT(*) FILTER (WHERE TripMeets AND NOT CellsMeet) AS TripOnly
 FROM (
   SELECT eIntersects(s.TripLonLat, n.GeomLonLat) AS TripMeets,
     eIntersects(th3index(s.TripLonLat, 7), n.GeomLonLat) AS CellsMeet
@@ -90,8 +90,8 @@ FROM (
 
 \echo == Listing: parents of the cells at a finer resolution against the cells at the coarser one
 -- 19 | 0
-SELECT count(*) FILTER (WHERE (getValues(th3index(TripLonLat, 7)) -
+SELECT COUNT(*) FILTER (WHERE (getValues(th3index(TripLonLat, 7)) -
     getValues(cellToParent(th3index(TripLonLat, 9), 7))) IS NOT NULL) AS H3Missed,
-  count(*) FILTER (WHERE getValues(tquadbin(TripLonLat, 13)) <>
+  COUNT(*) FILTER (WHERE getValues(tquadbin(TripLonLat, 13)) <>
     getValues(cellToParent(tquadbin(TripLonLat, 15), 13))) AS QuadbinDiffer
 FROM Ships200;

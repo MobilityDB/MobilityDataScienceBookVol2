@@ -63,7 +63,7 @@ SELECT ICAO24 FROM (
   SELECT ICAO24, NOT coalesce(pg_temp.reach(ST_Distance(lag(Geog) OVER W, Geog),
                                             Ts - lag(Ts) OVER W), true) AS Unreachable
   FROM Reports WINDOW W AS (PARTITION BY ICAO24 ORDER BY Rn)) S
-GROUP BY ICAO24 HAVING avg(Unreachable::int) <= 0.5;
+GROUP BY ICAO24 HAVING AVG(Unreachable::int) <= 0.5;
 
 -- The walk trusts its first report, so the seed is corroborated: the earliest of the first eleven
 -- reports of an aircraft that a majority of them can reach.
@@ -72,12 +72,12 @@ SELECT R.ICAO24, R.Rn, R.Ts, R.Geog FROM Reports R JOIN KeepAircraft USING (ICAO
 WHERE R.Rn <= 11;
 
 CREATE TEMP TABLE Seed AS
-SELECT ICAO24, coalesce(min(Rn) FILTER (WHERE Ok * 2 >= Others), 1) AS SeedRn
+SELECT ICAO24, coalesce(MIN(Rn) FILTER (WHERE Ok * 2 >= Others), 1) AS SeedRn
 FROM (
   SELECT a.ICAO24, a.Rn,
-    count(*) FILTER (WHERE b.Rn <> a.Rn AND b.Ts <> a.Ts
+    COUNT(*) FILTER (WHERE b.Rn <> a.Rn AND b.Ts <> a.Ts
       AND pg_temp.reach(ST_Distance(a.Geog, b.Geog), abs(b.Ts - a.Ts))) AS Ok,
-    count(*) - 1 AS Others
+    COUNT(*) - 1 AS Others
   FROM Head a JOIN Head b USING (ICAO24)
   GROUP BY a.ICAO24, a.Rn) A
 GROUP BY ICAO24;
@@ -87,7 +87,7 @@ GROUP BY ICAO24;
 -- where the track is rejoined.
 CREATE TEMP TABLE Fwd AS
 SELECT ICAO24, Rn, Ts, Geog,
-  sum(CASE WHEN NOT coalesce(pg_temp.reach(DPrev, DtPrev), true) THEN 1 ELSE 0 END)
+  SUM(CASE WHEN NOT coalesce(pg_temp.reach(DPrev, DtPrev), true) THEN 1 ELSE 0 END)
     OVER (PARTITION BY ICAO24 ORDER BY Rn) AS RunId
 FROM (
   SELECT R.ICAO24, R.Rn, R.Ts, R.Geog,

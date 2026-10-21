@@ -54,7 +54,7 @@ FROM Reconstructed r JOIN EvalMasks m USING (Task, GapId, PointIdx)
   JOIN TripPoints p USING (GapId, PointIdx);
 
 \echo The mean, median, and 90th percentile of the error of each model and task (meters)
-SELECT Model, Task, count(*) AS Positions, round(avg(Err)) AS MeanErr,
+SELECT Model, Task, COUNT(*) AS Positions, round(AVG(Err)) AS MeanErr,
   round(percentile_cont(0.5) WITHIN GROUP (ORDER BY Err)) AS MedianErr,
   round(percentile_cont(0.9) WITHIN GROUP (ORDER BY Err)) AS P90Err
 FROM Errors
@@ -63,13 +63,13 @@ ORDER BY Task, Model;
 
 \echo The model compared window by window with the model without context and with the baseline
 WITH PerWindow AS (
-  SELECT Model, Task, GapId, avg(Err) AS Err
+  SELECT Model, Task, GapId, AVG(Err) AS Err
   FROM Errors
   GROUP BY Model, Task, GapId )
-SELECT b.Model AS Versus, a.Task, count(*) AS Windows,
-  round(avg(a.Err - b.Err)) AS MeanDiff,
+SELECT b.Model AS Versus, a.Task, COUNT(*) AS Windows,
+  round(AVG(a.Err - b.Err)) AS MeanDiff,
   round(percentile_cont(0.5) WITHIN GROUP (ORDER BY a.Err - b.Err)) AS MedianDiff,
-  round(avg((a.Err < b.Err)::int), 3) AS ShareBetter
+  round(AVG((a.Err < b.Err)::int), 3) AS ShareBetter
 FROM PerWindow a JOIN PerWindow b USING (Task, GapId)
 WHERE a.Model = 'crossdomain' AND b.Model IN ('coordinates', 'linear')
 GROUP BY b.Model, a.Task
@@ -83,11 +83,11 @@ WITH Visible AS (
     SELECT 1 FROM EvalMasks m WHERE m.Task = 'recovery' AND
       m.GapId = p.GapId AND m.PointIdx = p.PointIdx ) ),
 Isolation AS (
-  SELECT m.GapId, m.PointIdx, min(abs(m.PointIdx - v.PointIdx)) AS Steps
+  SELECT m.GapId, m.PointIdx, MIN(abs(m.PointIdx - v.PointIdx)) AS Steps
   FROM EvalMasks m JOIN Visible v USING (GapId)
   WHERE m.Task = 'recovery'
   GROUP BY m.GapId, m.PointIdx )
-SELECT e.Model, i.Steps, count(*) AS Positions,
+SELECT e.Model, i.Steps, COUNT(*) AS Positions,
   round(percentile_cont(0.5) WITHIN GROUP (ORDER BY e.Err)) AS MedianErr
 FROM Errors e JOIN Isolation i USING (GapId, PointIdx)
 WHERE e.Task = 'recovery'

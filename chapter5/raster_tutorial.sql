@@ -6,7 +6,7 @@ SET TimeZone = 'UTC';
 SET client_min_messages = warning;
 
 \echo == tiles of the bathymetry and size of the table (886 tiles, 173 MB)
-SELECT count(*) AS Tiles,
+SELECT COUNT(*) AS Tiles,
   pg_size_pretty(pg_total_relation_size('bathymetry')) AS Size
 FROM Bathymetry;
 

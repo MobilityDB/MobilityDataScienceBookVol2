@@ -110,7 +110,7 @@ WITH Diff(Category, D) AS (
   SELECT Category, abs(degrees(yaw(Trip)) -
     (90 - degrees(azimuth(tgeompoint(Trip)))))
   FROM ObjectTrip WHERE length(tgeompoint(Trip)) > 5 )
-SELECT Category, count(*) AS Moving, count(*) FILTER (WHERE
+SELECT Category, COUNT(*) AS Moving, COUNT(*) FILTER (WHERE
   atSpanset(D, floatspanset '{(5,355),(365,720)}') IS NOT NULL) AS Differs
 FROM Diff GROUP BY Category ORDER BY Moving DESC;
 -- human.pedestrian.adult  144  112

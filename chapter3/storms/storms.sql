@@ -86,7 +86,7 @@ WHERE StormId IN (SELECT StormId FROM StormPoints);
 
 -- Every wind radii polygon is observed at an instant of the track of its
 -- storm, which the wind fields below rely on
-SELECT count(*) AS radii_without_observation
+SELECT COUNT(*) AS radii_without_observation
 FROM StormRadii r
 WHERE NOT EXISTS (
   SELECT 1 FROM StormPoints p WHERE p.StormId = r.StormId AND p.T = r.T );
@@ -162,8 +162,8 @@ UPDATE :tcbuffer SET Trav = traversedArea(Storm, true);
 -- Summary
 -- -----------------------------------------------------------------------------
 
-SELECT (SELECT count(*) FROM StormPoints) AS observations,
-  (SELECT count(*) FROM StormRadii) AS radii,
-  (SELECT count(DISTINCT StormId) FROM :tgeo) AS storms,
-  (SELECT count(*) FROM :tgeo) AS wind_fields,
-  (SELECT sum(numInstants(Storm)) FROM :tgeo) AS instants;
+SELECT (SELECT COUNT(*) FROM StormPoints) AS observations,
+  (SELECT COUNT(*) FROM StormRadii) AS radii,
+  (SELECT COUNT(DISTINCT StormId) FROM :tgeo) AS storms,
+  (SELECT COUNT(*) FROM :tgeo) AS wind_fields,
+  (SELECT SUM(numInstants(Storm)) FROM :tgeo) AS instants;

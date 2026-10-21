@@ -66,6 +66,6 @@ UPDATE Trips SET Trajectory = trajectory(Trip);
 CREATE INDEX ON Trips USING gist(Trip);
 CREATE INDEX ON Trips USING gist(Trajectory);
 ANALYZE;
-SELECT (SELECT count(*) FROM Trips) AS trips, (SELECT count(*) FROM Vehicles) AS vehicles,
-  (SELECT count(*) FROM Municipalities) AS municipalities, (SELECT count(*) FROM Points) AS points,
-  (SELECT min(startTimestamp(Trip)) FROM Trips) AS first, (SELECT max(endTimestamp(Trip)) FROM Trips) AS last;
+SELECT (SELECT COUNT(*) FROM Trips) AS trips, (SELECT COUNT(*) FROM Vehicles) AS vehicles,
+  (SELECT COUNT(*) FROM Municipalities) AS municipalities, (SELECT COUNT(*) FROM Points) AS points,
+  (SELECT MIN(startTimestamp(Trip)) FROM Trips) AS first, (SELECT MAX(endTimestamp(Trip)) FROM Trips) AS last;

@@ -65,7 +65,7 @@ SELECT MMSI FROM (
   SELECT MMSI, NOT coalesce(pg_temp.reach(ST_Distance(lag(Geom) OVER W, Geom),
                                           Ts - lag(Ts) OVER W), true) AS Unreachable
   FROM Kept WINDOW W AS (PARTITION BY MMSI ORDER BY Rn)) S
-GROUP BY MMSI HAVING avg(Unreachable::int) <= 0.5;
+GROUP BY MMSI HAVING AVG(Unreachable::int) <= 0.5;
 
 -- The walk trusts its first report, so the seed is corroborated: the earliest of the first eleven
 -- reports of a vessel that a majority of them can reach.
@@ -73,12 +73,12 @@ CREATE TEMP TABLE Head AS
 SELECT K.MMSI, K.Rn, K.Ts, K.Geom FROM Kept K JOIN KeepVessel USING (MMSI) WHERE K.Rn <= 11;
 
 CREATE TEMP TABLE Seed AS
-SELECT MMSI, coalesce(min(Rn) FILTER (WHERE Ok * 2 >= Others), 1) AS SeedRn
+SELECT MMSI, coalesce(MIN(Rn) FILTER (WHERE Ok * 2 >= Others), 1) AS SeedRn
 FROM (
   SELECT a.MMSI, a.Rn,
-    count(*) FILTER (WHERE b.Rn <> a.Rn AND b.Ts <> a.Ts
+    COUNT(*) FILTER (WHERE b.Rn <> a.Rn AND b.Ts <> a.Ts
       AND pg_temp.reach(ST_Distance(a.Geom, b.Geom), abs(b.Ts - a.Ts))) AS Ok,
-    count(*) - 1 AS Others
+    COUNT(*) - 1 AS Others
   FROM Head a JOIN Head b USING (MMSI)
   GROUP BY a.MMSI, a.Rn) A
 GROUP BY MMSI;
@@ -88,7 +88,7 @@ GROUP BY MMSI;
 -- where the track is rejoined.
 CREATE TEMP TABLE Fwd AS
 SELECT MMSI, Rn, Ts, Geom,
-  sum(CASE WHEN NOT coalesce(pg_temp.reach(DPrev, DtPrev), true) THEN 1 ELSE 0 END)
+  SUM(CASE WHEN NOT coalesce(pg_temp.reach(DPrev, DtPrev), true) THEN 1 ELSE 0 END)
     OVER (PARTITION BY MMSI ORDER BY Rn) AS RunId
 FROM (
   SELECT K.MMSI, K.Rn, K.Ts, K.Geom,
@@ -149,7 +149,7 @@ CREATE TABLE AISClean AS
 SELECT T, TypeOfMobile, MMSI, Latitude, Longitude, NavigationalStatus, ROT, SOG, COG, Heading,
   IMO, CallSign, Name, ShipType, CargoType, Width, Length, TypeOfPositionFixingDevice, Draught,
   Destination, ETA, DataSourceType, SizeA, SizeB, SizeC, SizeD, Geom,
-  sum(CASE WHEN Ts - LagTs > 600 THEN 1 ELSE 0 END)
+  SUM(CASE WHEN Ts - LagTs > 600 THEN 1 ELSE 0 END)
     OVER (PARTITION BY MMSI ORDER BY T)::integer AS Piece
 FROM (
   SELECT K.*, lag(K.Ts) OVER (PARTITION BY K.MMSI ORDER BY K.T) AS LagTs
@@ -163,8 +163,8 @@ CREATE INDEX ON AISClean (MMSI, T);
 ANALYZE AISClean;
 
 -- What each rule kept.
-SELECT 'raw reports' AS Step, count(*) AS N FROM AISInput WHERE T >= :'lo' AND T < :'hi'
-UNION ALL SELECT 'checked reports', count(*) FROM Kept
-UNION ALL SELECT 'clean reports', count(*) FROM AISClean
-UNION ALL SELECT 'vessels', count(DISTINCT MMSI) FROM AISClean
-UNION ALL SELECT 'pieces', count(*) FROM (SELECT DISTINCT MMSI, Piece FROM AISClean) P;
+SELECT 'raw reports' AS Step, COUNT(*) AS N FROM AISInput WHERE T >= :'lo' AND T < :'hi'
+UNION ALL SELECT 'checked reports', COUNT(*) FROM Kept
+UNION ALL SELECT 'clean reports', COUNT(*) FROM AISClean
+UNION ALL SELECT 'vessels', COUNT(DISTINCT MMSI) FROM AISClean
+UNION ALL SELECT 'pieces', COUNT(*) FROM (SELECT DISTINCT MMSI, Piece FROM AISClean) P;

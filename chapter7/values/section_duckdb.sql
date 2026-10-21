@@ -34,7 +34,7 @@ WHERE IsMoving = TRUE
 GROUP BY IsMoving, Month
 HAVING AvRot > 5;
 .print == groupbyall
-SELECT count(*) FROM (
+SELECT COUNT(*) FROM (
 SELECT MMSI, date_trunc('day', T) AS Day, round(SUM(SOG) / 24, 2) AS TotalSogPerDay,
   round(AVG(COG), 2) AS AvgCogPerDay
 FROM AISInput
@@ -47,20 +47,20 @@ FROM (
   WHERE MMSI = 258656000)
 PIVOT (AVG(SOG) FOR ShipType IN ('Cargo', 'Tanker', 'Passenger', 'Fishing') )
 ORDER BY day;
-SELECT Name, ShipType, count(*), count(DISTINCT Geom::VARCHAR) FROM AISInput WHERE MMSI = 258656000 GROUP BY ALL;
+SELECT Name, ShipType, COUNT(*), COUNT(DISTINCT Geom::VARCHAR) FROM AISInput WHERE MMSI = 258656000 GROUP BY ALL;
 .print == pivot2
 SELECT *
 FROM (
   SELECT MMSI, IF(hour(T) < 12, 'AM', 'PM') AS HalfDay, SOG
   FROM AISInput )
 PIVOT (
-  round(sum(SOG)) AS total,
-  max(SOG) AS bestSOG
+  round(SUM(SOG)) AS total,
+  MAX(SOG) AS bestSOG
   FOR HalfDay IN ('AM', 'PM')
 )
 ORDER BY MMSI
 LIMIT 4;
-SELECT MMSI, TypeOfMobile, count(*) FROM AISInput WHERE MMSI IN (3638, 261505, 2190045) GROUP BY ALL ORDER BY ALL;
+SELECT MMSI, TypeOfMobile, COUNT(*) FROM AISInput WHERE MMSI IN (3638, 261505, 2190045) GROUP BY ALL ORDER BY ALL;
 .print == files
 SELECT filename, COUNT(*)
 FROM read_csv_auto('${AIS_DIR}/*.csv', filename=true)
@@ -86,4 +86,4 @@ TO '${AIS_DIR}/ais.parquet'
 (FORMAT PARQUET, CODEC 'SNAPPY', ROW_GROUP_SIZE 100000);
 RESET memory_limit;
 .print == parquetquery
-SELECT count(*) FROM (SELECT MMSI, COUNT(*) FROM '${AIS_DIR}/ais.parquet' GROUP BY ALL);
+SELECT COUNT(*) FROM (SELECT MMSI, COUNT(*) FROM '${AIS_DIR}/ais.parquet' GROUP BY ALL);
