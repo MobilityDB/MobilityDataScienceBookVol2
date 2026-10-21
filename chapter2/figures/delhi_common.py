@@ -19,4 +19,4 @@ def select_by_positions(tc, positions):
 selected_positions = [1, 5, 8, 10]
 my_trajs = select_by_positions(tc, selected_positions)
 my_traj = tc.trajectories[1]
-my_traj_split = mpd.ObservationGapSplitter(my_traj).split(gap=timedelta(minutes=20))
+my_traj_split = mpd.ObservationGapSplitter(my_traj).split(gap=timedelta(minutes=30))

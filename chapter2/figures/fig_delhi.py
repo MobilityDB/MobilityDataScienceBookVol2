@@ -88,6 +88,27 @@ def delhitraj_places():
     return [tuple(pl) for pl in places]
 
 
+def split_part(i):
+    """Fig. 2.4: the part i of the split trajectory in its colour, over the whole trajectory in
+    light gray, the map fitted to the part."""
+    part = my_traj_split.trajectories[i]
+    m = my_traj.explore(tiles=None, color="lightgray", style_kwds={"weight": 3})
+    part.explore(m=m, color=["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"][i],
+                 style_kwds={"weight": 4})
+    w, s, e, n = part.get_bbox()
+    m.fit_bounds([[s, w], [n, e]])
+    VectorTiles("liberty-city").add_to(m)
+    return m
+
+
+def part_bounds(i, margin=0.04):
+    """The (south, west, north, east) of the part i of the split trajectory, with a margin of its
+    extent: the ground of the maps of that part."""
+    w, s, e, n = my_traj_split.trajectories[i].get_bbox()
+    dx, dy = (e - w) * margin, (n - s) * margin
+    return (s - dy, w - dx, n + dy, e + dx)
+
+
 def speed_map(traj):
     traj.add_speed(overwrite=True)
     m = traj.to_line_gdf().explore(tiles=None, style_kwds={"weight": 4},
@@ -97,7 +118,7 @@ def speed_map(traj):
 
 
 def generalization(which):
-    """Fig. 2.4: the second part of the split trajectory, and its DP and TDTR generalizations."""
+    """Fig. 2.5: the second part of the split trajectory, and its DP and TDTR generalizations."""
     original_traj = my_traj_split.trajectories[1]
     if which == "a":
         return speed_map(original_traj)
@@ -255,14 +276,17 @@ FIGS = {
     # Fig. 2.3: the whole trajectory, its splits and its speeds
     'mpandas2-delhitraj': (delhitraj, 1000, 1060, 143.9926,
                            ('bounds', 28.4834, 77.1133, 28.6753, 77.3154), CTRL),
-    # Fig. 2.4: three maps of one shape over the ground of the second part of the trajectory
-    **{f'mpandas2-generalization_{p}': (lambda p=p: generalization(p), 1706, 800, 143.9926,
-                                        ('bounds', 28.5371, 77.1952, 28.5720, 77.2849), CTRL)
+    # Fig. 2.4: four square maps, each fitted to its part
+    **{f'mpandas2-splits_{p}': (lambda i=i: split_part(i), 1000, 1000, 143.9926,
+                                ('bounds',) + part_bounds(i), CTRL)
+       for i, p in enumerate('abcd')},
+    # Fig. 2.5: three maps of one shape over the ground of the second part of the trajectory
+    **{f'mpandas2-generalization_{p}': (lambda p=p: generalization(p), 1706, 900, 143.9926,
+                                        ('bounds',) + part_bounds(1), CTRL)
        for p in 'abc'},
-    'mpandas2-stops': (stops, 574, 478, 143.9926, ('bounds', 28.530, 77.166, 28.6205, 77.290),
-                       CTRL),
-    'mpandas2-segments': (segments, 572, 474, 143.9926,
-                          ('bounds', 28.530, 77.166, 28.6205, 77.290), CTRL),
+    # Fig. 2.6: the stops and the segments of the third part, side by side over its ground
+    'mpandas2-stops': (stops, 574, 620, 143.9926, ('bounds',) + part_bounds(2), CTRL),
+    'mpandas2-segments': (segments, 574, 620, 143.9926, ('bounds',) + part_bounds(2), CTRL),
     'mpandas2-stops-collect': (stops_collect, 892, 636, 143.9926,
                                ('bounds', 28.4847, 77.1314, 28.6787, 77.4114), CTRL),
     'mpandas2-stops-agg': (stops_agg, 556, 620, 143.9926,
@@ -279,8 +303,8 @@ FIGS = {
 
 # name -> overlay of the text the map image does not carry: ('legend', anchor) for the categorical
 # legend of explore(), ('colorbar', title, width in cm[, anchor]) for its colour bar; and the
-# \\includegraphics options of the figure in the chapter. Figs. 2.1, 2.2, 2.3 and 2.6 place their legend
-# in the bottom left corner, which no trip crosses, in the 8 pt the colour bar of Fig. 2.4 is set in
+# \\includegraphics options of the figure in the chapter. Figs. 2.1, 2.2, 2.3 and 2.7 place their legend
+# in the bottom left corner, which no trip crosses, in the 8 pt the colour bar of Fig. 2.5 is set in
 # (FS of fig_charts_print.py).
 OVERLAY = {
     'mpandas2-delhitrips': (('legend', 'south west'), 'width=0.8\\textwidth'),
@@ -298,10 +322,11 @@ PRINTED = {
     'mpandas2-delhispeeds': ('width', 0.8 * TEXTWIDTH_MM),
     'mpandas2-delhitraj': ('width', 0.8 * TEXTWIDTH_MM),
     **{f'mpandas2-generalization_{p}': ('width', 0.8 * TEXTWIDTH_MM) for p in 'abc'},
+    **{f'mpandas2-splits_{p}': ('width', 0.48 * TEXTWIDTH_MM) for p in 'abcd'},
     'mpandas2-stops': ('width', 0.42 * TEXTWIDTH_MM), 'mpandas2-segments': ('width', 0.42 * TEXTWIDTH_MM),
     'mpandas2-stops-collect': ('width', 0.8 * TEXTWIDTH_MM),
     'mpandas2-stops-agg': ('width', 0.6 * TEXTWIDTH_MM),
-    # Fig. 2.8: the two maps side by side over the width of the text, one shape, one ground
+    # Fig. 2.9: the two maps side by side over the width of the text, one shape, one ground
     'mpandas2-smooth_a': ('width', 0.48 * TEXTWIDTH_MM), 'mpandas2-smooth_b': ('width', 0.48 * TEXTWIDTH_MM),
     'mpandas2-smooth-speed_a': ('height', 74), 'mpandas2-smooth-speed_b': ('height', 74),
 }

@@ -29,13 +29,13 @@ D = DATA
 
 
 # The size at which the book prints each panel (\includegraphics of chapter2.tex), whether it is a
-# map, and the width of its lines: two panels side by side 6 cm high (5.6 cm for Figs. 2.28 and
+# map, and the width of its lines: two panels side by side 6 cm high (5.6 cm for Figs. 2.29 and
 # 2.31), the three simplifications 0.3 of the text width, the first five trips 0.8 of it
 H6, H56, PAIR = 6 * CM, 5.6 * CM, 0.44 * TEXTWIDTH
 BMOD2_B = (653, 678)  # the size of the map pymeosbmod2_b of fig_pymeosbmod2_b.py, in CSS px
 PANELS = {
     'pymeosbmod2_a': (H56 * BMOD2_B[0] / BMOD2_B[1], H56, True, 0.3),
-    # Fig. 2.29 at the size of the map pymeosbmod2_a of Fig. 2.28, over the same ground
+    # Fig. 2.30 at the size of the map pymeosbmod2_a of Fig. 2.29, over the same ground
     'pymeosbmod3_a': (H56 * BMOD2_B[0] / BMOD2_B[1], H56, True, 0.4),
     'pymeosbmod3_b': (H56 * BMOD2_B[0] / BMOD2_B[1], H56, True, 0.4),
     'pymeossimplifications_a': (0.3 * TEXTWIDTH, 0.345 * TEXTWIDTH, True, 0.25),
@@ -50,7 +50,7 @@ PANELS = {
 }
 
 
-# The extent aggregations (Figs. 2.33 and 2.34) and the tiles of Fig. 2.38: the map without a frame
+# The extent aggregations (Figs. 2.34 and 2.35) and the tiles of Fig. 2.39: the map without a frame
 # or margin, so that the blue rectangle of the spatial extent, or the grid of the tiles, is its only box, and the chart with room on both sides of the two red lines
 # of the temporal extent; each panel names its lines in a legend under it
 FRAMELESS = {'pymeosbmod9_a', 'pymeosbmod5_a', 'pymeosbmod7_a'}
@@ -140,7 +140,7 @@ for traj in brussels_inout_trajectories["outside"].dropna():
         TemporalPointSequencePlotter.plot_xy(traj, axes=axes[1], show_markers=False, show_grid=False)
     else:
         TemporalPointSequenceSetPlotter.plot_xy(traj, axes=axes[1], show_markers=False, show_grid=False)
-# the extent of Fig. 2.28, so that the three maps show the same ground
+# the extent of Fig. 2.29, so that the three maps show the same ground
 for ax in axes:
     ax.set_xlim(bounds[0], bounds[2]); ax.set_ylim(bounds[1], bounds[3])
 save_panels(fig, axes, ['pymeosbmod3_a', 'pymeosbmod3_b'])
