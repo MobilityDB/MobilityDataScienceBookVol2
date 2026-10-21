@@ -70,9 +70,10 @@ DejaVu Sans at 6.67 points, the size whose x-height is that of the captions.
    `pymeosais2_a/b`.
 5. Advanced PyMEOS functionality, on BerlinMOD: `bmod_listings.py` runs the listings of the section on
    `trips.csv`, prints the values the chapter shows and draws the plots `pymeosbmod*` and
-   `pymeossimplifications*`; then `fig_bmod_outputs.py` renders the printed outputs
+   `pymeossimplifications_*`; then `fig_bmod_outputs.py` renders the printed outputs
    `pymeosbmod10` and `pymeosbmod12_a/b`, `fig_pymeosbmod2_b.py` draws the map `pymeosbmod2_b`,
-   and `fig_pymeosbmod6.py` draws the maps `pymeosbmod6_a/b`.
+   `fig_pymeosbmod6.py` draws the maps `pymeosbmod6_a/b`, and `fig_pymeossimplifications_first.py`
+   the maps `pymeossimplifications-first_a/b`.
    `bmod_listings.py` runs with `pymeos==1.1.3 pymeos_cffi==1.1.3`: the MEOS library of
    `pymeos_cffi` 1.2.0 answers `STBox.tile` with tiles that have no space dimension
    (`STBOX T((null))`), so that `TGeomPoint.tile` of the tiling listings raises "The box must
