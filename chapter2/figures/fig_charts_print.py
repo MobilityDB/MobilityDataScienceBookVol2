@@ -23,18 +23,19 @@ matplotlib.rcParams.update({
     "xtick.major.size": 2, "ytick.major.size": 2,
     "xtick.major.pad": 1.5, "ytick.major.pad": 1.5,
 })
-NORM = Normalize(vmin=0, vmax=20)  # the vmax of the printed statements; one scale for all panels
+NORM = Normalize(vmin=0, vmax=15)  # the vmax of speed_map of fig_delhi.py; one scale for all panels
 CMAP = "viridis"                   # the default colour map of explore() for a numeric column
 
 
 def colorbar(fig, cax):
     cb = fig.colorbar(ScalarMappable(norm=NORM, cmap=CMAP), cax=cax, orientation="horizontal")
+    cb.set_ticks(range(0, 16, 5))
     cb.set_label("Speed (m/s)", labelpad=1)
     cb.outline.set_linewidth(0.4)
     cb.ax.tick_params(width=0.4, length=2)
 
 
-# The scale 0-20 m/s of the maps of Fig. 2.4, which explore() draws with vmin=0 and vmax=20
+# The scale 0-15 m/s of the maps of Fig. 2.4, which explore() draws with vmin=0 and vmax=15
 fig = plt.figure(figsize=(0.6 * TEXTWIDTH, 0.42))
 colorbar(fig, fig.add_axes([0.03, 0.62, 0.94, 0.3]))
 # Cropped to its drawn content, so that the page holds the descenders of the label

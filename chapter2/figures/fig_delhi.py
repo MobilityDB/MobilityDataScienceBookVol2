@@ -91,7 +91,7 @@ def delhitraj_places():
 def speed_map(traj):
     traj.add_speed(overwrite=True)
     m = traj.to_line_gdf().explore(tiles=None, style_kwds={"weight": 4},
-                                   column="speed", vmin=0, vmax=20, legend=False)
+                                   column="speed", vmin=0, vmax=15, legend=False)
     VectorTiles("liberty-city").add_to(m)
     return m
 
