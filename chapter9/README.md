@@ -72,6 +72,7 @@ MobilityFlink. Its code is in `Flink_Examples/flights_stream/`:
 
 | Step | Code |
 |---|---|
+| The first example: twelve position reports of `first_example.csv` built into trajectories per window of 30 seconds, and their count at each instant | `first_example.py` (no Kafka) |
 | Replay of the state vectors into the topic `flights-states` | `replay_flights.py` |
 | Position and reachability rules, into the topic `flights-positions` | `walk/` (the Java job `flights.FlightsWalk`) |
 | The three dashboards, into the topics `climbing-brussels`, `close-pairs` and `traffic-per-hour` | `flights_dashboards.py` |
