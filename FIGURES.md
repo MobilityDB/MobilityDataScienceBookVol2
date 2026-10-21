@@ -17,7 +17,7 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 | 2.2 | Speeds of the four trajectories of Fig. 2.1 | `mpandas2-delhispeeds.pdf` | `chapter2/figures/fig_delhi.py` |
 | 2.3 | First trajectory of Fig. 2.1, the second of the collection tc, colored by its speed, with the start of each of its four parts | `mpandas2-delhitraj.pdf` | `chapter2/figures/fig_delhi.py` |
 | 2.4 | The four parts of the trajectory in Fig. 2.3, each in color over the whole trajectory in gray, each map fitted to its part | `mpandas2-splits_a.pdf`, `mpandas2-splits_b.pdf`, `mpandas2-splits_c.pdf`, `mpandas2-splits_d.pdf` | `chapter2/figures/fig_delhi.py` |
-| 2.5 | (a) Original trajectory, the second part of the trajectory in Fig. 2.4; (b) DP generalization; (c) Top-Down Time Ratio generalization | `mpandas2-generalization_a.pdf`, `mpandas2-generalization_b.pdf`, `mpandas2-generalization_c.pdf`, `mpandas2-generalization_cbar.pdf` | `chapter2/figures/fig_delhi.py`, `chapter2/figures/fig_charts_print.py` (colour bar) |
+| 2.5 | (a) Original trajectory, the second part of the trajectory in Fig. 2.4; (b) DP generalization; (c) Top-Down Time Ratio generalization | `mpandas2-generalization_a.pdf`, `mpandas2-generalization_b.pdf`, `mpandas2-generalization_c.pdf` | `chapter2/figures/fig_delhi.py` |
 | 2.6 | (a) Stops computed for the third leg of the split trajectory (part 3 in Fig. 2.4); (b) Segments corresponding to those stops | `mpandas2-stops.pdf`, `mpandas2-segments.pdf` | `chapter2/figures/fig_delhi.py` |
 | 2.7 | Stops of a collection of four trajectories | `mpandas2-stops-collect.pdf` | `chapter2/figures/fig_delhi.py` |
 | 2.8 | Trajectory aggregation | `mpandas2-stops-agg.pdf` | `chapter2/figures/fig_delhi.py` |

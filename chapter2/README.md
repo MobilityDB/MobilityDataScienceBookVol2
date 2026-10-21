@@ -33,15 +33,14 @@ captions. The scripts write into `figures/out`.
 The figures drawn with matplotlib have the size at which the book prints them, so that their text
 reads as the captions do: `print_panels.py` lays each panel of the listings of the PyMEOS section
 out again at that size, with its text in Latin Modern at 8 points through the PGF backend
-(`pdflatex` and the `lmodern` package), as `fig_charts_print.py` does for the MovingPandas section;
-a map keeps its frame and loses its coordinates. `fig_bmod_outputs.py` sets the printed outputs in
+(`pdflatex` and the `lmodern` package); a map keeps its frame and loses its coordinates. `fig_bmod_outputs.py` sets the printed outputs in
 DejaVu Sans at 6.67 points, the size whose x-height is that of the captions.
 
 1. Install the Python packages (the figures of the book are drawn with these versions) and the
    Chromium of Playwright:
    `pip install movingpandas==0.23.0 pymeos==1.2.1 pymeos_cffi==1.2.0 geopandas==1.2.0 pandas==2.3.3 shapely==2.2.0 matplotlib==3.11.2 folium==0.20.0 branca==0.8.2 mapclassify==2.11.0 stonesoup==1.9.1 scikit-learn==1.9.1 distinctipy==1.3.4 pyarrow==26.0.0 psycopg==3.3.6 pillow==12.3.0 pikepdf==10.16.0 playwright==1.63.0`
    and `playwright install chromium`. Set `CHROME` to use another Chromium executable.
-   `fig_charts_print.py` sets its text with `pdflatex` and the `lmodern` package.
+   `print_panels.py` sets its text with `pdflatex` and the `lmodern` package.
 2. Put the input data in `figures/data`, or in the folder given by the variable `CH2_DATA`:
    - `aisclean-2026-01-20.csv`, the reports of the table `AISClean` of the AIS database of the
      book (directory `ais` of this repository), written by `figures/export_aisclean.sh` with the
@@ -55,9 +54,8 @@ DejaVu Sans at 6.67 points, the size whose x-height is that of the captions.
      `project-jmeos.zip`.
 3. MovingPandas, on `../2021-01-30_all.csv`: `delhi_check.py` prints every output of
    the section, `mp_toy_check.py` the toy trajectories; `fig_delhi.py` draws the maps
-   `mpandas2-*` (it takes the names of the figures to draw, by default all of them), and
-   `fig_charts_print.py` the speed colour bar `mpandas2-generalization_cbar` that the three maps
-   `mpandas2-generalization_*` share. `delhi_common.py` holds the statements they share.
+   `mpandas2-*` (it takes the names of the figures to draw, by default all of them).
+   `delhi_common.py` holds the statements they share.
 4. PyMEOS on AIS data, run with `TZ=UTC` (the timestamps of the reports are in UTC):
    `ais_load.py` reads `aisclean-2026-01-20.csv` as the complete example of the chapter and
    writes `ais_filtered.parquet`; `ais_make_input.py` writes `aisinput.csv`, the records of the

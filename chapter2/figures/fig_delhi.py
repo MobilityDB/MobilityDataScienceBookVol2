@@ -112,7 +112,7 @@ def part_bounds(i, margin=0.04):
 def speed_map(traj):
     traj.add_speed(overwrite=True)
     m = traj.to_line_gdf().explore(tiles=None, style_kwds={"weight": 4},
-                                   column="speed", vmin=0, vmax=15, legend=False)
+                                   column="speed", vmin=0, vmax=15)
     VectorTiles("liberty-city").add_to(m)
     return m
 
@@ -303,13 +303,14 @@ FIGS = {
 
 # name -> overlay of the text the map image does not carry: ('legend', anchor) for the categorical
 # legend of explore(), ('colorbar', title, width in cm[, anchor]) for its colour bar; and the
-# \\includegraphics options of the figure in the chapter. Figs. 2.1, 2.2, 2.3 and 2.7 place their legend
-# in the bottom left corner, which no trip crosses, in the 8 pt the colour bar of Fig. 2.5 is set in
-# (FS of fig_charts_print.py).
+# \\includegraphics options of the figure in the chapter. Figs. 2.1, 2.2, 2.3, 2.5 and 2.7 place their
+# legend or colour bar in the bottom left corner, which no trip crosses, in 8 pt (FS of print_panels.py).
 OVERLAY = {
     'mpandas2-delhitrips': (('legend', 'south west'), 'width=0.8\\textwidth'),
     'mpandas2-delhispeeds': (('colorbar', 'Speed (m/s)', 3.5, 'south west'), 'width=0.8\\textwidth'),
     'mpandas2-delhitraj': (('colorbar', 'Speed (m/s)', 3.5, 'south west'), 'width=0.8\\textwidth'),
+    **{f'mpandas2-generalization_{p}': (('colorbar', 'Speed (m/s)', 3.5, 'south west'),
+                                        'width=0.8\\textwidth') for p in 'abc'},
     'mpandas2-stops-collect': (('legend', 'south west'), 'width=0.8\\textwidth'),
     'mpandas2-smooth-speed_a': (('colorbar', 'Speed (m/s)', 2.6), 'height=7.4cm'),
     'mpandas2-smooth-speed_b': (('colorbar', 'Speed (m/s)', 2.6), 'height=7.4cm'),
@@ -365,6 +366,7 @@ def shown_bounds(ext, css_w, css_h):
 PLACES = {'mpandas2-delhitraj': delhitraj_places}
 
 FONT_8PT = {'mpandas2-delhitrips', 'mpandas2-delhispeeds', 'mpandas2-delhitraj',
+            'mpandas2-generalization_a', 'mpandas2-generalization_b', 'mpandas2-generalization_c',
             'mpandas2-stops-collect'}
 
 names = sys.argv[1:] or list(FIGS)

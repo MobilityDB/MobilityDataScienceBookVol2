@@ -261,8 +261,8 @@ def poly_patch(geom, color):
 
 if 'tripdistricts' in which:
     # the 2 x 3 panels of the notebook (cell 38): the six municipalities crossed by most trips,
-    # each with its clipped trips, in EPSG:3857 on a square extent. As the charts of
-    # chapter2/figures/fig_charts_print.py, the figure has the width at which the book prints it
+    # each with its clipped trips, in EPSG:3857 on a square extent. As the panels of
+    # chapter2/figures/print_panels.py, the figure has the width at which the book prints it
     # (0.95\textwidth), so that it is not scaled; the Vietnamese names, whose letters the T1 fonts
     # of pdflatex lack, are set in the default font of matplotlib, DejaVu Sans, embedded as
     # TrueType, at the size whose x-height is that of the captions: \small, 8.5 TeX points of

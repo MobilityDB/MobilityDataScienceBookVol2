@@ -1,8 +1,7 @@
 """Print step of the matplotlib figures of the PyMEOS section of chapter 2. The listings draw on
 figures of 20 x 10 inches; #print_panel lays one of their axes out again on a page of the size at
-which the book prints it, so that the text is set in the caption's font at the caption's size,
-as #style of fig_charts_print.py does for the MovingPandas figures: Latin Modern through the PGF
-backend, 8 pt, the size the dense figures of the book take. A map keeps its frame and loses its
+which the book prints it, so that the text is set in the caption's font at the caption's size:
+Latin Modern through the PGF backend, 8 pt, the size the dense figures of the book take. A map keeps its frame and loses its
 coordinates; a chart keeps its axes. The lines of the data are drawn at a width that reads at
 print size. #print_grid does the same for a grid of maps with titles, which it wraps at the
 width of a panel."""
