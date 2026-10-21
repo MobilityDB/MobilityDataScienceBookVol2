@@ -6,7 +6,11 @@ the Leaflet map, returns three VectorGrid styles drawn bottom to top: areas; roa
 railways; road fills. Drawing the road fills in a grid above every casing keeps the casing of one tile
 from crossing the road fill of its neighbour. The colours are those of the OpenFreeMap 'liberty' and 'positron' styles without their
 symbol layers (no labels), each translucent fill blended over the background into an opaque colour,
-so that the buffer of a tile may overlap its neighbour without darkening it.
+so that the buffer of a tile may overlap its neighbour without darkening it. `landcover` gives the
+classes of the landcover layer a style draws and the zoom from which it draws each: 'liberty' draws
+woods, grass and sand at every zoom, as the OpenFreeMap style does, and 'positron' grass and sand at
+every zoom and woods from zoom 10, the zoom from which the OpenFreeMap style draws them, so that a map
+of a country is not covered with forest patches.
 """
 import json
 
@@ -14,11 +18,13 @@ STYLES = {
     "liberty": dict(background="#f8f4f0", water="#9ebdff", waterway="#a0c8f0", park="#e2ecd4",
                     residential="#f5ece0", wood="#e3efd4", grass="#e2ebd4", sand="#f7efc3",
                     aeroway="#ebe9e5", runway="#f0ede9", major="#ffeeaa", motorway="#ffcc88",
-                    casing="#e9ac77", minor="#ffffff", rail="#bbbbbb", building="#dcd8d3"),
+                    casing="#e9ac77", minor="#ffffff", rail="#bbbbbb", building="#dcd8d3",
+                    landcover=dict(wood=0, grass=0, sand=0)),
     "positron": dict(background="#f2f3f0", water="#c2c8ca", waterway="#c2c8ca", park="#e6ead9",
                      residential="#eaeaea", wood="#e6ead9", grass="#e6ead9", sand="#eeeee6",
                      aeroway="#e8e8e8", runway="#ffffff", major="#ffffff", motorway="#ffffff",
-                     casing="#dddddd", minor="#ffffff", rail="#dddddd", building="#e4e4e4"),
+                     casing="#dddddd", minor="#ffffff", rail="#dddddd", building="#e4e4e4",
+                     landcover=dict(wood=10, grass=0, sand=0)),
 }
 
 # Every OpenMapTiles layer is given a style in each grid (an empty one when the grid does not draw it),
@@ -43,7 +49,7 @@ _JS = """(map => {
     'housenumber', 'poi', 'aerodrome_label', 'landmark'];
   const grids = [
     {water: p => p.brunnel === 'tunnel' ? none : fill(c.water),
-     landcover: p => ({wood: fill(c.wood), grass: fill(c.grass), sand: fill(c.sand)})[p.class] || none,
+     landcover: (p, z) => p.class in c.landcover && z >= c.landcover[p.class] ? fill(c[p.class]) : none,
      landuse: (p, z) => ({residential: coarse(z) ? none : fill(c.residential), cemetery: fill('#d8e0bd'),
        hospital: fill('#ffddee'), school: fill('#eceecc'), pitch: fill('#dee3cd'),
        track: fill('#dee3cd')})[p.class] || none,
