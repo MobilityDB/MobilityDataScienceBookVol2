@@ -162,13 +162,14 @@ inputs as its three subfloats:
 `figures/traversed_area_figures.py` draws the figures of the traversed areas of
 two moving regions and of the three types of holes in a traversed area, and
 `figures/distance_figures.py` the outer Voronoi diagram of a convex polygon and
-the decomposition of a cross into convex parts. They need only `shapely`. The
+the decompositions of a cross into convex parts. They need only `shapely`. The
 first computes each traversed area in the three steps of Sect. 4.5.5: the
 movement is sampled at poses at most 0.05 radians apart, every edge sweeps the
 convex hull of its placements at two consecutive poses, and the pieces and the
 placements are merged; it prints the area and the number of holes of each
-traversed area on the standard error. The second checks that the parts of the
-cross are convex and that their union is the cross. Both write TikZ pictures,
+traversed area on the standard error. The second checks that the parts of each
+decomposition of the cross are convex and that their union is the cross, the
+three parts of the first one disjoint and the two of the second overlapping. Both write TikZ pictures,
 which the chapter inputs:
 
     OUT=out python3 figures/traversed_area_figures.py
@@ -179,7 +180,7 @@ which the chapter inputs:
 | Traversed area of two moving regions | `traversed_area_figures.py`, `traversed_area_example.tex` |
 | Three types of holes in the traversed area of a moving region | `traversed_area_figures.py`, `hole_1.tex`, `hole_2.tex`, `hole_3.tex` |
 | Outer Voronoi diagram of a convex polygon | `distance_figures.py`, `outer_voronoi_diagram_polygon.tex` |
-| A non-convex object and its decomposition into three convex parts | `distance_figures.py`, `convex_object.tex`, `convex_decomposition_1.tex` |
+| A non-convex object, its decomposition into three disjoint convex parts, and into two overlapping convex parts | `distance_figures.py`, `convex_object.tex`, `convex_decomposition_1.tex`, `convex_decomposition_2.tex` |
 
 ### Checking the Text
 

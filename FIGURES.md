@@ -78,7 +78,7 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 | 4.24 | Computing the area traversed between two poses | `planar_graph_segments.tex`, `planar_graph_graph.tex`, `planar_graph_walk.tex` | `chapter4/figures/planar_graph.py` (writes the TikZ panels) |
 | 4.25 | Holes in the traversed area | `hole_1.tex`, `hole_2.tex`, `hole_3.tex` | `chapter4/figures/traversed_area_figures.py` |
 | 4.28 | Outer Voronoi diagram of a convex polygon | `outer_voronoi_diagram_polygon.tex` | `chapter4/figures/distance_figures.py` |
-| 4.29 | Non-convex object with an optimal convex decomposition | `convex_object.tex`, `convex_decomposition_1.tex` | `chapter4/figures/distance_figures.py` |
+| 4.29 | A non-convex object, its decomposition into three disjoint convex parts, and into two overlapping convex parts | `convex_object.tex`, `convex_decomposition_1.tex`, `convex_decomposition_2.tex` | `chapter4/figures/distance_figures.py` |
 | 4.31 | Heading flip of a double-ended ferry | `ais_flip.pdf` | `chapter4/figures/export_ais.py` |
 | 4.33 | The vessels in the port of Frederikshavn at 10:00 on January 20, 2026, displayed as temporal points (a) and as temporal rigid geometries (b) | `ais_layer_points.pdf`, `ais_layer_hulls.pdf` | `chapter4/figures/export_ais.py` |
 | 4.34 | A ferry turning in the port of Gedser | `ais_turn_swept.pdf`, `ais_turn_paths.pdf` | `chapter4/figures/export_ais.py` |
