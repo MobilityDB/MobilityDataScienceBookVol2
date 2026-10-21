@@ -95,7 +95,11 @@ def squeeze(content, gstates, page_box, margin=4.0):
         tiles at the edge of the map extend beyond the page);
       * a path filled with f* and painted again with S after an ExtGState that changes only stroke
         parameters (same /ca and /BM, no soft mask) is written once with B*, which is defined as that
-        fill followed by that stroke.
+        fill followed by that stroke;
+      * so is a path filled with f* and stroked with S after an ExtGState that changes only the fill
+        opacity /ca, every other entry it sets being already in force (a circle marker of Leaflet,
+        filled half transparent and stroked opaque), that ExtGState being written after the B* so
+        that the state that follows is the same.
     Lines the routine does not recognize are written unchanged; clips are tracked for axis-aligned
     transforms and single-rectangle clip paths only, anything else keeps the enclosing clip."""
     lines = content.split(b'\n')
@@ -169,23 +173,43 @@ def squeeze(content, gstates, page_box, margin=4.0):
             return False
         return all(str(a.get(k, '')) == str(b.get(k, '')) for k in ('/ca', '/BM'))
 
-    out, i, gcur, merged = [], 0, None, 0
+    def stroke_same(g):
+        """Whether the ExtGState g changes only the fill opacity of the state in force: the twin of
+        #fill_same for the stroke, against the entries of every ExtGState set since the last q"""
+        a = gstates.get(g)
+        return (a is not None and '/SMask' not in a and '/SMask' not in state
+                and all(k == '/ca' or (k in state and state[k] == v) for k, v in a.items()))
+
+    out, i, gcur, merged, state, saved = [], 0, None, 0, {}, []
     while i < len(items):
         it = items[i]
-        if (it[0] == 'path' and it[2] == b'f*' and i + 2 < len(items) and items[i + 1][0] == 'raw'
-                and items[i + 1][1].endswith(b' gs') and items[i + 2][0] == 'path' and items[i + 2][2] == b'S'
-                and items[i + 2][1] == it[1] and fill_same(gcur, items[i + 1][1].split()[0].decode())):
-            gcur = items[i + 1][1].split()[0].decode()
-            out.append(items[i + 1][1])
+        pair = (it[0] == 'path' and it[2] == b'f*' and i + 2 < len(items) and items[i + 1][0] == 'raw'
+                and items[i + 1][1].endswith(b' gs') and items[i + 2][0] == 'path'
+                and items[i + 2][2] == b'S' and items[i + 2][1] == it[1])
+        if pair and (fill_same(gcur, items[i + 1][1].split()[0].decode())
+                     or stroke_same(items[i + 1][1].split()[0].decode())):
+            g = items[i + 1][1].split()[0].decode()
+            before = fill_same(gcur, g)
+            if before:
+                out.append(items[i + 1][1])
             if it[1]:
                 out.extend(sum(it[1], []))
                 out.append(b'B*')
+            if not before:
+                out.append(items[i + 1][1])
+            gcur = g
+            state.update(gstates[g])
             merged += 1
             i += 3
             continue
         if it[0] == 'raw':
             if it[1].endswith(b' gs'):
                 gcur = it[1].split()[0].decode()
+                state.update(gstates.get(gcur, {}))
+            elif it[1] == b'q':
+                saved.append(dict(state))
+            elif it[1] == b'Q' and saved:
+                state = saved.pop()
             out.append(it[1])
         elif it[1]:
             out.extend(sum(it[1], []))
