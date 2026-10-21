@@ -184,11 +184,12 @@ simplifications["dp"] = simplifications["trip"].apply(
     lambda tr: tr.simplify_douglas_peucker(tolerance))
 simplifications["sed"] = simplifications["trip"].apply(
     lambda tr: tr.simplify_douglas_peucker(tolerance, synchronized=True))
-# The instants that each simplification keeps of the first trip, which the maps
-# pymeossimplifications-first_a and _b of fig_pymeossimplifications_first.py draw over the base map
-first = simplifications.iloc[0]
+# The instants that each simplification keeps of the trip 495, which the maps
+# pymeossimplifications-trip_a, _b and _c of fig_pymeossimplifications_trip.py draw over the base map
+east_west = simplifications.iloc[495]
 for key, name in (("dp", "DP"), ("sed", "SED")):
-    head(f'{name} instants of the first trip', (first[key].num_instants(), first["trip"].num_instants()))
+    head(f'{name} instants of the trip 495',
+         (east_west[key].num_instants(), east_west["trip"].num_instants()))
 fig, axes = plt.subplots(1, 3, figsize=(30, 10))
 for _, trip in simplifications.iterrows():
     trip["trip"].plot(axes=axes[0])
