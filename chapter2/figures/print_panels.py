@@ -162,7 +162,9 @@ def print_aligned(fig, panels):
     styled by the keyword arguments style of #_style as #print_panel styles it, the axes of every
     panel in one box: the one that clears the text of all of them, so that the boxes of the panels
     have the same size and the same place on their pages, and two panels set side by side are
-    aligned at the top. The pages of the panels have one size."""
+    aligned at the top. The pages of the panels have one size: the one that holds that box, the
+    pages losing the height that the maps leave free under it. A style may carry `bounds` (xmin,
+    ymin, xmax, ymax), the limits of a map in place of those of its data."""
     width, height = panels[0][2], panels[0][3]
     if any((w, h) != (width, height) for _, _, w, h, _ in panels):
         raise ValueError('the panels of print_aligned have pages of different sizes')
@@ -173,21 +175,33 @@ def print_aligned(fig, panels):
     for ax, _, _, _, style in panels:
         for a in fig.axes:
             a.set_visible(a is ax)
-        _style(ax, **style)
+        _style(ax, **{k: v for k, v in style.items() if k != 'bounds'})
         _fit(fig, [(ax, (0, 0, width, height))], width, height)
         boxes.append(ax.get_position())
     box = [max(b.x0 for b in boxes), max(b.y0 for b in boxes)]
     box += [min(b.x1 for b in boxes) - box[0], min(b.y1 for b in boxes) - box[1]]
     # A map without a frame has the shape of its data (its extent rectangle or its grid of tiles is
-    # its box): the box of every panel is the one the map takes at the top of the common box
+    # its box), a map with bounds the shape of these: the box of every panel is the one the map takes
+    # at the top of the common box
+    bottom = box[1]
     for ax, _, _, _, style in panels:
-        if style.get('map_') and not style.get('frame', True):
+        if style.get('map_') and (not style.get('frame', True) or style.get('bounds')):
             ax.set_aspect('equal', adjustable='box', anchor='N')
-            # the limits again those of the data, which the aspect of #_style widened to fill a box
-            ax.autoscale_view()
+            if style.get('bounds'):
+                xmin, ymin, xmax, ymax = style['bounds']
+                ax.set_xlim(xmin, xmax); ax.set_ylim(ymin, ymax)
+            else:
+                # the limits again those of the data, which the aspect of #_style widened to fill a box
+                ax.autoscale_view()
             ax.set_position(box)
             ax.apply_aspect()
             box = list(ax.get_position(original=False).bounds)
+    # The pages lose the height the maps leave free under the box, which keeps the margin under it
+    # that holds the text of the panels
+    if box[1] > bottom:
+        cut = height - (box[1] - bottom) * height
+        box = [box[0], bottom * height / cut, box[2], box[3] * height / cut]
+        fig.set_size_inches(width, cut)
     for ax, path, _, _, _ in panels:
         for a in fig.axes:
             a.set_visible(a is ax)

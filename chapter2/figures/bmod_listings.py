@@ -3,6 +3,7 @@ listings in order on trips.csv, prints every value the chapter shows, and saves 
 figures pymeosbmod2_a ... pymeosbmod11_b but the maps pymeosbmod2_b and pymeosbmod6, and
 pymeossimplifications* as PDF and PNG panels, and the values of pymeosbmod10 and pymeosbmod12
 that fig_bmod_outputs.py renders. Code inside the listings is the chapter's code."""
+import math
 import os
 from pathlib import Path
 
@@ -29,8 +30,10 @@ D = DATA
 
 
 # The size at which the book prints each panel (\includegraphics of chapter2.tex), whether it is a
-# map, and the width of its lines: two panels side by side 6 cm high (5.6 cm for Figs. 2.29 and
-# 2.31), the three simplifications 0.3 of the text width, the first five trips 0.8 of it
+# map, and the width of its lines: two panels side by side 0.44 of the text width wide and at most
+# 6 cm high, #print_aligned of print_panels.py cutting their pages to the height of their maps (5.6 cm
+# for Figs. 2.29 and 2.31), the three simplifications 0.3 of the text width, the first five trips 0.8
+# of it
 H6, H56, PAIR = 6 * CM, 5.6 * CM, 0.44 * TEXTWIDTH
 BMOD2_B = (653, 678)  # the size of the map pymeosbmod2_b of fig_pymeosbmod2_b.py, in CSS px
 PANELS = {
@@ -53,6 +56,9 @@ PANELS = {
 # of the temporal extent; each panel names its lines in a legend under it
 FRAMELESS = {'pymeosbmod9_a', 'pymeosbmod5_a', 'pymeosbmod7_a'}
 MARGIN = {'pymeosbmod9_b': 0.08, 'pymeosbmod5_b': 0.08}
+# name -> the limits (xmin, ymin, xmax, ymax) of a map in place of those of its data: the map of
+# Fig. 2.38 has the ground of the grid of tiles of Fig. 2.39, so that the two figures have one size
+BOUNDS = {}
 EMPHASIS = {'pymeosbmod9_a': 'blue', 'pymeosbmod9_b': 'red', 'pymeosbmod5_a': 'blue',
             'pymeosbmod5_b': 'red'}
 # The trips are timestamped in the time zone of Brussels (+02 in June): the time axes are labelled in it
@@ -70,7 +76,8 @@ def save_panels(fig, axes, names, ms=1.5):
         panels.append((ax, f'{OUT}/{name}.pdf', width, height,
                        dict(map_=map_, lw=lw, ms=ms, frame=name not in FRAMELESS,
                             margin=MARGIN.get(name, 0 if name in FRAMELESS else 0.03),
-                            emphasis=EMPHASIS.get(name), tz=TZ)))
+                            emphasis=EMPHASIS.get(name), tz=TZ,
+                            **({'bounds': BOUNDS[name]} if name in BOUNDS else {}))))
     if len(panels) > 1:
         print_aligned(fig, panels)
     else:
@@ -268,6 +275,12 @@ with pd.option_context('display.max_colwidth', 50, 'display.max_rows', 10):
     ts = repr(tiled_speeds).splitlines()[-4:]
 with open(f'{OUT}/pymeosbmod10.txt', 'w') as f:
     f.write('\n'.join(tt) + '\n\n' + '\n'.join(ts) + '\n')
+# The ground of the tiles of Fig. 2.39 for the map of Fig. 2.38, and for the speed charts of both the
+# values up to the top of the speed tiles of 10 m/s that hold data
+grid = extent_bulk.tile(5e3)
+BOUNDS['pymeosbmod11_a'] = (min(t.xmin() for t in grid), min(t.ymin() for t in grid),
+                            max(t.xmax() for t in grid), max(t.ymax() for t in grid))
+SPEED_TOP = 10 * math.ceil(max(sp.max_value() for sp in speeds) / 10)
 fig, axes = plt.subplots(1, 2, figsize=(20, 10))
 for tiled_trip in tiled_trips:
     for traj in tiled_trip:
@@ -275,6 +288,7 @@ for tiled_trip in tiled_trips:
 for tiled_speed in tiled_speeds:
     for traj in tiled_speed:
         traj.plot(axes=axes[1], show_markers=False, rasterized=True)
+axes[1].set_ylim(-0.03 * SPEED_TOP, SPEED_TOP)
 save_panels(fig, axes, ['pymeosbmod11_a', 'pymeosbmod11_b'])
 del tiled_trips, tiled_speeds
 
@@ -296,6 +310,7 @@ for tile, color in zip(speed_tiles, distinctipy.get_colors(len(speed_tiles), rng
         speed_in_tile = speed.at(tile)
         if speed_in_tile is not None:
             speed_in_tile.plot(axes=axes[1], color=color, show_markers=False, rasterized=True)
+axes[1].set_ylim(-0.03 * SPEED_TOP, SPEED_TOP)
 save_panels(fig, axes, ['pymeosbmod7_a', 'pymeosbmod7_b'])
 
 data = []
