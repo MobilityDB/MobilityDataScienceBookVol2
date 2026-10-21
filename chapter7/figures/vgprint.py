@@ -52,7 +52,8 @@ _MEASURE = """ext => {
     const b = r.getBoundingClientRect(), cs = getComputedStyle(inner);
     labels.push({text: t, x0: (b.left - box.left) / box.width, y0: (b.top - box.top) / box.height,
                  x1: (b.right - box.left) / box.width, y1: (b.bottom - box.top) / box.height,
-                 color: cs.color, bold: parseInt(cs.fontWeight) >= 600 || !!inner.querySelector('b, strong')});
+                 color: cs.color, bold: parseInt(cs.fontWeight) >= 600 || !!inner.querySelector('b, strong'),
+                 anchor: inner.dataset.anchor || null});
   }
   const xs = new Set(), ys = new Set();
   const tiles = document.querySelectorAll('svg.leaflet-tile');
@@ -204,8 +205,12 @@ def write_overlay(path, graphic, incl, pfx, labels=(), legend=None, colorbar=Non
                 name = rf' node[anchor={lb["place"]}, inner sep=1.5pt] {{{t}}}' if t else ''
                 body.append(rf'\fill ({lb["x0"]:.4f}, {1 - lb["y0"]:.4f}) circle (0.8pt){name};')
                 continue
-            body.append(rf'\node[anchor=north west, inner sep=0.5pt, text={col(lb["color"])}] at '
-                        rf'({lb["x0"]:.4f}, {1 - lb["y0"]:.4f}) {{{t}}};')
+            # A label whose div gives data-anchor="north east" ends at the right edge of its measured
+            # box, so that it keeps clear of what lies right of it whatever the width of the TeX font
+            east = lb.get('anchor') == 'north east'
+            body.append(rf'\node[anchor={"north east" if east else "north west"}, inner sep=0.5pt, '
+                        rf'text={col(lb["color"])}] at '
+                        rf'({lb["x1" if east else "x0"]:.4f}, {1 - lb["y0"]:.4f}) {{{t}}};')
         body.append(r'\end{scope}')
     if legend:
         title, items = legend

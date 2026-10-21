@@ -64,13 +64,20 @@ if 'rodbyputt' in which:
         for line in lines_of(row['geom_obj']):
             folium.PolyLine(locations=latlon(line), color=mcolors.to_hex(cmap(i)), weight=1.5,
                 opacity=0.8, tooltip=f"MMSI: {row['MMSI']}").add_to(m)
-    for name, col in [('Rodby', 'Rodby'), ('Puttgarden', 'Puttgarden')]:
+    # Each name sits 6 px beside its port, at the height of the middle of the box, over the open
+    # sea that the trajectories leave on that side: west of Rødby, whose land lies east, and east
+    # of Puttgarden, whose west side is the edge of the map; a name west of its box ends at the
+    # box (data-anchor of #write_overlay of vgprint.py)
+    for name, col, side in [('Rødby', 'Rodby', 'west'), ('Puttgarden', 'Puttgarden', 'east')]:
         port = wkt.loads(trajs[col].iloc[0])
         minx, miny, maxx, maxy = port.bounds
         folium.Rectangle(bounds=[[miny, minx], [maxy, maxx]], color='blue', weight=2,
             fill=False).add_to(m)
-        folium.Marker(location=[miny, maxx], icon=folium.DivIcon(
-            html=f'<div style="font-size:9px; color:blue">{name}</div>')).add_to(m)
+        at, css = (('north east', 'right:6px') if side == 'west' else ('north west', 'left:6px'))
+        folium.Marker(location=[(miny + maxy) / 2, minx if side == 'west' else maxx],
+            icon=folium.DivIcon(icon_size=(0, 0), icon_anchor=(0, 0),
+            html=f'<div data-anchor="{at}" style="position:absolute; {css}; top:-6px; '
+                 f'white-space:nowrap; font-size:9px; color:blue">{name}</div>')).add_to(m)
     pr = [wkt.loads(trajs[c].iloc[0]).bounds for c in ('Rodby', 'Puttgarden')]
     m.fit_bounds([[min(b[1] for b in pr), min(b[0] for b in pr)],
                   [max(b[3] for b in pr), max(b[2] for b in pr)]])
