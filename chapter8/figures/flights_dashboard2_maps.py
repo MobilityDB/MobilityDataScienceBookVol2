@@ -18,6 +18,7 @@ import matplotlib
 matplotlib.use("pgf")
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import pandas as pd
 from matplotlib import font_manager
 
@@ -53,6 +54,8 @@ def distance():
     fig, ax = plt.subplots(figsize=(TEXTWIDTH, 1.9))
     ax.plot(d.Time, d.Distance, color="#1f77b4", linewidth=0.7)
     ax.set_yscale("log")
+    # The axis keeps only the ticks of the powers of 10 that carry their label
+    ax.yaxis.set_minor_locator(mticker.NullLocator())
     ax.set_ylabel("Distance (km)")
     ax.set_xlabel("Time (UTC), March 1, 2026")
     ax.xaxis.set_major_formatter(HOURS)
