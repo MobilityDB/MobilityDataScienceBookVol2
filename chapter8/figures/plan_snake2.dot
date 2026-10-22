@@ -1,0 +1,154 @@
+// The physical plan of the query of the trips by borough as the Spark UI draws it (fig:DAG of
+// chapter 8): the stations and the trips are scanned in two columns that run downwards and meet at
+// the broadcast hash join; the aggregation, the exchange and the final stages then fold across the
+// two columns. Two columns keep the figure narrow, so that, printed at the text width, its text
+// keeps about 80% of the height of the caption. dot -Tpdf writes plan_snake2.pdf.
+digraph G {
+    fontname="Helvetica,Arial,sans-serif"
+    node [fontname="Helvetica,Arial,sans-serif", shape=rect, style=filled, penwidth=1.5]
+    edge [fontname="Helvetica,Arial,sans-serif", color="#707070", penwidth=1.2]
+    compound=true
+    rankdir=TB
+    newrank=true
+    nodesep=0.4
+    ranksep=0.3
+
+    // =========================================================
+    // Left column: the stations
+    // =========================================================
+    scan_stations [
+        label="Scan parquet\nspark_catalog.default.stations\n\nnumber of files read: 4\nnumber of output rows: 2,266",
+        fillcolor="#f76b21", color="#f76b21", fontcolor="white", align=left, group=c1
+    ]
+
+    subgraph cluster_codegen_1 {
+        label="WholeStageCodegen (1)\nduration: total (min, med, max)\n2.7 s (650 ms, 688 ms, 711 ms)"
+        fontcolor="black" labelloc="t" labeljust="r" style="filled,rounded" fillcolor="#ceeeff" color="#78c8ff"
+
+        columnar_stations [
+            label="ColumnarToRow\n\nnumber of output rows: 2,266\nnumber of input batches: 4",
+            fillcolor="#f7b021", color="#f7b021", align=left, group=c1
+        ]
+
+        filter_stations [
+            label="Filter\n\nnumber of output rows: 699",
+            fillcolor="white", color="#78c8ff", align=left, group=c1
+        ]
+
+        columnar_stations -> filter_stations
+    }
+
+    // Into the side of ColumnarToRow, clear of the name of the codegen stage above it
+    scan_stations -> columnar_stations [headport=w]
+
+    broadcast_exchange [
+        label="BroadcastExchange\n\nnumber of output rows: 699\ndata size: 8.0 MiB",
+        fillcolor="#ceeeff", color="#78c8ff", align=left, group=c1
+    ]
+
+    filter_stations -> broadcast_exchange
+
+    // =========================================================
+    // Right column: the trips and the join
+    // =========================================================
+    scan_trips [
+        label="Scan parquet\nspark_catalog.default.trips\n\nnumber of files read: 16\nnumber of output rows: 35,002,469",
+        fillcolor="#ceeeff", color="#78c8ff", align=left, group=c2
+    ]
+
+    subgraph cluster_codegen_2 {
+        label="WholeStageCodegen (2)\nduration: total (min, med, max)\n14.3 s (439 ms, 687 ms, 1.8 s)"
+        fontcolor="black" labelloc="b" labeljust="r" style="filled,rounded" fillcolor="#ceeeff" color="#78c8ff"
+
+        columnar_trips [
+            label="ColumnarToRow\n\nnumber of output rows: 35,002,469\nnumber of input batches: 8,553",
+            fillcolor="white", color="#78c8ff", align=left, group=c2
+        ]
+
+        filter_trips [
+            label="Filter\n\nnumber of output rows: 34,949,039",
+            fillcolor="white", color="#78c8ff", align=left, group=c2
+        ]
+
+        broadcast_hash_join [
+            label="BroadcastHashJoin\n\nnumber of output rows: 23,370,649",
+            fillcolor="white", color="#78c8ff", align=left, group=c2
+        ]
+
+        project [
+            label="Project",
+            fillcolor="white", color="#78c8ff", align=center, group=c2
+        ]
+
+        hash_aggregate_1 [
+            label="HashAggregate\n\nnumber of output rows: 89",
+            fillcolor="white", color="#78c8ff", align=left, group=c2
+        ]
+
+        columnar_trips -> filter_trips
+        filter_trips -> broadcast_hash_join
+        broadcast_hash_join -> project
+        project -> hash_aggregate_1
+    }
+
+    scan_trips -> columnar_trips
+    broadcast_exchange -> broadcast_hash_join
+
+    // =========================================================
+    // The exchange and the final aggregation, folded across the two columns
+    // =========================================================
+    exchange [
+        label="Exchange\n\nnumber of partitions: 200\ndata size: 4.2 KiB",
+        fillcolor="#ceeeff", color="#78c8ff", align=left, group=c1
+    ]
+
+    // hash_aggregate_1 -> exchange, drawn right to left
+    exchange -> hash_aggregate_1 [dir=back]
+
+    aqe_shuffle_read [
+        label="AQEShuffleRead\n\nnumber of partitions: 1\npartition data size: 7.6 KiB\nnumber of coalesced partitions: 1",
+        fillcolor="#ceeeff", color="#78c8ff", align=left, group=c1
+    ]
+
+    exchange -> aqe_shuffle_read
+
+    subgraph cluster_codegen_3 {
+        label="WholeStageCodegen (3)\nduration: 12 ms"
+        fontcolor="black" labelloc="t" labeljust="l" style="filled,rounded" fillcolor="#ceeeff" color="#78c8ff"
+
+        hash_aggregate_2 [
+            label="HashAggregate\n\nnumber of output rows: 12",
+            fillcolor="white", color="#78c8ff", align=left, group=c2
+        ]
+    }
+
+    aqe_shuffle_read -> hash_aggregate_2
+
+    adaptive_spark_plan [
+        label="AdaptiveSparkPlan",
+        fillcolor="#ceeeff", color="#78c8ff", align=center, group=c2
+    ]
+
+    hash_aggregate_2 -> adaptive_spark_plan
+
+    adaptive_parquet_scan [
+        label="Adaptive Parquet Scan",
+        fillcolor="#ceeeff", color="#78c8ff", align=center, group=c1
+    ]
+
+    // adaptive_spark_plan -> adaptive_parquet_scan, drawn right to left
+    adaptive_parquet_scan -> adaptive_spark_plan [dir=back]
+
+    // The ranks: the stations left of the trips, row by row
+    { rank=same; scan_stations; scan_trips }
+    { rank=same; columnar_stations; columnar_trips }
+    { rank=same; filter_stations; filter_trips }
+    { rank=same; broadcast_exchange; broadcast_hash_join }
+    { rank=same; exchange; hash_aggregate_1 }
+    { rank=same; aqe_shuffle_read; hash_aggregate_2 }
+    { rank=same; adaptive_parquet_scan; adaptive_spark_plan }
+    scan_stations -> scan_trips [style=invis]
+    columnar_stations -> columnar_trips [style=invis]
+    filter_stations -> filter_trips [style=invis]
+    broadcast_exchange -> exchange [style=invis]
+}

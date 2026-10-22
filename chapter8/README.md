@@ -198,9 +198,18 @@ running application of the notebook:
 
     pdflatex figures/sparkArq.tex
 
+`spark-new.tex` is the TikZ source of the figure of the Spark processing scheme, and
+`plan_snake2.dot` the Graphviz source of the figure of the physical plan of a query as the
+Spark UI draws it:
+
+    pdflatex figures/spark-new.tex
+    dot -Tpdf figures/plan_snake2.dot -o plan_snake2.pdf
+
 | Figure | Script, output |
 |---|---|
 | The Spark SQL components | `sparkArq.tex`, `sparkArq.pdf` |
+| The Spark processing scheme | `spark-new.tex`, `spark-new.pdf` |
+| The physical plan of a query (Plan Visualization: DAG) | `plan_snake2.dot`, `plan_snake2.pdf` |
 | The applications and the jobs in the History Server | `history_server.py`, `incomplete.png`, `incomplete2.png`, `thesparkapp.png`, `completedquery.png` |
 | The distance between the two closest aircraft | `flights_dashboard2_maps.py`, `flightsDashboard2_distance.pdf` |
 | The position reports and the altitudes of the two closest aircraft | `flights_dashboard2_maps.py`, `flightsDashboard2_map.pdf`, `flightsDashboard2_altitude.pdf` |
