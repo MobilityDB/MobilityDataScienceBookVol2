@@ -21,8 +21,8 @@ GROUP BY h.hour_start
 ORDER BY h.hour_start;
 .print == rodby ferries
 WITH Ports(Rodby, Puttgarden) AS
- (SELECT ST_MakeEnvelope(651135, 6058230, 651422, 6058548),
-     ST_MakeEnvelope(644339, 6042108, 644896, 6042487))
+  (SELECT ST_MakeEnvelope(651135, 6058230, 651422, 6058548),
+    ST_MakeEnvelope(644339, 6042108, 644896, 6042487))
 SELECT s.MMSI, V.Name FROM Ports p, Ships s LEFT JOIN V USING (MMSI)
 WHERE eintersects(trip, p.Rodby) AND eintersects(trip, p.Puttgarden) ORDER BY ALL;
 .print == buffer500
@@ -35,4 +35,4 @@ WITH Port AS (SELECT ST_Point(726765.3929300838, 6178705.65508127) AS port_geom)
 PortBuffer AS (SELECT ST_Buffer(port_geom, 1000) AS buf FROM Port)
 SELECT s.MMSI, V.Name, V.ShipType FROM ships s LEFT JOIN V USING (MMSI), PortBuffer pb
 WHERE eIntersects(s.trip, pb.buf) AND
- astext(stops(atGeometry(s.trip, pb.buf),10.0, interval '20 minutes')) IS NOT NULL ORDER BY ALL;
+  astext(stops(atGeometry(s.trip, pb.buf),10.0, interval '20 minutes')) IS NOT NULL ORDER BY ALL;

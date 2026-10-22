@@ -35,10 +35,10 @@ SELECT COUNT(*) AS Noisy, round(MIN(minValue(SL))::numeric, 1) AS MinSL,
 FROM ShipNoise;
 \echo == the vessels with the smallest and the largest source level: type and length (Pleasure | 7 | 106.4, Pilot | 12 | 191.7)
 (SELECT v.ShipType, v.Length, round(minValue(s.SL)::numeric, 1) AS SL
- FROM ShipNoise s JOIN VesselClass v USING (MMSI) ORDER BY minValue(s.SL) LIMIT 1)
+  FROM ShipNoise s JOIN VesselClass v USING (MMSI) ORDER BY minValue(s.SL) LIMIT 1)
 UNION ALL
 (SELECT v.ShipType, v.Length, round(maxValue(s.SL)::numeric, 1)
- FROM ShipNoise s JOIN VesselClass v USING (MMSI) ORDER BY maxValue(s.SL) DESC LIMIT 1);
+  FROM ShipNoise s JOIN VesselClass v USING (MMSI) ORDER BY maxValue(s.SL) DESC LIMIT 1);
 
 \echo == Listing: the radius of the noise from the excess level and the depth
 -- Radius of the noise of a vessel from the excess level DL = SL - NL and the depth H,

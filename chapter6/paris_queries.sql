@@ -284,8 +284,8 @@ DayPart(TourId, Tour, PartOfDay) AS (
 SELECT DISTINCT f.TourId,
   startValue(f.Tour->>'StepNo')::integer AS FirstStep,
   startValue(f.Tour->>'Name') AS FirstName,
- startValue(s.Tour->>'StepNo')::integer AS SecondStep,
-   startValue(s.Tour->>'Name') AS SecondName, f.PartOfDay
+  startValue(s.Tour->>'StepNo')::integer AS SecondStep,
+  startValue(s.Tour->>'Name') AS SecondName, f.PartOfDay
 FROM DayPart f, DayPart s
 WHERE f.TourId = s.TourId AND f.Tour <<# s.Tour
   AND startValue(s.Tour->>'Price') = 'Moderate'

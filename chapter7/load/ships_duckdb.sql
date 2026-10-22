@@ -8,7 +8,7 @@ LOAD mobilityduck;
 LOAD postgres;
 
 CREATE OR REPLACE TABLE ships (MMSI integer, Trip tgeompoint, SOG tfloat,
- COG tfloat);
+  COG tfloat);
 
 INSERT INTO ships
 SELECT MMSI, Trip, SOG, COG

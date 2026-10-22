@@ -21,12 +21,12 @@ FROM municipalities
 ORDER BY municipalityid
 ) TO 'data/hanoi/municipalities.csv' (HEADER);
 COPY (
-WITH tripInt AS
- (SELECT vehicleid, tripid,
-         COUNT(DISTINCT m.municipalityid) AS intersectCount
+WITH tripInt AS (
+  SELECT vehicleid, tripid,
+    COUNT(DISTINCT m.municipalityid) AS intersectCount
   FROM trips t, municipalities m
   WHERE eintersects(trip, municipalitygeo)
-GROUP BY vehicleid, tripid)
+  GROUP BY vehicleid, tripid )
 SELECT t1.*, lonlat(ST_Simplify(t.trajectory, 1.0)) AS trajectory
 FROM trips t JOIN tripInt t1 ON (t.tripId = t1.tripId AND t.vehicleid = t1.vehicleid)
 ORDER BY intersectCount DESC, t1.tripid
