@@ -97,7 +97,7 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 
 | Figure | Content | Files | Scripts |
 |---|---|---|---|
-| 5.2 | Bathymetry around the island of Læsø | `bathymetry_laeso` | `chapter5/figures/make_figures.sh` (job_bathymetry_laeso.json) |
+| 5.2 | Bathymetry around the island of Læsø | `bathymetry_laeso` | `chapter5/figures/make_figures.sh` (job_bathymetry_laeso.json), `chapter5/figures/overlay_bathymetry_laeso.py` |
 | 5.3 | The seabed of a reef area north-east of Læsø | `seabed_slope`, `seabed_tpi` | `chapter5/figures/make_figures.sh`, `chapter5/figures/export_seabed.sh` |
 | 5.4 | The depth under a vessel between two reports | `depth_under_vessel` | `chapter5/figures/make_figures.sh`, `chapter5/figures/overlay_depth_under_vessel.py` |
 | 5.9 | An AIS track on the H3, QUADBIN, and S2 grids | `cellgrids` | `chapter5/figures/make_figures.sh`, `chapter5/figures/export_cellgrids.sql`, `chapter5/figures/cellgrids_panels.py`, `chapter5/figures/cellgrids_compose.tex` |

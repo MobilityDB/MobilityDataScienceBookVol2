@@ -40,8 +40,11 @@ cp "$HERE/cellgrids_panels.py" "$HERE/cellgrids_compose.tex" "$OUT/"
 (cd "$OUT" && timeout 900 "${RUN[@]}" cellgrids_panels.py . 2>&1 | grep -E 'wrote|Error|Traceback' || true)
 (cd "$OUT" && pdflatex -interaction=nonstopmode cellgrids_compose.tex > /dev/null &&
   mv cellgrids_compose.pdf cellgrids.pdf)
-# The labels and the legend of the depth under the vessel are LaTeX, in the style
-# of the captions, drawn over the image by depth_under_vessel_overlay.tex.
+# The labels and the legends of the bathymetry around Laeso and of the depth under
+# the vessel are LaTeX, in the style of the captions, drawn over the images by
+# bathymetry_laeso_overlay.tex and depth_under_vessel_overlay.tex.
+python3 "$HERE/overlay_bathymetry_laeso.py" "$HERE/job_bathymetry_laeso.json" \
+  figs/chap5/bathymetry_laeso '0.85\textwidth' "$OUT/bathymetry_laeso_overlay.tex"
 python3 "$HERE/overlay_depth_under_vessel.py" "$HERE/job_depth_under_vessel.json" \
   "$OUT/vessel_reports.gpkg" figs/chap5/depth_under_vessel '0.85\textwidth' \
   "$OUT/depth_under_vessel_overlay.tex"
