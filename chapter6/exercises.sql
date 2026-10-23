@@ -39,13 +39,11 @@ ORDER BY m.TourId, MuseumStep, RestStep;
 SELECT TourId, SUM(upper(AtTime) - lower(AtTime)) AS RestaurantTime
 FROM TourPoI
 WHERE PoI->>'Category' = 'Restaurant'
-GROUP BY TourId
-ORDER BY RestaurantTime DESC, TourId;
+GROUP BY TourId ORDER BY RestaurantTime DESC, TourId;
 
 \echo == Exercise 6.2, query 3
 SELECT TourId,
-  duration(getTime(atValue(Tour->>'Category', text 'Restaurant')))
-    AS RestaurantTime
+  duration(getTime(atValue(Tour->>'Category', text 'Restaurant'))) AS RestaurantTime
 FROM TempTour
 WHERE atValue(Tour->>'Category', text 'Restaurant') IS NOT NULL
 ORDER BY RestaurantTime DESC, TourId;
@@ -68,13 +66,11 @@ SELECT TourId, MAX((PoI->>'Stars')::int) AS Stars,
   SUM(upper(AtTime) - lower(AtTime)) AS HotelTime
 FROM TourPoI
 WHERE PoI ? 'Stars'
-GROUP BY TourId
-ORDER BY TourId;
+GROUP BY TourId ORDER BY TourId;
 
 \echo == Exercise 6.4, query 2
 SELECT TourId,
-  maxValue(tfloat(atTime(Tour, whenTrue(Tour ? 'Stars')), 'Stars',
-    'step')) AS Stars,
+  maxValue(tfloat(atTime(Tour, whenTrue(Tour ? 'Stars')), 'Stars', 'step')) AS Stars,
   duration(whenTrue(Tour ? 'Stars')) AS HotelTime
 FROM TempTour
 WHERE whenTrue(Tour ? 'Stars') IS NOT NULL
@@ -114,8 +110,7 @@ Kept(TripId, StartPos, EndPos) AS (
     SELECT c.TripId, c.StartPos, c.EndPos FROM Cycle c
     WHERE c.TripId = k.TripId AND c.StartPos > k.EndPos
     ORDER BY c.StartPos LIMIT 1 ) n )
-SELECT k.TripId, k.StartPos, k.EndPos,
-  s.CellSeq[k.StartPos:k.EndPos] AS MatchSeq
+SELECT k.TripId, k.StartPos, k.EndPos, s.CellSeq[k.StartPos:k.EndPos] AS MatchSeq
 FROM Kept k JOIN TripCellsSeq s USING (TripId)
 WHERE k.TripId = 4
 ORDER BY k.StartPos;
