@@ -66,7 +66,9 @@ DejaVu Sans at 6.67 points, the size whose x-height is that of the captions.
    of the AIS database of the book (variables `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` and
    `PGDATABASE`, by default those of the chapter and `ais`), and
    `PSYCOPG_IMPL=python python3 pymeos_ais2_plot.py` reads one ship back and draws
-   `pymeosais2_a/b`.
+   `pymeosais2_a/b`. The three maps `pymeosais1_a/b` and `pymeosais2_a` share one size, one
+   extent and the labelled towns (`pymeosais_view.py`); the extent is that of the trajectories
+   written by `pymeos_ais1.py`, which therefore runs before both figure scripts.
 5. Advanced PyMEOS functionality, on BerlinMOD: `bmod_listings.py` runs the listings of the section on
    `trips.csv`, prints the values the chapter shows and draws the plots `pymeosbmod*` and
    `pymeossimplifications_*`; then `fig_bmod_outputs.py` renders the printed outputs

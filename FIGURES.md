@@ -39,8 +39,8 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 | 2.24 | Update operation for temporal values | `temporal_update` | Drawing of the book |
 | 2.25 | Delete operation for temporal values | `temporal_delete` | Drawing of the book |
 | 2.26 | Modification operations for temporal tables in SQL | `modif_sql` | Drawing of the book |
-| 2.27 | (a) A simplified trajectory using PyMEOS; (b) Same trajectory after exporting it to MovingPandas | `pymeosais1_a.pdf`, `pymeosais1_b.pdf` | `chapter2/figures/pymeos_ais1.py`, `chapter2/figures/fig_pymeosais1.py` |
-| 2.28 | (a) A MobilityDB trajectory obtained after loading from PyMEOS; (b) The SOG values | `pymeosais2_a.pdf`, `pymeosais2_b.pdf` | `chapter2/figures/pymeos_ais2.py`, `chapter2/figures/pymeos_ais2_plot.py` |
+| 2.27 | (a) A simplified trajectory using PyMEOS; (b) Same trajectory after exporting it to MovingPandas | `pymeosais1_a.pdf`, `pymeosais1_b.pdf` | `chapter2/figures/pymeos_ais1.py`, `chapter2/figures/fig_pymeosais1.py`, `chapter2/figures/pymeosais_view.py` |
+| 2.28 | (a) A MobilityDB trajectory obtained after loading from PyMEOS; (b) The SOG values | `pymeosais2_a.pdf`, `pymeosais2_b.pdf` | `chapter2/figures/pymeos_ais1.py`, `chapter2/figures/pymeos_ais2.py`, `chapter2/figures/pymeos_ais2_plot.py`, `chapter2/figures/pymeosais_view.py` |
 | 2.29 | Trajectories overlaid with Brussels' municipalities | `pymeosbmod2_a.pdf`, `pymeosbmod2_b.pdf` | `chapter2/figures/bmod_listings.py` (a), `chapter2/figures/fig_pymeosbmod2_b.py` (b) |
 | 2.30 | Trajectories (a) inside and (b) outside Brussels | `pymeosbmod3_a.pdf`, `pymeosbmod3_b.pdf` | `chapter2/figures/bmod_listings.py` |
 | 2.31 | Trajectories clipped to each municipality in Brussels | `pymeosbmod4.pdf` | `chapter2/figures/bmod_listings.py` |

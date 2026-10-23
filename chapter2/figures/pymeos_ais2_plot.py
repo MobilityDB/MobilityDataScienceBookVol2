@@ -15,7 +15,7 @@ from pymeos import *
 from pymeos.db.psycopg import MobilityDB
 import movingpandas as mpd
 from vtiles import VectorTiles
-from vgprint import MM_PER_PX, pad_page, page_size_in, print_map
+from vgprint import MM_PER_PX, pad_page, page_size_in, print_map, write_overlay
 
 pymeos_initialize()
 connection = MobilityDB.connect(host=os.environ.get("PGHOST", "localhost"),
@@ -38,22 +38,30 @@ VectorTiles("liberty").add_to(m)
 fig, ax = plt.subplots(figsize=(10, 10))
 sog.plot(axes=ax)
 # --- end of the listing
-# Panel (a) the map over the extent of the trip, at the print scale of the maps of fig_delhi.py
-# (MM_PER_PX); panel (b) the SOG chart. Both are printed 6 cm high, side by side.
-from print_panels import CM, TEXTWIDTH, print_panel_box
+# Panel (a) the map at the size, over the extent and with the towns of the maps pymeosais1_a/b
+# (#bounds of pymeosais_view.py, which needs the trips written by pymeos_ais1.py), at the print scale
+# of the maps of fig_delhi.py (MM_PER_PX); panel (b) the SOG chart, as high as the map, beside it.
+from print_panels import TEXTWIDTH, print_panel_box
+from pymeosais_view import HEIGHT_MM, PLACES, WIDTH_MM, bounds as view_bounds
 html = f"{OUT}/pymeosais2_a.html"
 m.save(html)
+south, west, north, east = view_bounds(DATA)
 box = trajectory.to_geometric().bounding_box()
-# A margin of a twentieth of the extent, so that the ends of the trip stay inside the frame
-dx, dy = (box.xmax() - box.xmin()) / 20, (box.ymax() - box.ymin()) / 20
-width_mm, height_mm = 0.48 * TEXTWIDTH * 25.4, 60
-print_map(html, f"{OUT}/pymeosais2_a.pdf", round(width_mm / MM_PER_PX), round(height_mm / MM_PER_PX),
-          round(width_mm / 25.4, 4), round(height_mm / 25.4, 4),
-          bounds=(box.ymin() - dy, box.xmin() - dx, box.ymax() + dy, box.xmax() + dx))
+assert west <= box.xmin() and box.xmax() <= east and south <= box.ymin() and box.ymax() <= north, \
+    "the trip leaves the extent of the maps pymeosais1_a/b"
+info = print_map(html, f"{OUT}/pymeosais2_a.pdf", round(WIDTH_MM / MM_PER_PX), round(HEIGHT_MM / MM_PER_PX),
+                 round(WIDTH_MM / 25.4, 4), round(HEIGHT_MM / 25.4, 4),
+                 bounds=(south, west, north, east), places=PLACES)
 # The box of the chart is as high as the page of the map as Chrome printed it, and the page of the
 # map is padded with the margins of the labels of the chart, so that the two boxes have one height
 # and are aligned at the top
-under, above = print_panel_box(fig, ax, f"{OUT}/pymeosais2_b.pdf", 0.44 * TEXTWIDTH,
-                               page_size_in(f"{OUT}/pymeosais2_a.pdf")[1], lw=0.5, ms=1.5)
+map_h = page_size_in(f"{OUT}/pymeosais2_a.pdf")[1]
+under, above = print_panel_box(fig, ax, f"{OUT}/pymeosais2_b.pdf", 0.44 * TEXTWIDTH, map_h,
+                               lw=0.5, ms=1.5)
 pad_page(f"{OUT}/pymeosais2_a.pdf", under, above)
+# The labels of the towns are placed on the padded page: their heights, measured from the top of the
+# map, move down by the padding above it and are scaled to the padded height
+labels = [dict(lb, y0=(above + lb['y0'] * map_h) / (map_h + under + above)) for lb in info['labels']]
+write_overlay(f"{OUT}/pymeosais2_a_overlay.tex", "figs/chap2/pymeosais2_a.pdf", "width=0.48\\textwidth",
+              "ovpymeosaisa", labels=labels, comment="pymeos_ais2_plot.py")
 pymeos_finalize()
