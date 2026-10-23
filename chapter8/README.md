@@ -187,6 +187,16 @@ aircraft as vector charts and writes the QGIS job of their position reports:
     python figures/flights_dashboard2_maps.py out figs 36.4376427601968 41.75345135029372 THY325 BOX571
     bash figures/render.sh figs flightsDashboard2_map.json
 
+`flights_dashboards.sh` prints the page of the Streamlit dashboards of the air traffic use case
+(`dashboards/app.py`, the service `dashboards` of `docker-compose-nozeppelin.yml`, a client of the
+service `spark-connect`) with `chapter9/figures/capture.py`, once the tables of the notebook
+"8.3 Create tables from scratch-flights-MobilitySpark" are in the warehouse and those of
+`dashboards/dashboards_tables.sql` are built (the button of dashboard 2 builds them); `PYTHON`
+names a Python with Playwright:
+
+    docker compose -f docker-compose-nozeppelin.yml up -d spark-connect dashboards
+    bash figures/flights_dashboards.sh figs
+
 `history_server.py` captures with headless Chrome the pages of the Spark History Server
 (http://localhost:18080) shown in the section on query processing, given the identifier of the
 running application of the notebook:
@@ -213,6 +223,7 @@ Spark UI draws it:
 | The applications and the jobs in the History Server | `history_server.py`, `incomplete.png`, `incomplete2.png`, `thesparkapp.png`, `completedquery.png` |
 | The distance between the two closest aircraft | `flights_dashboard2_maps.py`, `flightsDashboard2_distance.pdf` |
 | The position reports and the altitudes of the two closest aircraft | `flights_dashboard2_maps.py`, `flightsDashboard2_map.pdf`, `flightsDashboard2_altitude.pdf` |
+| The dashboards of the air traffic use case | `flights_dashboards.sh`, `flightsDashboards.pdf` |
 
 The directory `measure` holds the scripts that measure the times and compare the answers that
 the chapter states for the air traffic use case on the cluster of `docker-compose-nozeppelin.yml`.

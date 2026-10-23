@@ -21,14 +21,15 @@
 # PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #
 
-"""Print a chapter 9 dashboard to a PDF with Playwright Chromium once a condition holds in the page.
+"""Print a dashboard of chapters 8 and 9 to a PDF with Playwright Chromium once a condition holds.
 
 The page is opened in Chromium with SwiftShader for WebGL, and printed once a JavaScript
 condition holds (the window that the figure shows) and the basemap has settled. The PDF has the
-printed width of the figure and the aspect of the viewport. Leaflet draws the data with its SVG
-renderer, which prints as vectors, and MapLibre GL the OpenStreetMap vector-tile basemap on a WebGL
-canvas, which prints as one image; the device scale factor makes that canvas 300 dpi of the
-printed size. A PNG preview is written beside it.
+printed width of the figure and the aspect of the viewport. The text, the metrics and the charts
+of the page print as vectors; a map, drawn on a WebGL canvas by MapLibre GL (the OpenStreetMap
+vector-tile basemap) and deck.gl (the pydeck layers of the Streamlit dashboards), prints as one
+image, and the device scale factor makes that canvas 300 dpi of the printed size. A Leaflet page
+draws its data with the SVG renderer, which prints as vectors. A PNG preview is written beside it.
 
     python capture.py <url> <out.pdf> <width> <height> <js-condition> [settle_s] [timeout_s] [width_mm]
 """
@@ -42,8 +43,10 @@ settle = float(sys.argv[6]) if len(sys.argv) > 6 else 20
 timeout = float(sys.argv[7]) if len(sys.argv) > 7 else 900
 width_mm = float(sys.argv[8]) if len(sys.argv) > 8 else 332.89723 / 72.27 * 25.4   # \textwidth of svmono
 
-# The zoom buttons and the attribution are hidden; the caption credits the basemap.
-HIDE = ".leaflet-control-zoom, .leaflet-control-attribution { display: none !important; }"
+# The zoom buttons and the attribution of Leaflet are hidden; the caption credits the basemap.
+# The page of a Streamlit app fills the figure, without the margins around its content.
+HIDE = (".leaflet-control-zoom, .leaflet-control-attribution { display: none !important; }"
+        " [data-testid='stMainBlockContainer'] { padding: 8px 8px !important; }")
 
 # A WebGL canvas prints blank unless its drawing buffer is kept after each frame.
 KEEP_BUFFER = """

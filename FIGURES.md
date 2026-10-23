@@ -166,10 +166,11 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 | 8.19 | Distance in kilometers flown over each country by the flights over Europe on March 1, 2026, on a logarithmic scale | `flightsQuery3.pdf`, `flightsQuery3_scale` | `chapter8/figures/flights_queries_maps.py` |
 | 8.20 | Number of aircraft in the air over Europe on March 1, 2026, at each instant of the day | `flightsQuery4.pdf` | `chapter8/figures/flights_queries_maps.py` |
 | 8.21 | The flights within 15 km of the holding fixes of London Heathrow, between 2,000 and 5,000 meters, on March 1, 2026: Bovingdon (red), Lambourne (blue), Ockham (green), and Biggin Hill (purple) | `flightsQuery5.pdf` | `chapter8/figures/flights_queries_maps.py` |
-| 8.22 | Dashboard 1: flights leaving Brussels on March 1, 2026, below 2,000 meters while they climb | `flightsDashboard1_left.pdf`, `flightsDashboard1_right.pdf`, `flightsDashboard1_scale` | `chapter8/figures/flights_maps.py` |
-| 8.23 | Dashboard 2: distance in three dimensions between THY325 and BOX571 on March 1, 2026, on a logarithmic scale | `flightsDashboard2_distance.pdf` | `chapter8/figures/flights_dashboard2_maps.py` |
-| 8.24 | Dashboard 2: THY325 (red) and BOX571 (blue) on March 1, 2026 | `flightsDashboard2_map.pdf`, `flightsDashboard2_altitude.pdf` | `chapter8/figures/flights_dashboard2_maps.py` |
-| 8.25 | Dashboard 3: flights on March 1, 2026 | `flightsDashboard3_left.pdf`, `flightsDashboard3_right.pdf`, `flightsDashboard3_scale` | `chapter8/figures/flights_maps.py` |
+| 8.22 | The dashboards of the air traffic use case in MobilitySpark | `flightsDashboards.pdf` | `chapter8/figures/flights_dashboards.sh` |
+| 8.23 | Dashboard 1: flights leaving Brussels on March 1, 2026, below 2,000 meters while they climb | `flightsDashboard1_left.pdf`, `flightsDashboard1_right.pdf`, `flightsDashboard1_scale` | `chapter8/figures/flights_maps.py` |
+| 8.24 | Dashboard 2: distance in three dimensions between THY325 and BOX571 on March 1, 2026, on a logarithmic scale | `flightsDashboard2_distance.pdf` | `chapter8/figures/flights_dashboard2_maps.py` |
+| 8.25 | Dashboard 2: THY325 (red) and BOX571 (blue) on March 1, 2026 | `flightsDashboard2_map.pdf`, `flightsDashboard2_altitude.pdf` | `chapter8/figures/flights_dashboard2_maps.py` |
+| 8.26 | Dashboard 3: flights on March 1, 2026 | `flightsDashboard3_left.pdf`, `flightsDashboard3_right.pdf`, `flightsDashboard3_scale` | `chapter8/figures/flights_maps.py` |
 
 ### Chapter 9
 
