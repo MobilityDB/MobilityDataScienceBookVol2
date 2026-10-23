@@ -47,6 +47,14 @@ The cell filter of the second listing of Query 1 reads a column `cells` of the c
 segment; the layouts of MobilityLakehouse do not store it, and the cell covers of the chapter are
 measured by `benchmark/planar/cellcover/` of MobilityLakehouse instead.
 
+### Exercises
+
+Exercises 10.4 and 10.5 are worked by hand from the physical layouts and
+the table formats of the chapter; `exercises_by_hand.py` computes every
+number of their answers, with Python alone:
+
+    python3 exercises_by_hand.py
+
 ### Figures
 
 `figures/render_pdfs.sh` writes the figures of the chapter as the PDF files the book includes,

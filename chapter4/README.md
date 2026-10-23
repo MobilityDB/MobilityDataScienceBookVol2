@@ -105,6 +105,14 @@ while `azimuth` is measured clockwise from north, so the course in the
 convention of the yaw is `90 - azimuth`; comparing the two raw reports a
 disagreement almost everywhere for no reason but the convention.
 
+### Exercises
+
+Exercises 4.3 and 4.4 are worked by hand from the distance algorithm and
+the nuScenes conventions of the chapter; `exercises_by_hand.py` computes every
+number of their answers, with Python alone:
+
+    python3 exercises_by_hand.py
+
 ### Figures
 
 `figures/make_figures.sh` draws the figures of the chapter drawn from data into
