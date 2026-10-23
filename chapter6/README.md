@@ -54,7 +54,8 @@ extract gives other districts and other answers to the district queries.
 | `delhi_queries.sql` | The queries over the Delhi trips, each preceded by its statement and its pattern |
 | `delhi_districts.sql` | The pattern of Query `que:point-district` over the districts, in its overlapping, disjoint, and any-length versions |
 | `delhi_model_comparison.sql` | The per-cell averages stored in `TripCells` against those computed at query time from `TripTiles` |
-| `run_all.sh` | Runs the four query scripts and compares the number of rows of every answer with `expected/` |
+| `exercises.sql` | The queries of the answers of the exercises of the chapter |
+| `run_all.sh` | Runs the five query scripts and compares the number of rows of every answer with `expected/` |
 
 ### Running
 

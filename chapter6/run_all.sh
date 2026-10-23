@@ -11,7 +11,7 @@ set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
 cd "$HERE"
 export PGDATABASE=${PGDATABASE:-semantic}
-SCRIPTS=${*:-paris_queries delhi_queries delhi_districts delhi_model_comparison}
+SCRIPTS=${*:-paris_queries delhi_queries delhi_districts delhi_model_comparison exercises}
 mkdir -p out
 status=0
 for s in $SCRIPTS; do
