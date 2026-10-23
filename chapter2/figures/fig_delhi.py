@@ -78,8 +78,9 @@ def delhitraj_places():
     box, which the trajectory does not cross; a number whose corner holds one already (the boxes of
     parts 1 and 3 nearly coincide) is set under it, a line of 3.5 mm lower: the labels of #print_map,
     drawn without a dot in the colour of the box by #write_overlay of vgprint.py."""
-    s, _, n, _ = shown_bounds(('bounds',) + trips_bounds(), (TRIPS_W + 1) // 2, (TRIPS_H + 1) // 2)
-    deg_per_mm = (n - s) / (0.55 * TEXTWIDTH_MM * TRIPS_H / TRIPS_W)
+    s, _, n, _ = shown_bounds(('bounds',) + trips_bounds(under=TRAJ_UNDER), (TRIPS_W + 1) // 2,
+                              (TRAJ_H + 1) // 2)
+    deg_per_mm = (n - s) / (0.55 * TEXTWIDTH_MM * TRAJ_H / TRIPS_W)
     places = []
     for i, part in enumerate(my_traj_split):
         _, _, east, north = part.get_bbox()
@@ -102,16 +103,17 @@ def split_part(i):
     return m
 
 
-def trips_bounds(margin=0.06):
+def trips_bounds(margin=0.06, under=0.0):
     """The (south, west, north, east) of the four trajectories, with the same margin of their extent
-    on every side: the one ground of Figs. 2.1 to 2.3, 2.7 and 2.8, on which the boxes of the parts
-    stay clear of the edges of the map; the legend or colour bar sits in the bottom left corner,
-    which no trip crosses."""
+    on every side and `under` of it more at the bottom: the one ground of Figs. 2.1 to 2.3, 2.7 and
+    2.8, on which the boxes of the parts stay clear of the edges of the map; the legend or colour bar
+    sits in the bottom left corner, which no trip crosses, and in Fig. 2.3 under the boxes of the
+    parts, which reach the bottom of the trips."""
     boxes = [t.get_bbox() for t in my_trajs]
     w, s = min(b[0] for b in boxes), min(b[1] for b in boxes)
     e, n = max(b[2] for b in boxes), max(b[3] for b in boxes)
     dx, dy = (e - w) * margin, (n - s) * margin
-    return (s - dy, w - dx, n + dy, e + dx)
+    return (s - dy - (n - s) * under, w - dx, n + dy, e + dx)
 
 
 def shape_of(bounds, width):
@@ -125,6 +127,9 @@ def shape_of(bounds, width):
 # Figs. 2.1 to 2.3, 2.7 and 2.8: one ground and one shape, printed at 0.55 of the text width, so
 # that the maps print at the same height, that of the former Figs. 2.1 and 2.2
 TRIPS_W, TRIPS_H = shape_of(trips_bounds(), 1724)
+# Fig. 2.3: the same width and ground, taller by the room of its colour bar under the boxes
+TRAJ_UNDER = 0.18
+TRAJ_H = shape_of(trips_bounds(under=TRAJ_UNDER), TRIPS_W)[1]
 
 
 def part_bounds(i, margin=0.04):
@@ -282,7 +287,8 @@ FIGS = {
     'mpandas2-delhitrips': (delhitrips, TRIPS_W, TRIPS_H, 143.9926, ('bounds',) + trips_bounds(),
                             ('.leaflet-control-layers',)),
     'mpandas2-delhispeeds': (delhispeeds, TRIPS_W, TRIPS_H, 143.9926, ('bounds',) + trips_bounds(), CTRL),
-    'mpandas2-delhitraj': (delhitraj, TRIPS_W, TRIPS_H, 143.9926, ('bounds',) + trips_bounds(), CTRL),
+    'mpandas2-delhitraj': (delhitraj, TRIPS_W, TRAJ_H, 143.9926,
+                           ('bounds',) + trips_bounds(under=TRAJ_UNDER), CTRL),
     # Fig. 2.4: four square maps, each fitted to its part
     **{f'mpandas2-splits_{p}': (lambda i=i: split_part(i), 1000, 1000, 143.9926,
                                 ('bounds',) + part_bounds(i), CTRL)
