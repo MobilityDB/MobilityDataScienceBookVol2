@@ -4,7 +4,13 @@
  * description of its point of interest (discrete model), and the table
  * TempTour holding each tour as a tjsonb and a tgeompoint value (continuous
  * model). The queries are in paris_queries.sql.
+ *
+ * The times of the tours are local times in Paris, so they are read in the
+ * time zone of Paris whatever the time zone of the server; the queries then
+ * show them in UTC.
  *****************************************************************************/
+
+SET TIMEZONE TO 'Europe/Paris';
 
 DROP TABLE IF EXISTS PoI CASCADE;
 CREATE TABLE PoI(PoIId integer PRIMARY KEY, Name text NOT NULL,
