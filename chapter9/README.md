@@ -149,6 +149,14 @@ For instance, with `W=Flink_Examples/flights_stream` as above:
     MEOS_LIB=<directory of libmeos.so> bash $W/measure/dashboards_session.sh out/dashboards
     MEOS_LIB=<directory of libmeos.so> bash $W/measure/queries_session.sh out/queries
 
+### Exercises
+
+Exercises 9.4 and 9.5 are worked by hand from the rules of MobilityFlink and of
+the flights stream; `exercises_by_hand.py` computes every number of their
+answers, with Python alone:
+
+    python3 exercises_by_hand.py
+
 ### Figures
 
 The directory `figures` holds the scripts that print the dashboards of the chapter to the PDF

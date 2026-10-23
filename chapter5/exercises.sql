@@ -85,3 +85,22 @@ FROM WaveHeight
 GROUP BY lower(ValidTime)
 ORDER BY Km2 DESC
 LIMIT 3;
+
+-- Exercise 5.2, answered by hand and verified on the raster Depth of
+-- map_algebra.sql; the numbers of Exercise 5.3 are computed by grids_by_hand.py
+\echo == 8. the depths of the raster Depth in three classes
+SELECT ST_DumpValues(ST_Reclass(Rast, 1, '[0-10):1, [10-16):2, [16-100]:3',
+  '8BUI', 0), 1)
+FROM Depth;
+
+\echo == 9. the focal maximum of the raster Depth over windows of 3 x 3 pixels
+SELECT ST_DumpValues(ST_MapAlgebra(Rast, 1,
+  'ST_Max4ma(double precision[][][], integer[][], text[])'::regprocedure,
+  '32BF', 'FIRST', NULL, 1, 1), 1)
+FROM Depth;
+
+\echo == 10. the bilinear and the nearest depth at the position (600225, 6400175)
+SELECT ST_Value(Rast, 1, geometry 'SRID=25832;Point(600225 6400175)', true,
+  'bilinear') AS Bilinear,
+  ST_Value(Rast, 1, geometry 'SRID=25832;Point(600225 6400175)') AS Nearest
+FROM Depth;

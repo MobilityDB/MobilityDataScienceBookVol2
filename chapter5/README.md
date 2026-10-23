@@ -143,7 +143,7 @@ script states, before each listing of the chapter, the answer the book prints.
 | Case Study: Underwater Noise and the Depth of the Water | `case_noise.sql` |
 | Case Study: Traffic over a Global Grid | `case_traffic.sql` |
 | Case Study: Fields in Cloud-Native Storage | `case_raquet.sql` |
-| Exercises | `exercises.sql` |
+| Exercises | `exercises.sql`, and `grids_by_hand.py` (Python alone) for the numbers of Exercise 5.3, worked by hand |
 
 The scripts run in this order, since later ones use tables of earlier ones:
 `map_algebra.sql` builds the rasters `Seabed`, `SeabedMean`, and
