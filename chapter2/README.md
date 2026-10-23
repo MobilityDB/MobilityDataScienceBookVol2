@@ -86,7 +86,9 @@ The folder `exercises` holds the programs of the answers to the MovingPandas and
 exercises of the chapter. Run them in that folder with `aisinput.csv` (step 4 above) copied into
 it: `mp_a.py`, `mp_b.py` and `mp_c.py` answer the MovingPandas exercise, and `pm_a.py`, `pm_b.py`
 and `pm_c.py` the PyMEOS one (`pm_b.py` and `pm_c.py` run the loading part of `pm_a.py`). `pm_d.py`
-answers the exercise on the design of the MEOS bindings and needs no data.
+answers the exercise on the design of the MEOS bindings and needs no data. `pm_e.py` answers
+the exercise on aggregation and tiling and needs no data either; it runs with `pymeos==1.1.3
+pymeos_cffi==1.1.3`, for the reason given in step 5 above.
 
 ### JMEOS Programs
 

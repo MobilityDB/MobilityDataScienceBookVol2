@@ -167,6 +167,11 @@ Exercise 7.4 is worked by hand on the table `TestGeo` of the chapter;
 
     python3 exercises_by_hand.py
 
+Exercise 7.5 queries the CSV file and the Parquet file of Sect. "Analyzing Non-Persistent Data"
+without loading them; `values/section_duckdb.sql` writes the Parquet file first (step 1 above):
+
+    ./run_duckdb.sh :memory: exercises_files.sql
+
 ### BerlinMOD Data Generator
 
 These files create the BerlinMOD benchmark for the city of Hanoi, based on the hanoi.osm file that can be obtained from OpenStreetMap. To produce the database you shoul follow the step next.
