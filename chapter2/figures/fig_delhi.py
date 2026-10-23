@@ -78,8 +78,8 @@ def delhitraj_places():
     box, which the trajectory does not cross; a number whose corner holds one already (the boxes of
     parts 1 and 3 nearly coincide) is set under it, a line of 3.5 mm lower: the labels of #print_map,
     drawn without a dot in the colour of the box by #write_overlay of vgprint.py."""
-    s, _, n, _ = shown_bounds(('bounds',) + traj_bounds(), 500, 530)
-    deg_per_mm = (n - s) / (0.8 * TEXTWIDTH_MM * 1060 / 1000)
+    s, _, n, _ = shown_bounds(('bounds',) + trips_bounds(), (TRIPS_W + 1) // 2, (TRIPS_H + 1) // 2)
+    deg_per_mm = (n - s) / (0.8 * TEXTWIDTH_MM * TRIPS_H / TRIPS_W)
     places = []
     for i, part in enumerate(my_traj_split):
         _, _, east, north = part.get_bbox()
@@ -102,13 +102,28 @@ def split_part(i):
     return m
 
 
-def traj_bounds(margin=0.06, under=0.15):
-    """The (south, west, north, east) of the whole trajectory, with a margin of its extent, `under` of
-    it under the trajectory: the ground of Fig. 2.3, on which the boxes of the parts stay clear of the
-    edges of the map and its colour bar is set under them."""
-    w, s, e, n = my_traj.get_bbox()
+def trips_bounds(margin=0.06, under=0.15):
+    """The (south, west, north, east) of the four trajectories, with a margin of their extent, `under`
+    of it under them: the one ground of Figs. 2.1, 2.2 and 2.3, which show the same trips, on which the
+    boxes of the parts stay clear of the edges of the map and the legend or colour bar is set under
+    the trips."""
+    boxes = [t.get_bbox() for t in my_trajs]
+    w, s = min(b[0] for b in boxes), min(b[1] for b in boxes)
+    e, n = max(b[2] for b in boxes), max(b[3] for b in boxes)
     dx, dy = (e - w) * margin, (n - s) * margin
     return (s - (n - s) * under, w - dx, n + dy, e + dx)
+
+
+def shape_of(bounds, width):
+    """The (width, height) in px of a map of the given width showing the bounds (south, west, north,
+    east) exactly, in the Web Mercator projection of Leaflet (#shown_bounds)."""
+    s, w, n, e = bounds
+    y = lambda lat: math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
+    return width, round(width * (y(n) - y(s)) / math.radians(e - w))
+
+
+# Figs. 2.1 to 2.3, 2.7 and 2.8: one ground and one shape, so that the maps print at the same height
+TRIPS_W, TRIPS_H = shape_of(trips_bounds(), 1724)
 
 
 def part_bounds(i, margin=0.04):
@@ -266,12 +281,11 @@ def smooth_speed_b():
 # give the shape of the map and, with the extent, the ground it shows
 # extent: ('view', lat, lon, zoom) or ('bounds', south, west, north, east)
 FIGS = {
-    'mpandas2-delhitrips': (delhitrips, 1724, 1032, 143.9926, ('view', 28.579, 77.221, 12),
+    # Figs. 2.1 to 2.3: the four trips, their speeds, and the first trip with its splits, over one ground
+    'mpandas2-delhitrips': (delhitrips, TRIPS_W, TRIPS_H, 143.9926, ('bounds',) + trips_bounds(),
                             ('.leaflet-control-layers',)),
-    'mpandas2-delhispeeds': (delhispeeds, 1422, 1026, 143.9926, ('view', 28.559, 77.248, 12), CTRL),
-    # Fig. 2.3: the whole trajectory, its splits and its speeds
-    'mpandas2-delhitraj': (delhitraj, 1000, 1060, 143.9926,
-                           ('bounds',) + traj_bounds(), CTRL),
+    'mpandas2-delhispeeds': (delhispeeds, TRIPS_W, TRIPS_H, 143.9926, ('bounds',) + trips_bounds(), CTRL),
+    'mpandas2-delhitraj': (delhitraj, TRIPS_W, TRIPS_H, 143.9926, ('bounds',) + trips_bounds(), CTRL),
     # Fig. 2.4: four square maps, each fitted to its part
     **{f'mpandas2-splits_{p}': (lambda i=i: split_part(i), 1000, 1000, 143.9926,
                                 ('bounds',) + part_bounds(i), CTRL)
@@ -283,10 +297,11 @@ FIGS = {
     # Fig. 2.6: the stops and the segments of the third part, side by side over its ground
     'mpandas2-stops': (stops, 574, 620, 143.9926, ('bounds',) + part_bounds(2), CTRL),
     'mpandas2-segments': (segments, 574, 620, 143.9926, ('bounds',) + part_bounds(2), CTRL),
-    'mpandas2-stops-collect': (stops_collect, 892, 636, 143.9926,
-                               ('bounds', 28.4847, 77.1314, 28.6787, 77.4114), CTRL),
-    'mpandas2-stops-agg': (stops_agg, 556, 620, 143.9926,
-                           ('bounds', 28.5551, 77.1690, 28.6751, 77.2712), CTRL),
+    # Figs. 2.7 and 2.8: the stops of the four trips and the aggregation of the collection, whose
+    # points all lie on the ground of Figs. 2.1 to 2.3, over that ground and in that shape
+    'mpandas2-stops-collect': (stops_collect, TRIPS_W, TRIPS_H, 143.9926, ('bounds',) + trips_bounds(),
+                               CTRL),
+    'mpandas2-stops-agg': (stops_agg, TRIPS_W, TRIPS_H, 143.9926, ('bounds',) + trips_bounds(), CTRL),
     'mpandas2-smooth_a': (smooth_a, 648, 888, 143.9926,
                           ('bounds', 28.554, 77.2035, 28.629, 77.2545), CTRL),
     'mpandas2-smooth_b': (smooth_b, 648, 888, 143.9926,
@@ -322,7 +337,7 @@ PRINTED = {
     **{f'mpandas2-splits_{p}': ('width', 0.48 * TEXTWIDTH_MM) for p in 'abcd'},
     'mpandas2-stops': ('width', 0.42 * TEXTWIDTH_MM), 'mpandas2-segments': ('width', 0.42 * TEXTWIDTH_MM),
     'mpandas2-stops-collect': ('width', 0.8 * TEXTWIDTH_MM),
-    'mpandas2-stops-agg': ('width', 0.6 * TEXTWIDTH_MM),
+    'mpandas2-stops-agg': ('width', 0.8 * TEXTWIDTH_MM),
     # Fig. 2.9: the two maps side by side over the width of the text, one shape, one ground
     'mpandas2-smooth_a': ('width', 0.48 * TEXTWIDTH_MM), 'mpandas2-smooth_b': ('width', 0.48 * TEXTWIDTH_MM),
     'mpandas2-smooth-speed_a': ('height', 74), 'mpandas2-smooth-speed_b': ('height', 74),
