@@ -28,11 +28,11 @@
 SET TimeZone = 'UTC';
 SET geometry_always_xy = true;
 COPY (
-SELECT MMSI, DATE_TRUNC('hour', t) AS hour,
+SELECT MMSI, DATE_TRUNC('hour', t) AS ReportHour,
   ST_AsText(ST_Centroid(ST_Collect(ARRAY_AGG(geom)))) AS centroid_wkt
 FROM AISInput
-GROUP BY MMSI, hour
-ORDER BY MMSI, hour
+GROUP BY MMSI, ReportHour
+ORDER BY MMSI, ReportHour
 ) TO 'data/ais/centroids.csv' (HEADER);
 COPY (
 WITH Target AS (

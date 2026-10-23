@@ -41,9 +41,9 @@ SET
          4 |  0.49
 
 == 7. hours with the largest area of the sea with waves of at least 2 m
- hour  |  km2  
--------+-------
- 23:00 | 69999
- 22:00 | 64468
- 21:00 | 58100
+ validhour |  km2
+-----------+-------
+ 23:00     | 69999
+ 22:00     | 64468
+ 21:00     | 58100
 

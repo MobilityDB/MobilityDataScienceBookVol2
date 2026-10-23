@@ -67,7 +67,7 @@ for key, color in (("trip", "green"), ("dp", "red"), ("sed", "blue")):
     maps[key] = m
 # ------------------------------------------------------------------------------------------
 
-print(trip[["vehicle", "day", "seq"]].to_dict(), {k: trip[k].num_instants() for k in maps},
+print(trip[["vehicle", "startdate", "seq"]].to_dict(), {k: trip[k].num_instants() for k in maps},
       {k: round(trip["trip"].distance(trip[k]).max_value(), 1) for k in ("dp", "sed")})
 
 # The maps are laid out at the scale of zoom 12.149: a Web Mercator metre is 256 * 2^ZOOM / 40075016

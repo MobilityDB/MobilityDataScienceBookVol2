@@ -79,7 +79,7 @@ FROM Seabed s, ST_ValueCount(ST_Reclass(ST_Clip(ST_MapAlgebra(
   '8BUI', 255)) v
 ORDER BY v.value;
 \echo == 7. hours with the largest area of the sea with waves of at least 2 m
-SELECT to_char(lower(ValidTime), 'HH24:MI') AS Hour,
+SELECT to_char(lower(ValidTime), 'HH24:MI') AS ValidHour,
   SUM((ST_SummaryStats(ST_Reclass(Rast, 1, '[2-100]:1', '8BUI', 0))).count) AS Km2
 FROM WaveHeight
 GROUP BY lower(ValidTime)

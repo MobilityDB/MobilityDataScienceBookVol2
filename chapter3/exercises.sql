@@ -94,8 +94,8 @@ SELECT round(tcbuffer '[Cbuffer(Point(0 0), 1)@2001-01-01,
 WITH T(Tcb, Cb) AS (
   SELECT tcbuffer '[Cbuffer(Point(0 0), 1)@2001-01-01,
     Cbuffer(Point(10 0), 1)@2001-01-02]', cbuffer 'Cbuffer(Point(5 4), 1)' )
-SELECT whenTrue(tDwithin(Tcb, Cb, 3)) AS Periods, eDwithin(Tcb, Cb, 3) AS Ever,
-  aDwithin(Tcb, Cb, 3) AS Always
+SELECT whenTrue(tDwithin(Tcb, Cb, 3)) AS Periods,
+  eDwithin(Tcb, Cb, 3) AS EverWithin, aDwithin(Tcb, Cb, 3) AS AlwaysWithin
 FROM T;
 -- {[2001-01-01 04:48:00+00, 2001-01-01 19:12:00+00]} | t | f
 

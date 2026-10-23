@@ -42,8 +42,8 @@
   },
   {
    "id": "q6_centroid",
-   "duck": "SELECT MMSI, DATE_TRUNC('hour', t) AS Hour, ST_Centroid(ST_Collect(ARRAY_AGG(geom))) AS Centroid FROM AISInput GROUP BY MMSI, hour ORDER BY MMSI, hour",
-   "pg": "SELECT MMSI, DATE_TRUNC('hour', t) AS Hour, ST_Centroid(ST_Collect(ARRAY_AGG(geom))) AS Centroid FROM AISInput GROUP BY MMSI, hour ORDER BY MMSI, hour"
+   "duck": "SELECT MMSI, DATE_TRUNC('hour', t) AS ReportHour, ST_Centroid(ST_Collect(ARRAY_AGG(geom))) AS Centroid FROM AISInput GROUP BY MMSI, ReportHour ORDER BY MMSI, ReportHour",
+   "pg": "SELECT MMSI, DATE_TRUNC('hour', t) AS ReportHour, ST_Centroid(ST_Collect(ARRAY_AGG(geom))) AS Centroid FROM AISInput GROUP BY MMSI, ReportHour ORDER BY MMSI, ReportHour"
   },
   {
    "id": "q7_bbox",

@@ -181,7 +181,7 @@ for _, row in communes.iterrows():
         "trip"].apply(lambda tr: tr.at(row["geom"]))
     commune_trajectories[f'{row["name"]}-distance'] = commune_trajectories[
         f'{row["name"]}-trajectory'].apply(lambda tr: tr.length() if tr else 0)
-distances = commune_trajectories[["vehicle", "day", "seq", *(f"{commune}-distance"
+distances = commune_trajectories[["vehicle", "startdate", "seq", *(f"{commune}-distance"
     for commune in communes["name"])]]
 head('commune distances (km, sum)', (distances.iloc[:, 3:].sum() / 1000).round(1).to_string())
 matplotlib.rcParams['figure.max_open_warning'] = 0
@@ -226,7 +226,7 @@ for _, trip in simplifications.iterrows():
     trip["dp"].plot(axes=axes[1])
     trip["sed"].plot(axes=axes[2])
 save_panels(fig, axes, ['pymeossimplifications_a', 'pymeossimplifications_b', 'pymeossimplifications_c'])
-distances = simplifications[["vehicle", "day", "seq"]].copy()
+distances = simplifications[["vehicle", "startdate", "seq"]].copy()
 distances["trip"] = simplifications["trip"].apply(lambda tr: tr.num_instants())
 distances["dp"] = simplifications["dp"].apply(lambda tr: tr.num_instants())
 distances["sed"] = simplifications["sed"].apply(lambda tr: tr.num_instants())

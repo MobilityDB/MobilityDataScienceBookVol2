@@ -52,26 +52,26 @@ SELECT * EXCLUDE (SOG) FROM AISInput LIMIT 2;
 .print == columns
 SELECT MAX(COLUMNS('L.*')) FROM AISInput;
 .print == alias
-SELECT SOG > 0.5 AS IsMoving, date_trunc('month', T) AS Month,
+SELECT SOG > 0.5 AS IsMoving, date_trunc('month', T) AS ReportMonth,
   AVG(ROT) AS AvRot
 FROM AISInput
 WHERE IsMoving = TRUE
-GROUP BY IsMoving, Month
+GROUP BY IsMoving, ReportMonth
 HAVING AvRot > 5;
 .print == groupbyall
 SELECT COUNT(*) FROM (
-SELECT MMSI, date_trunc('day', T) AS Day, round(SUM(SOG) / 24, 2) AS TotalSogPerDay,
+SELECT MMSI, date_trunc('day', T) AS ReportDay, round(SUM(SOG) / 24, 2) AS TotalSogPerDay,
   round(AVG(COG), 2) AS AvgCogPerDay
 FROM AISInput
 GROUP BY ALL);
 .print == pivot1
 SELECT *
 FROM (
-  SELECT MMSI, date_trunc('day', T) AS day,  ShipType, SOG
+  SELECT MMSI, date_trunc('day', T) AS ReportDay,  ShipType, SOG
   FROM AISInput
   WHERE MMSI = 258656000)
 PIVOT (AVG(SOG) FOR ShipType IN ('Cargo', 'Tanker', 'Passenger', 'Fishing') )
-ORDER BY day;
+ORDER BY ReportDay;
 SELECT Name, ShipType, COUNT(*), COUNT(DISTINCT Geom::VARCHAR) FROM AISInput WHERE MMSI = 258656000 GROUP BY ALL;
 .print == pivot2
 SELECT *
