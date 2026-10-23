@@ -37,8 +37,9 @@ OUT = Path(__file__).resolve().parent / 'out'
 CHROME = os.environ.get('CHROME')  # None: the Chromium that Playwright installs
 FS = f'{8.5 * 72 / 72.27 * 0.431 / 0.547:.3f}pt'  # 6.67 pt
 CSS = f"""body {{ margin: 0; font-family: 'DejaVu Sans', sans-serif; font-size: {FS}; background: #fff; }}
-pre {{ font-family: 'DejaVu Sans Mono', monospace; font-size: {FS}; margin: 2px 3px; }}
 table {{ border-collapse: collapse; margin: 2px; font-size: {FS}; }}
+table.series td {{ padding: 0 4px; }}
+table.series tbody tr {{ background: none; }}
 th, td {{ padding: 2px 4px; text-align: right; white-space: nowrap; }}
 thead th {{ border-bottom: 1px solid #000; }}
 tbody tr:nth-child(odd) {{ background: #f5f5f5; }}
@@ -65,7 +66,23 @@ def render(body, name):
         b.close()
 
 
-render(f'<pre>{html.escape(open(f"{OUT}/pymeosbmod10.txt").read())}</pre>', 'pymeosbmod10')
+def series(text):
+    """A printed Series as the HTML table that #render prints, in the sans-serif font of the
+    book's code, the index right and the values left aligned, which spaces cannot do outside a
+    monospaced font"""
+    rows = []
+    for line in text.rstrip('\n').split('\n'):
+        if not line.strip():
+            rows.append('<tr><td colspan="2" style="height: 0.8em"></td></tr>')
+        elif line.startswith('Name:'):
+            rows.append(f'<tr><td colspan="2" style="text-align: left">{html.escape(line)}</td></tr>')
+        else:
+            i, v = line.split(None, 1)
+            rows.append(f'<tr><td>{html.escape(i)}</td><td style="text-align: left">{html.escape(v)}</td></tr>')
+    return '<table class="series">' + ''.join(rows) + '</table>'
+
+
+render(series(open(f'{OUT}/pymeosbmod10.txt').read()), 'pymeosbmod10')
 
 sp = pd.read_csv(f'{OUT}/spatial_aggregates.csv').head(6)
 sp['tile'] = sp['tile'].map(lambda s: trunc(s, 34))
