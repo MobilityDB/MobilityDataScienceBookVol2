@@ -79,7 +79,7 @@ def delhitraj_places():
     parts 1 and 3 nearly coincide) is set under it, a line of 3.5 mm lower: the labels of #print_map,
     drawn without a dot in the colour of the box by #write_overlay of vgprint.py."""
     s, _, n, _ = shown_bounds(('bounds',) + trips_bounds(), (TRIPS_W + 1) // 2, (TRIPS_H + 1) // 2)
-    deg_per_mm = (n - s) / (0.8 * TEXTWIDTH_MM * TRIPS_H / TRIPS_W)
+    deg_per_mm = (n - s) / (0.55 * TEXTWIDTH_MM * TRIPS_H / TRIPS_W)
     places = []
     for i, part in enumerate(my_traj_split):
         _, _, east, north = part.get_bbox()
@@ -102,16 +102,16 @@ def split_part(i):
     return m
 
 
-def trips_bounds(margin=0.06, under=0.15):
-    """The (south, west, north, east) of the four trajectories, with a margin of their extent, `under`
-    of it under them: the one ground of Figs. 2.1, 2.2 and 2.3, which show the same trips, on which the
-    boxes of the parts stay clear of the edges of the map and the legend or colour bar is set under
-    the trips."""
+def trips_bounds(margin=0.06):
+    """The (south, west, north, east) of the four trajectories, with the same margin of their extent
+    on every side: the one ground of Figs. 2.1 to 2.3, 2.7 and 2.8, on which the boxes of the parts
+    stay clear of the edges of the map; the legend or colour bar sits in the bottom left corner,
+    which no trip crosses."""
     boxes = [t.get_bbox() for t in my_trajs]
     w, s = min(b[0] for b in boxes), min(b[1] for b in boxes)
     e, n = max(b[2] for b in boxes), max(b[3] for b in boxes)
     dx, dy = (e - w) * margin, (n - s) * margin
-    return (s - (n - s) * under, w - dx, n + dy, e + dx)
+    return (s - dy, w - dx, n + dy, e + dx)
 
 
 def shape_of(bounds, width):
@@ -122,7 +122,8 @@ def shape_of(bounds, width):
     return width, round(width * (y(n) - y(s)) / math.radians(e - w))
 
 
-# Figs. 2.1 to 2.3, 2.7 and 2.8: one ground and one shape, so that the maps print at the same height
+# Figs. 2.1 to 2.3, 2.7 and 2.8: one ground and one shape, printed at 0.55 of the text width, so
+# that the maps print at the same height, that of the former Figs. 2.1 and 2.2
 TRIPS_W, TRIPS_H = shape_of(trips_bounds(), 1724)
 
 
@@ -187,12 +188,10 @@ def stops_collect():
     stop_points = detector.get_stop_points(
         min_duration=timedelta(seconds=120), max_diameter=100)
     print("len(stop_points)", len(stop_points))
-    m = my_trajs.explore(
-        column="deviceId", tooltip="deviceId", popup=True, style_kwds={"weight": 4},
-        name="Trajectories", tiles=None)
-    stop_points.explore(
-        m=m, color="red", tooltip="stop_id", popup=True, marker_kwds={"radius": 7},
-        name="Stop points")
+    m = my_trajs.explore(column="deviceId", tooltip="deviceId", popup=True,
+        style_kwds={"weight": 4}, name="Trajectories", tiles=None)
+    stop_points.explore(m=m, color="red", tooltip="stop_id", popup=True,
+        marker_kwds={"radius": 7}, name="Stop points")
     VectorTiles("liberty-city").add_to(m)
     folium.LayerControl().add_to(m)
     return m
@@ -200,9 +199,8 @@ def stops_collect():
 
 def stops_agg():
     generalized = mpd.MinDistanceGeneralizer(tc).generalize(tolerance=100)
-    aggregator = mpd.TrajectoryCollectionAggregator(
-        generalized, max_distance=1000, min_distance=100,
-        min_stop_duration=timedelta(minutes=5))
+    aggregator = mpd.TrajectoryCollectionAggregator(generalized, max_distance=1000,
+        min_distance=100, min_stop_duration=timedelta(minutes=5))
     pts = aggregator.get_significant_points_gdf()
     clusters = aggregator.get_clusters_gdf()
     print("significant points", len(pts), "clusters", len(clusters))
@@ -317,12 +315,12 @@ FIGS = {
 # \\includegraphics options of the figure in the chapter. Figs. 2.1, 2.2, 2.3, 2.5 and 2.7 place their
 # legend or colour bar in the bottom left corner, which no trip crosses, in 8 pt (FS of print_panels.py).
 OVERLAY = {
-    'mpandas2-delhitrips': (('legend', 'south west'), 'width=0.8\\textwidth'),
-    'mpandas2-delhispeeds': (('colorbar', 'Speed (m/s)', 3.5, 'south west'), 'width=0.8\\textwidth'),
-    'mpandas2-delhitraj': (('colorbar', 'Speed (m/s)', 3.5, 'south west'), 'width=0.8\\textwidth'),
+    'mpandas2-delhitrips': (('legend', 'south west'), 'width=0.55\\textwidth'),
+    'mpandas2-delhispeeds': (('colorbar', 'Speed (m/s)', 3.5, 'south west'), 'width=0.55\\textwidth'),
+    'mpandas2-delhitraj': (('colorbar', 'Speed (m/s)', 3.5, 'south west'), 'width=0.55\\textwidth'),
     **{f'mpandas2-generalization_{p}': (('colorbar', 'Speed (m/s)', 3.5, 'south west'),
                                         'width=0.8\\textwidth') for p in 'abc'},
-    'mpandas2-stops-collect': (('legend', 'south west'), 'width=0.8\\textwidth'),
+    'mpandas2-stops-collect': (('legend', 'south west'), 'width=0.55\\textwidth'),
     'mpandas2-smooth-speed_a': (('colorbar', 'Speed (m/s)', 2.6), 'height=7.4cm'),
     'mpandas2-smooth-speed_b': (('colorbar', 'Speed (m/s)', 2.6), 'height=7.4cm'),
 }
@@ -330,14 +328,14 @@ OVERLAY = {
 # chapter2.tex)
 TEXTWIDTH_MM = 332.89723 / 72.27 * 25.4
 PRINTED = {
-    'mpandas2-delhitrips': ('width', 0.8 * TEXTWIDTH_MM),
-    'mpandas2-delhispeeds': ('width', 0.8 * TEXTWIDTH_MM),
-    'mpandas2-delhitraj': ('width', 0.8 * TEXTWIDTH_MM),
+    'mpandas2-delhitrips': ('width', 0.55 * TEXTWIDTH_MM),
+    'mpandas2-delhispeeds': ('width', 0.55 * TEXTWIDTH_MM),
+    'mpandas2-delhitraj': ('width', 0.55 * TEXTWIDTH_MM),
     **{f'mpandas2-generalization_{p}': ('width', 0.8 * TEXTWIDTH_MM) for p in 'abc'},
     **{f'mpandas2-splits_{p}': ('width', 0.48 * TEXTWIDTH_MM) for p in 'abcd'},
     'mpandas2-stops': ('width', 0.42 * TEXTWIDTH_MM), 'mpandas2-segments': ('width', 0.42 * TEXTWIDTH_MM),
-    'mpandas2-stops-collect': ('width', 0.8 * TEXTWIDTH_MM),
-    'mpandas2-stops-agg': ('width', 0.8 * TEXTWIDTH_MM),
+    'mpandas2-stops-collect': ('width', 0.55 * TEXTWIDTH_MM),
+    'mpandas2-stops-agg': ('width', 0.55 * TEXTWIDTH_MM),
     # Fig. 2.9: the two maps side by side over the width of the text, one shape, one ground
     'mpandas2-smooth_a': ('width', 0.48 * TEXTWIDTH_MM), 'mpandas2-smooth_b': ('width', 0.48 * TEXTWIDTH_MM),
     'mpandas2-smooth-speed_a': ('height', 74), 'mpandas2-smooth-speed_b': ('height', 74),
