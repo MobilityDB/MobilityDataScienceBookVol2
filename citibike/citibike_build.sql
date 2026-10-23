@@ -27,7 +27,7 @@
 -- as Delta tables, by the statements of Sect. "The Citi Bike Data" of the chapter on Apache
 -- Spark and Apache Sedona. The directory of the data is the variable data, set by build.sh.
 
-CREATE OR REPLACE TEMP VIEW citibike_csv
+CREATE OR REPLACE TEMPORARY VIEW citibike_csv
 USING csv
 OPTIONS (path 'file://${data}/citibike/csv', header 'true', inferSchema 'true');
 
@@ -53,7 +53,7 @@ UPDATE trips SET
   end_station_id = CASE WHEN end_station_id RLIKE '^[0-9]+[.][0-9]$'
     THEN concat(end_station_id, '0') ELSE end_station_id END;
 
-CREATE OR REPLACE TEMP VIEW auxi_nta_2020 USING shapefile
+CREATE OR REPLACE TEMPORARY VIEW auxi_nta_2020 USING shapefile
 OPTIONS (path 'file://${data}/citibike/nynta2020_26b', header 'true', inferSchema 'true');
 
 DROP TABLE IF EXISTS nta;
@@ -71,7 +71,7 @@ CREATE TABLE stations (
 ) USING DELTA;
 
 -- One record per station identifier, with its number of trips
-CREATE OR REPLACE TEMP VIEW stations_clean AS
+CREATE OR REPLACE TEMPORARY VIEW stations_clean AS
 WITH trip_starts AS (
   SELECT
     TRIM(CAST(start_station_id AS STRING)) AS id, start_station_name AS name,
