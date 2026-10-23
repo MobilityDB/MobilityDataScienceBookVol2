@@ -55,14 +55,14 @@ WITH SL AS (
 SELECT s.MMSI, tgeompoint(s.Noise) AS Trip, atTime(l.SL, getTime(s.Noise)) AS SL
 FROM Ships s JOIN SL l USING (MMSI)
 WHERE s.Noise IS NOT NULL;
-SELECT COUNT(*) AS Noisy, round(MIN(minValue(SL))::numeric, 1) AS MinSL,
-  round(MAX(maxValue(SL))::numeric, 1) AS MaxSL
+SELECT COUNT(*) AS Noisy, round(MIN(minValue(SL)), 1) AS MinSL,
+  round(MAX(maxValue(SL)), 1) AS MaxSL
 FROM ShipNoise;
 \echo == the vessels with the smallest and the largest source level: type and length (Pleasure | 7 | 106.4, Pilot | 12 | 191.7)
-(SELECT v.ShipType, v.Length, round(minValue(s.SL)::numeric, 1) AS SL
+(SELECT v.ShipType, v.Length, round(minValue(s.SL), 1) AS SL
   FROM ShipNoise s JOIN VesselClass v USING (MMSI) ORDER BY minValue(s.SL) LIMIT 1)
 UNION ALL
-(SELECT v.ShipType, v.Length, round(maxValue(s.SL)::numeric, 1)
+(SELECT v.ShipType, v.Length, round(maxValue(s.SL), 1)
   FROM ShipNoise s JOIN VesselClass v USING (MMSI) ORDER BY maxValue(s.SL) DESC LIMIT 1);
 
 \echo == Listing: the radius of the noise from the excess level and the depth
@@ -98,8 +98,8 @@ SELECT s.MMSI, s.Trip, s.SL, d.Depth,
   tcbuffer(s.Trip, noiseRadius(s.SL - 80, NULL)) AS Spherical,
   tcbuffer(s.Trip, noiseRadius(s.SL - 80, d.Depth)) AS DepthAware
 FROM ShipNoise s JOIN Depth d USING (MMSI);
-SELECT round((ST_Area(traversedArea(Spherical, true)) / 1e6)::numeric, 1) AS AreaSph,
-  round((ST_Area(traversedArea(DepthAware, true)) / 1e6)::numeric, 1) AS AreaDepth,
+SELECT round(ST_Area(traversedArea(Spherical, true)) / 1e6, 1) AS AreaSph,
+  round(ST_Area(traversedArea(DepthAware, true)) / 1e6, 1) AS AreaDepth,
   duration(whenTrue(tIntersects(Spherical, n.Geom))) AS InReefSph,
   duration(whenTrue(tIntersects(DepthAware, n.Geom))) AS InReefDepth
 FROM NoiseOne, NaturalAreas n
@@ -117,10 +117,10 @@ Level AS (
   SELECT Wind, 10 * log10(1e8 + exp(ln(10) / 10 * (50 + 7.5 * exp(0.5 * ln(Wind)) +
     20 * log10(0.063) - 40 * log10(0.463) + 10 * log10(0.231 * 63)))) AS NL
   FROM Wind )
-SELECT round(minValue(Wind)::numeric, 1) AS MinWind, round(maxValue(Wind)::numeric, 1) AS MaxWind,
-  round(minValue(NL)::numeric, 1) AS MinNL, round(maxValue(NL)::numeric, 1) AS MaxNL,
-  round((ST_Area(traversedArea(tcbuffer(o.Trip, noiseRadius(o.SL - l.NL, o.Depth)), true))
-    / 1e6)::numeric, 1) AS AreaWind
+SELECT round(minValue(Wind), 1) AS MinWind, round(maxValue(Wind), 1) AS MaxWind,
+  round(minValue(NL), 1) AS MinNL, round(maxValue(NL), 1) AS MaxNL,
+  round(ST_Area(traversedArea(tcbuffer(o.Trip, noiseRadius(o.SL - l.NL, o.Depth)), true))
+    / 1e6, 1) AS AreaWind
 FROM Level l, NoiseOne o;
 
 \echo == Listing: the depth, the wind, and the three moving regions of the noise of every vessel
@@ -193,29 +193,29 @@ FROM NoisePairs;
 \echo == the fishing vessel: type, length, period under way, sequences, km, source level, time over the bathymetry, depth (Fishing | 15 | 05:29:12 | 17:16:58 | 5 | 45.2 | 121.0 | 148.5 | 03:14:05.740078 | 0.3 | 60.7)
 \set m 220334000
 SELECT v.ShipType, v.Length, startTimestamp(x.Trip) AS StartT, endTimestamp(x.Trip) AS EndT,
-  numSequences(x.Trip) AS Seqs, round((length(x.Trip) / 1000)::numeric, 1) AS Km,
-  round(minValue(s.SL)::numeric, 1) AS MinSL, round(maxValue(s.SL)::numeric, 1) AS MaxSL,
+  numSequences(x.Trip) AS Seqs, round(length(x.Trip) / 1000, 1) AS Km,
+  round(minValue(s.SL), 1) AS MinSL, round(maxValue(s.SL), 1) AS MaxSL,
   duration(getTime(x.Depth)) AS DepthKnown,
-  round(minValue(x.Depth)::numeric, 1) AS MinDepth, round(maxValue(x.Depth)::numeric, 1) AS MaxDepth
+  round(minValue(x.Depth), 1) AS MinDepth, round(maxValue(x.Depth), 1) AS MaxDepth
 FROM NoiseModels x JOIN VesselClass v USING (MMSI) JOIN ShipNoise s USING (MMSI) WHERE x.MMSI = :m;
 
 \echo == nearest port to the start and to the end of its trip (Vesterø Havn, Læsø, 11719 m and 11723 m)
-SELECT 'start' AS k, p.PortName, round(ST_Distance(p.Geom, startValue(x.Trip))::numeric) AS d
+SELECT 'start' AS k, p.PortName, round(ST_Distance(p.Geom, startValue(x.Trip))) AS d
 FROM NoiseModels x, Port p WHERE x.MMSI = :m ORDER BY ST_Distance(p.Geom, startValue(x.Trip)) LIMIT 1;
-SELECT 'end' AS k, p.PortName, round(ST_Distance(p.Geom, endValue(x.Trip))::numeric) AS d
+SELECT 'end' AS k, p.PortName, round(ST_Distance(p.Geom, endValue(x.Trip))) AS d
 FROM NoiseModels x, Port p WHERE x.MMSI = :m ORDER BY ST_Distance(p.Geom, endValue(x.Trip)) LIMIT 1;
 
 \echo == time under the depth law, time at the cap of 10 km, largest radius spherical and depending on the depth (01:49:36.313068 | | 2650 | 7611)
 WITH r AS (SELECT s.SL - 80 AS DL, x.Depth, x.Trip FROM NoiseModels x JOIN ShipNoise s USING (MMSI) WHERE x.MMSI = :m)
 SELECT duration(whenTrue((DL #> 20 * log10(10 * Depth)) & (Depth #>= 10))) AS DepthLaw,
   duration(whenTrue(noiseRadius(DL, Depth) #>= 9999.999)) AS AtCap,
-  round(maxValue(noiseRadius(DL, NULL))::numeric) AS MaxRSph,
-  round(maxValue(noiseRadius(DL, Depth))::numeric) AS MaxRDep
+  round(maxValue(noiseRadius(DL, NULL))) AS MaxRSph,
+  round(maxValue(noiseRadius(DL, Depth))) AS MaxRDep
 FROM r;
 
 \echo == wind and ambient noise met by the fishing vessel (2.6 | 5.4 | 80.1 | 80.3)
-SELECT round(minValue(Wind)::numeric, 1) AS MinWind, round(maxValue(Wind)::numeric, 1) AS MaxWind,
-  round(minValue(NL)::numeric, 1) AS MinNL, round(maxValue(NL)::numeric, 1) AS MaxNL
+SELECT round(minValue(Wind), 1) AS MinWind, round(maxValue(Wind), 1) AS MaxWind,
+  round(minValue(NL), 1) AS MinNL, round(maxValue(NL), 1) AS MaxNL
 FROM WindNoise WHERE MMSI = :m;
 
 \echo == time the noise spends in each protected area it reaches under the three models (reef area 22: 01:06:41.329226 | 01:41:15.027631; area 35 only with the depth, 00:05:53.168909)
@@ -234,12 +234,12 @@ FROM NoiseModels x, NaturalAreas n
 WHERE x.MMSI = :m AND n.Id = 22;
 
 \echo == the wind of the day over the area: mean and highest wind speed (5.5 | 16.5)
-SELECT round((ST_SummaryStatsAgg(Rast, 1, true)).mean::numeric, 1) AS MeanWind,
-  round((ST_SummaryStatsAgg(Rast, 1, true)).max::numeric, 1) AS MaxWind
+SELECT round((ST_SummaryStatsAgg(Rast, 1, true)).mean, 1) AS MeanWind,
+  round((ST_SummaryStatsAgg(Rast, 1, true)).max, 1) AS MaxWind
 FROM WindSpeed;
 
 \echo == along the trips: highest wind and ambient noise, and vessels whose ambient noise exceeds 81 dB (14.1 | 82.6 | 181)
-SELECT round(MAX(maxValue(Wind))::numeric, 1) AS MaxWind,
-  round(MAX(maxValue(NL))::numeric, 1) AS MaxNL,
+SELECT round(MAX(maxValue(Wind)), 1) AS MaxWind,
+  round(MAX(maxValue(NL)), 1) AS MaxNL,
   COUNT(*) FILTER (WHERE maxValue(NL) > 81) AS Over81
 FROM WindNoise;

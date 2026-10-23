@@ -40,7 +40,7 @@ SELECT duration(whenTrue((Depth #>= 20) & (Depth #< 30))) AS Duration
 FROM VesselDepth;
 
 \echo == 2. for each of the first 200 vessels, the highest wave met and when
-SELECT s.MMSI, round(maxValue(w.WaveHeight)::numeric, 2) AS MaxHs,
+SELECT s.MMSI, round(maxValue(w.WaveHeight), 2) AS MaxHs,
   startTimestamp(atMax(w.WaveHeight)) AS AtTime
 FROM Ships200 s JOIN SeaState w USING (MMSI)
 ORDER BY maxValue(w.WaveHeight) DESC NULLS LAST
@@ -48,7 +48,7 @@ LIMIT 3;
 
 \echo == 3. time-weighted average surface temperature met by the first 200 vessels
 SELECT s.MMSI, round(twAvg(mergeAgg(rasterValue(atTime(s.Trip, t.ValidTime), t.Rast)
-    ORDER BY t.ValidTime))::numeric, 2) AS AvgTemp
+    ORDER BY t.ValidTime)), 2) AS AvgTemp
 FROM Ships200 s, SurfaceTemperature t
 WHERE s.Trip && t.ValidTime AND ST_Intersects(t.Rast, trajectory(s.Trip))
 GROUP BY s.MMSI

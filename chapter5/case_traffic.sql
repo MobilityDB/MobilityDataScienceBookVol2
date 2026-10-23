@@ -92,9 +92,9 @@ FROM CellTraffic
 WHERE cellToParent(Cell, 5) = '851f26d3fffffff'
 ORDER BY VesselTime DESC
 LIMIT 1;
-SELECT round((100 * ST_Area(ST_Intersection(cellToBoundary(h3index '871f26d1bffffff'),
+SELECT round(100 * ST_Area(ST_Intersection(cellToBoundary(h3index '871f26d1bffffff'),
     cellToBoundary(h3index '851f26d3fffffff'))::geography) /
-  ST_Area(cellToBoundary(h3index '871f26d1bffffff')::geography))::numeric, 1)
+  ST_Area(cellToBoundary(h3index '871f26d1bffffff')::geography), 1)
   AS PctInParent;
 
 \echo == Query: vessel-hours by the mean depth of the H3 cells of resolution 7
@@ -130,7 +130,7 @@ SELECT COUNT(*) AS Cells, round(SUM(EXTRACT(EPOCH FROM t.VesselTime)) / 3600) AS
 FROM CellTraffic t JOIN CellDepth d USING (Cell) JOIN CellZones z USING (Cell)
 WHERE (d.Depth).mean < 10 AND EXISTS (SELECT 1 FROM Port p WHERE ST_Intersects(p.Geom, z.Geom));
 \echo == mean depth of the three busiest cells (6.3, 3.3, 8.4)
-SELECT t.Cell, round((d.Depth).mean::numeric, 1) AS MeanDepth
+SELECT t.Cell, round((d.Depth).mean, 1) AS MeanDepth
 FROM CellTraffic t JOIN CellDepth d USING (Cell)
 ORDER BY t.VesselTime DESC
 LIMIT 3;
@@ -144,8 +144,8 @@ LIMIT 3;
    871f23c9effffff |      77 |      33.7 |     15.3
    871f22268ffffff |      76 |      36.2 |     17.7
    871f23c9cffffff |      75 |      31.7 |     21.4 */
-SELECT t.Cell, t.Vessels, round((d.Depth).mean::numeric, 1) AS MeanDepth,
-  round((d.Depth).min::numeric, 1) AS MinDepth
+SELECT t.Cell, t.Vessels, round((d.Depth).mean, 1) AS MeanDepth,
+  round((d.Depth).min, 1) AS MinDepth
 FROM CellTraffic t JOIN CellDepth d USING (Cell) JOIN CellZones z USING (Cell)
 WHERE (d.Depth).count * 2500 >= 0.95 * ST_Area(z.Geom)
 ORDER BY t.Vessels DESC, t.Cell::text

@@ -193,7 +193,7 @@ CREATE TABLE Ship(Body) AS SELECT trgeometry
    Pose(Point(60 0),1.5707963267948966)@2001-01-01 08:02]';
 
 SELECT length(Body) AS Length, maxValue(speed(Body)) AS MaxSpeed,
-  round(maxValue(angularSpeed(Body))::numeric, 4) AS MaxAngularSpeed
+  round(maxValue(angularSpeed(Body)), 4) AS MaxAngularSpeed
 FROM Ship;
 -- 60 | 1 | 0.0262
 
@@ -214,10 +214,10 @@ SELECT ST_AsText(valueAtTimestamp(bodyPointTrajectory(Body,
 FROM Ship;
 -- POINT(65 5) | POINT(67.071 7.071)
 
-SELECT round(nearestApproachDistance(Body, Buoy)::numeric, 2) AS Dist,
+SELECT round(nearestApproachDistance(Body, Buoy), 2) AS Dist,
   getTimestamp(nearestApproachInstant(Body, Buoy)) AS Time,
   ST_AsText(shortestLine(Body, Buoy), 2) AS Line,
-  round(nearestApproachDistance(Body::tgeompoint, Buoy)::numeric, 2)
+  round(nearestApproachDistance(Body::tgeompoint, Buoy), 2)
     AS CenterDist
 FROM Ship, (SELECT geometry 'Point(80 30)' AS Buoy) AS B;
 /* 25.62 | 2001-01-01 08:01:26.407125+00 | LINESTRING(65.79 8.69,80 30) |

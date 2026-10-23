@@ -32,7 +32,7 @@
 SET TimeZone = 'UTC';
 
 -- The area affected by the noise of the fishing vessel during its trip
-SELECT round((ST_Area(traversedArea(Noise, true)) / 1e6)::numeric, 2) AS AreaKm2
+SELECT round(ST_Area(traversedArea(Noise, true)) / 1e6, 2) AS AreaKm2
 FROM Ships
 WHERE MMSI = 220323000;
 -- 177.79
@@ -70,7 +70,7 @@ WHERE n.Realm <> 'Terrestrial' AND stbox(n.Geom) && stbox(v.Noise)
 -- SELECT 3936
 
 SELECT n.NameEng, COUNT(DISTINCT e.MMSI) AS Vessels,
-  round((SUM(extract(epoch FROM duration(e.Heard))) / 3600)::numeric, 1)
+  round(SUM(extract(epoch FROM duration(e.Heard))) / 3600, 1)
     AS VesselHours
 FROM Exposure e JOIN NaturalAreas n ON n.Id = e.AreaId
 GROUP BY n.Id, n.NameEng
@@ -87,8 +87,8 @@ FROM Exposure WHERE AreaId = 122;
 WITH Heard AS (
   SELECT AreaId, spansetUnion(Heard) AS Heard
   FROM Exposure GROUP BY AreaId )
-SELECT n.NameEng, round((1440 - extract(epoch FROM duration(h.Heard))
-  / 60)::numeric, 1) AS MinutesQuiet
+SELECT n.NameEng, round(1440 - extract(epoch FROM duration(h.Heard))
+  / 60, 1) AS MinutesQuiet
 FROM Heard h JOIN NaturalAreas n ON n.Id = h.AreaId
 ORDER BY MinutesQuiet, n.NameEng LIMIT 3;
 -- C | 0.0
@@ -112,8 +112,8 @@ CREATE OR REPLACE VIEW Passenger(Noise) AS
   SELECT Noise FROM Ships WHERE MMSI = 219000407;
 
 SELECT numInstants(tDistance(a.Noise, b.Noise)),
-  round(minValue(tDistance(a.Noise, b.Noise))::numeric, 2),
-  round(maxValue(tDistance(a.Noise, b.Noise))::numeric, 2)
+  round(minValue(tDistance(a.Noise, b.Noise)), 2),
+  round(maxValue(tDistance(a.Noise, b.Noise)), 2)
 FROM Fishing a, Passenger b;
 -- 1902 | 7735.04 | 53826.11
 
@@ -121,7 +121,7 @@ SELECT asText(nearestApproachInstant(a.Noise, b.Noise), 2)
 FROM Fishing a, Passenger b;
 -- Cbuffer(POINT(632718.9 6356807.66),2923.13)@2026-01-20 17:00:34+00
 
-SELECT round(nearestApproachDistance(a.Noise, b.Noise)::numeric, 2)
+SELECT round(nearestApproachDistance(a.Noise, b.Noise), 2)
 FROM Fishing a, Passenger b;
 -- 7735.04
 

@@ -38,8 +38,8 @@ SET client_min_messages = warning;
    8 | 881f24272bfffff | 0.568
    9 | 891f24272b7ffff | 0.081 */
 SELECT r, latLngToCell(geometry 'SRID=4326;Point(10.60 57.44)', r) AS H3,
-  round((cellArea(latLngToCell(geometry 'SRID=4326;Point(10.60 57.44)', r))
-    / 1e6)::numeric, 3) AS Km2
+  round(cellArea(latLngToCell(geometry 'SRID=4326;Point(10.60 57.44)', r))
+    / 1e6, 3) AS Km2
 FROM generate_series(7, 9) AS r;
 /* 13 | 48d60b7e2fffffff | {4337,2491,13}
    14 | 48e60b7e2cffffff | {8674,4982,14}
@@ -54,12 +54,12 @@ SELECT l, s2CellToToken(geoToS2Cell(geography 'SRID=4326;Point(10.60 57.44)', l)
 FROM generate_series(13, 15) AS l;
 
 \echo == areas of the QUADBIN cell of zoom 13 and of the cells closest in area (6.919, 0.432, 0.318 km2)
-SELECT round((cellArea(geoToQuadbinCell(geometry 'SRID=4326;Point(10.60 57.44)', 13))
-    / 1e6)::numeric, 3) AS Quadbin13,
-  round((cellArea(geoToQuadbinCell(geometry 'SRID=4326;Point(10.60 57.44)', 15))
-    / 1e6)::numeric, 3) AS Quadbin15,
-  round((cellArea(geoToS2Cell(geography 'SRID=4326;Point(10.60 57.44)', 14))
-    / 1e6)::numeric, 3) AS S2Level14;
+SELECT round(cellArea(geoToQuadbinCell(geometry 'SRID=4326;Point(10.60 57.44)', 13))
+    / 1e6, 3) AS Quadbin13,
+  round(cellArea(geoToQuadbinCell(geometry 'SRID=4326;Point(10.60 57.44)', 15))
+    / 1e6, 3) AS Quadbin15,
+  round(cellArea(geoToS2Cell(geography 'SRID=4326;Point(10.60 57.44)', 14))
+    / 1e6, 3) AS S2Level14;
 
 \echo == Listing: the descendants of an S2 cell lie between two identifiers
 -- 464f3c4800000001 | 464f3c4fffffffff

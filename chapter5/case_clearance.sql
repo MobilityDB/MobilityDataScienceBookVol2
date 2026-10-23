@@ -57,10 +57,10 @@ FROM Clearance;
 SELECT COUNT(*) AS Vessels FROM Draughts;
 
 \echo == the six negative clearances: in a port area at the minimum, and the speed from the positions (m/s)
-SELECT c.MMSI, round(minValue(c.Clearance)::numeric, 1) AS MinClear,
+SELECT c.MMSI, round(minValue(c.Clearance), 1) AS MinClear,
   EXISTS (SELECT 1 FROM Port p WHERE ST_Intersects(p.Geom,
     valueAtTimestamp(s.Trip, startTimestamp(atMin(c.Clearance))))) AS InPort,
-  round(valueAtTimestamp(speed(s.Trip), startTimestamp(atMin(c.Clearance)))::numeric, 1)
+  round(valueAtTimestamp(speed(s.Trip), startTimestamp(atMin(c.Clearance))), 1)
     AS Speed
 FROM Clearance c JOIN Ships s USING (MMSI)
 WHERE minValue(c.Clearance) < 0
@@ -86,12 +86,12 @@ SELECT u.MMSI, u.Draught,
 FROM Underway u, Bathymetry b
 WHERE ST_Intersects(b.Rast, trajectory(u.Trip))
 GROUP BY u.MMSI, u.Draught;
-SELECT c.MMSI, c.Draught, round(minValue(c.Clearance)::numeric, 1) AS MinClear,
+SELECT c.MMSI, c.Draught, round(minValue(c.Clearance), 1) AS MinClear,
   duration(whenTrue(c.Clearance #< 2)) AS Under2,
   round(ST_X(valueAtTimestamp(s.TripLonLat,
-    startTimestamp(atMin(c.Clearance))))::numeric, 3) AS Lon,
+    startTimestamp(atMin(c.Clearance)))), 3) AS Lon,
   round(ST_Y(valueAtTimestamp(s.TripLonLat,
-    startTimestamp(atMin(c.Clearance))))::numeric, 3) AS Lat
+    startTimestamp(atMin(c.Clearance)))), 3) AS Lat
 FROM ClearanceUnderway c JOIN Ships s USING (MMSI)
 ORDER BY minValue(c.Clearance)
 LIMIT 10;
@@ -102,8 +102,8 @@ SELECT COUNT(*) AS Vessels,
   COUNT(*) FILTER (WHERE minValue(Clearance) < 0) AS Negative
 FROM ClearanceUnderway;
 \echo == the vessel approaching Aarhus while its clearance is less than 2 m: km sailed and mean reported speed (7.2 | 4.8)
-SELECT round((length(atTime(u.Trip, whenTrue(c.Clearance #< 2))) / 1000)::numeric, 1) AS Km,
-  round(twAvg(atTime(s.SOG, whenTrue(c.Clearance #< 2)))::numeric, 1) AS AvgSOG
+SELECT round(length(atTime(u.Trip, whenTrue(c.Clearance #< 2))) / 1000, 1) AS Km,
+  round(twAvg(atTime(s.SOG, whenTrue(c.Clearance #< 2))), 1) AS AvgSOG
 FROM ClearanceUnderway c JOIN Underway u USING (MMSI) JOIN Ships s USING (MMSI)
 WHERE c.MMSI = 636024511;
 \echo == under way by the speed computed from the positions: the vessels with a negative clearance, the speed from the positions and the reported speed at the minimum (knots), and where (219018501 | 11.6 | -1.1 | 4.2 | 2.0 | 10.245 | 56.159)
@@ -116,12 +116,12 @@ c AS (
   FROM u, Bathymetry b
   WHERE u.Trip IS NOT NULL AND ST_Intersects(b.Rast, trajectory(u.Trip))
   GROUP BY u.MMSI, u.Draught )
-SELECT c.MMSI, c.Draught, round(minValue(c.Clearance)::numeric, 1) AS MinClear,
-  round((valueAtTimestamp(speed(s.Trip), startTimestamp(atMin(c.Clearance))) * 3600 / 1852)::numeric, 1)
+SELECT c.MMSI, c.Draught, round(minValue(c.Clearance), 1) AS MinClear,
+  round(valueAtTimestamp(speed(s.Trip), startTimestamp(atMin(c.Clearance))) * 3600 / 1852, 1)
     AS SpeedPos,
-  round(valueAtTimestamp(s.SOG, startTimestamp(atMin(c.Clearance)))::numeric, 1) AS SOG,
-  round(ST_X(valueAtTimestamp(s.TripLonLat, startTimestamp(atMin(c.Clearance))))::numeric, 3) AS Lon,
-  round(ST_Y(valueAtTimestamp(s.TripLonLat, startTimestamp(atMin(c.Clearance))))::numeric, 3) AS Lat
+  round(valueAtTimestamp(s.SOG, startTimestamp(atMin(c.Clearance))), 1) AS SOG,
+  round(ST_X(valueAtTimestamp(s.TripLonLat, startTimestamp(atMin(c.Clearance)))), 3) AS Lon,
+  round(ST_Y(valueAtTimestamp(s.TripLonLat, startTimestamp(atMin(c.Clearance)))), 3) AS Lat
 FROM c JOIN Ships s USING (MMSI)
 WHERE minValue(c.Clearance) < 0
 ORDER BY 3;

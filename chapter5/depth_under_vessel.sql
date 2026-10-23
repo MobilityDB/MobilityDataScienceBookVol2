@@ -36,7 +36,7 @@ SET client_min_messages = warning;
 SELECT MMSI, MAX(Draught) AS Draught, MIN(T) AS FirstReport, MAX(T) AS LastReport,
   COUNT(*) AS Reports
 FROM AISClean WHERE MMSI = 273277840 GROUP BY MMSI;
-SELECT round((length(Trip) / 1000)::numeric, 1) AS Km FROM Ships WHERE MMSI = 273277840;
+SELECT round(length(Trip) / 1000, 1) AS Km FROM Ships WHERE MMSI = 273277840;
 
 \echo == Listing: using a spatial database (nine periods)
 /* FirstReport         | LastReport
@@ -85,5 +85,5 @@ WITH VesselDepth AS (
   FROM Ships s, Bathymetry b
   WHERE s.MMSI = 273277840 AND ST_Intersects(b.Rast, trajectory(s.Trip))
   GROUP BY s.Trip )
-SELECT round(length(atTime(Trip, whenTrue(Depth #< 20)))::numeric, 1) AS Meters
+SELECT round(length(atTime(Trip, whenTrue(Depth #< 20))), 1) AS Meters
 FROM VesselDepth;

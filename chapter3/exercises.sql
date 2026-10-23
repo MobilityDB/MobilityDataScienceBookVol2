@@ -34,7 +34,7 @@ SET TimeZone = 'UTC';
 -- Exercise 1: the database of the case study
 
 \echo == 1.1 largest radius of the noise of the fishing vessel, and when
-SELECT round(maxValue(Noise::tfloat)::numeric) AS MaxRadius,
+SELECT round(maxValue(Noise::tfloat)) AS MaxRadius,
   startTimestamp(atMax(Noise::tfloat)) AS AtTime
 FROM Ships
 WHERE MMSI = 220323000;
@@ -69,7 +69,7 @@ WHERE a.MMSI = 220323000 AND b.MMSI = 219000407;
 \echo == 1.5 area swept by a circular buffer of radius 1 moving 10 units
 SELECT round(ST_Area(traversedArea(tcbuffer(
   tgeompoint '[Point(0 0)@2001-01-01, Point(10 0)@2001-01-02]',
-  tfloat '[1@2001-01-01, 1@2001-01-02]'), true))::numeric, 2) AS Area;
+  tfloat '[1@2001-01-01, 1@2001-01-02]'), true)), 2) AS Area;
 -- 23.14
 
 -- Exercise 2: temporal circular buffers of literal values
@@ -78,8 +78,8 @@ SELECT round(ST_Area(traversedArea(tcbuffer(
 WITH T(Tcb) AS (
   SELECT tcbuffer '[Cbuffer(Point(0 0), 1)@2001-01-01,
     Cbuffer(Point(0 0), 3)@2001-01-03]' )
-SELECT round(radius(valueAtTimestamp(Tcb, '2001-01-02'))::numeric, 2) AS Radius,
-  round(ST_Area(geometry(valueAtTimestamp(Tcb, '2001-01-02')))::numeric, 4)
+SELECT round(radius(valueAtTimestamp(Tcb, '2001-01-02')), 2) AS Radius,
+  round(ST_Area(geometry(valueAtTimestamp(Tcb, '2001-01-02'))), 4)
     AS Area
 FROM T;
 -- 2.00 | 12.5611
@@ -103,7 +103,7 @@ FROM T;
 WITH T(Area) AS (
   SELECT traversedArea(tcbuffer '[Cbuffer(Point(0 0), 1)@2001-01-01,
     Cbuffer(Point(1 0), 3)@2001-01-02]', true) )
-SELECT ST_AsText(Area), round(ST_Area(Area)::numeric, 4) AS Area
+SELECT ST_AsText(Area), round(ST_Area(Area), 4) AS Area
 FROM T;
 -- CURVEPOLYGON(CIRCULARSTRING(-2 0,4 0,-2 0)) | 28.2624
 
@@ -111,8 +111,8 @@ FROM T;
 
 \echo == 4.1 average radius of the noise of the fishing vessel, in transit and fishing
 SELECT
-  round(twAvg(atTime(Noise::tfloat, whenTrue(SOG #> 6.0)))::numeric) AS Transit,
-  round(twAvg(atTime(Noise::tfloat, whenTrue(SOG #<= 6.0)))::numeric) AS Fishing
+  round(twAvg(atTime(Noise::tfloat, whenTrue(SOG #> 6.0)))) AS Transit,
+  round(twAvg(atTime(Noise::tfloat, whenTrue(SOG #<= 6.0)))) AS Fishing
 FROM Ships
 WHERE MMSI = 220323000;
 -- 1923 | 187

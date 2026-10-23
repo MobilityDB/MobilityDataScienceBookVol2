@@ -74,7 +74,7 @@ FROM (
   FROM Bathymetry b, NaturalAreas n
   WHERE n.Id = 23 AND ST_Intersects(b.Rast, n.Geom) ) t;
 \echo == area of the protected area south of Laeso (365.2 km2, all of it water)
-SELECT round((ST_Area(Geom) / 1e6)::numeric, 1) AS AreaKm2 FROM NaturalAreas WHERE Id = 23;
+SELECT round(ST_Area(Geom) / 1e6, 1) AS AreaKm2 FROM NaturalAreas WHERE Id = 23;
 
 -- Listing: the normalized difference vegetation index. It needs the tables Red
 -- and NearInfrared of a Landsat 8 scene, which the chapter does not use; the
@@ -89,8 +89,8 @@ SELECT round((ST_Area(Geom) / 1e6)::numeric, 1) AS AreaKm2 FROM NaturalAreas WHE
 
 \echo == Query: how did the wave height change between 12:00 and 23:00
 -- 0.42 | -0.51 | 0.98 | 282134
-SELECT round((s).mean::numeric, 2) AS Mean, round((s).min::numeric, 2) AS Min,
-  round((s).max::numeric, 2) AS Max, (s).count AS Pixels
+SELECT round((s).mean, 2) AS Mean, round((s).min, 2) AS Min,
+  round((s).max, 2) AS Max, (s).count AS Pixels
 FROM (
   SELECT ST_SummaryStatsAgg(ST_MapAlgebra(a.Rast, 1, b.Rast, 1,
     '[rast2] - [rast1]'), 1, true) AS s
@@ -153,14 +153,14 @@ WHERE n.Id = 22 AND ST_Intersects(b.Rast, n.Geom)
 GROUP BY n.Id, n.Geom;
 \echo == size of the assembled raster (256 x 512) and of the area (87.3 km2)
 SELECT ST_Width(Rast) AS Width, ST_Height(Rast) AS Height,
-  round((ST_Area(Geom) / 1e6)::numeric, 1) AS AreaKm2
+  round(ST_Area(Geom) / 1e6, 1) AS AreaKm2
 FROM Seabed;
 
 \echo == Query: slope and ruggedness of the seabed in the reef area
 -- 0.50 | 5.29 | 0.36 | 3.53
-SELECT round((s).mean::numeric, 2) AS MeanSlope,
-  round((s).max::numeric, 2) AS MaxSlope,
-  round((r).mean::numeric, 2) AS MeanTRI, round((r).max::numeric, 2) AS MaxTRI
+SELECT round((s).mean, 2) AS MeanSlope,
+  round((s).max, 2) AS MaxSlope,
+  round((r).mean, 2) AS MeanTRI, round((r).max, 2) AS MaxTRI
 FROM (
   SELECT ST_SummaryStats(ST_Clip(ST_Slope(Rast, 1, '32BF', 'DEGREES', 1.0),
     Geom)) AS s,
@@ -216,7 +216,7 @@ SELECT COUNT(*) AS Tiles FROM BathymetryMin100;
    1    |      4 |      8.00
    2    |      6 |     11.50
    3    |      6 |     15.67 */
-SELECT z.val AS Zone, COUNT(*) AS Pixels, round(AVG(d.val)::numeric, 2) AS MeanDepth
+SELECT z.val AS Zone, COUNT(*) AS Pixels, round(AVG(d.val), 2) AS MeanDepth
 FROM Depth r
   CROSS JOIN LATERAL ST_PixelAsPoints(ST_Reclass(r.Rast, 1,
     '[0-10):1, [10-14):2, [14-100]:3', '8BUI', 0)) z
@@ -231,7 +231,7 @@ ORDER BY z.val;
    2    |     11.60
    3    |     15.67 */
 SELECT (g).val AS Zone,
-  round((ST_SummaryStats(ST_Clip(r.Rast, (g).geom))).mean::numeric, 2)
+  round((ST_SummaryStats(ST_Clip(r.Rast, (g).geom))).mean, 2)
     AS MeanDepth
 FROM Depth r, ST_DumpAsPolygons(ST_Reclass(r.Rast, 1,
   '[0-10):1, [10-14):2, [14-100]:3', '8BUI', 0)) g
@@ -274,7 +274,7 @@ ORDER BY n.NameEng, v.value;
 
 \echo == Query: stretches of the path of the vessel over water less than 20 m deep
 -- 13 | 3287.0
-SELECT COUNT(*) AS Stretches, round(SUM(ST_Length(geom))::numeric, 1) AS Meters
+SELECT COUNT(*) AS Stretches, round(SUM(ST_Length(geom)), 1) AS Meters
 FROM (
   SELECT (ST_Dump(ST_LineMerge(ST_Union((gv).geom)))).geom
   FROM (

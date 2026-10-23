@@ -35,8 +35,8 @@ SET client_min_messages = warning;
 
 \echo == mean and highest wave height of the field per hour (0.93 in the morning, 1.36 and 3.68 at 23:00)
 SELECT to_char(lower(ValidTime), 'HH24:MI') AS Hour,
-  round((ST_SummaryStatsAgg(Rast, 1, true)).mean::numeric, 2) AS MeanHs,
-  round((ST_SummaryStatsAgg(Rast, 1, true)).max::numeric, 2) AS MaxHs
+  round((ST_SummaryStatsAgg(Rast, 1, true)).mean, 2) AS MeanHs,
+  round((ST_SummaryStatsAgg(Rast, 1, true)).max, 2) AS MaxHs
 FROM WaveHeight
 GROUP BY lower(ValidTime)
 ORDER BY lower(ValidTime);
@@ -54,13 +54,13 @@ SELECT COUNT(*) AS Vessels,
   COUNT(*) FILTER (WHERE maxValue(WaveHeight) >= 1) AS Over1,
   COUNT(*) FILTER (WHERE maxValue(WaveHeight) >= 1.5) AS Over15,
   COUNT(*) FILTER (WHERE maxValue(WaveHeight) >= 2) AS Over2,
-  round(MAX(maxValue(WaveHeight))::numeric, 2) AS MaxHs
+  round(MAX(maxValue(WaveHeight)), 2) AS MaxHs
 FROM SeaState;
 /* MMSI      | MaxHs | Over2
    257243000 |  2.65 | 05:29:41
    314545000 |  2.23 | 04:11:14
    219438000 |  2.45 | 03:59:52 */
-SELECT MMSI, round(maxValue(WaveHeight)::numeric, 2) AS MaxHs,
+SELECT MMSI, round(maxValue(WaveHeight), 2) AS MaxHs,
   duration(whenTrue(WaveHeight #>= 2)) AS Over2
 FROM SeaState
 WHERE maxValue(WaveHeight) >= 2
@@ -68,9 +68,9 @@ ORDER BY duration(whenTrue(WaveHeight #>= 2)) DESC
 LIMIT 3;
 \echo == the 29 vessels that met waves of at least 2 m: longitudes of their highest waves, and how many after 20:00 (3.2 | 7.3 | 24)
 SELECT COUNT(*) AS Vessels,
-  round(MIN(ST_X(valueAtTimestamp(s.TripLonLat, startTimestamp(atMax(w.WaveHeight)))))::numeric, 1)
+  round(MIN(ST_X(valueAtTimestamp(s.TripLonLat, startTimestamp(atMax(w.WaveHeight))))), 1)
     AS MinLon,
-  round(MAX(ST_X(valueAtTimestamp(s.TripLonLat, startTimestamp(atMax(w.WaveHeight)))))::numeric, 1)
+  round(MAX(ST_X(valueAtTimestamp(s.TripLonLat, startTimestamp(atMax(w.WaveHeight))))), 1)
     AS MaxLon,
   COUNT(*) FILTER (WHERE startTimestamp(atMax(w.WaveHeight)) >= '2026-01-20 20:00+00')
     AS After20
@@ -100,8 +100,8 @@ SELECT r.MMSI, s.ShipType,
   duration(whenTrue(r.WaveHeight #< 1.5) * whenTrue(s.SOG #> 3)) AS TimeLow
 FROM Rough r JOIN Speed s USING (MMSI);
 SELECT ShipType, COUNT(*) AS Vessels,
-  round(AVG(SogHigh)::numeric, 1) AS SogHigh,
-  round(AVG(SogLow)::numeric, 1) AS SogLow,
+  round(AVG(SogHigh), 1) AS SogHigh,
+  round(AVG(SogLow), 1) AS SogLow,
   COUNT(*) FILTER (WHERE SogHigh < 0.9 * SogLow) AS Slower,
   COUNT(*) FILTER (WHERE SogHigh > 1.1 * SogLow) AS Faster
 FROM SpeedWaves

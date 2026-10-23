@@ -152,7 +152,7 @@ WITH Stored(CellId, Visits, AvgPm25) AS (
   WHERE TripId = 6 GROUP BY CellId ),
 Formed(CellId, TwAvgPm25) AS (
   SELECT CellId, twAvg(Pm25) FROM TripTiles WHERE TripId = 6 )
-SELECT CellId, Visits, round(AvgPm25::numeric, 2) AS AvgPm25,
-  round(TwAvgPm25::numeric, 2) AS TwAvgPm25
+SELECT CellId, Visits, round(AvgPm25, 2) AS AvgPm25,
+  round(TwAvgPm25, 2) AS TwAvgPm25
 FROM Stored JOIN Formed USING (CellId)
 ORDER BY CellId;

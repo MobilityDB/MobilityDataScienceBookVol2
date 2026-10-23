@@ -44,10 +44,10 @@ SELECT tgeometry 'Interp=Linear;[Point(0 0)@2001-01-01, Point(1 1)@2001-01-02]';
 SELECT
   round(nearestApproachDistance(tgeometry 'SRID=4326;[Polygon((4.35 50.84,
     4.40 50.84,4.40 50.88,4.35 50.84))@2001-01-01, Point(4.37 50.85)@2001-01-02]',
-    geometry 'SRID=4326;Point(4.45 50.84)')::numeric, 4) AS Planar,
+    geometry 'SRID=4326;Point(4.45 50.84)'), 4) AS Planar,
   round(nearestApproachDistance(tgeography 'SRID=4326;[Polygon((4.35 50.84,
     4.40 50.84,4.40 50.88,4.35 50.84))@2001-01-01, Point(4.37 50.85)@2001-01-02]',
-    geography 'Point(4.45 50.84)')::numeric, 1) AS Geodetic;
+    geography 'Point(4.45 50.84)'), 1) AS Geodetic;
 -- 0.0500 | 3521.9
 
 -- The SRID of a wind field before and after each conversion
@@ -58,8 +58,8 @@ WHERE Name = 'Milton' AND Radii = 64;
 
 -- What was the extent of the hurricane-force winds of Milton on October 10,
 -- 2024, at 2:30?
-SELECT round((ST_Area(valueAtTimestamp(Storm, '2024-10-10 02:30'))
-  / 1e6)::numeric) AS AreaKm2
+SELECT round(ST_Area(valueAtTimestamp(Storm, '2024-10-10 02:30'))
+  / 1e6) AS AreaKm2
 FROM Storms2024_tgeo
 WHERE Name = 'Milton' AND Radii = 64;
 -- 9660
@@ -77,10 +77,10 @@ ORDER BY Name, Radii;
 
 -- How close to Tampa did the hurricane-force winds of Milton come, and when?
 SELECT
-  round((nearestApproachDistance(Storm,
-    geography 'Point(-82.46 27.95)') / 1000)::numeric, 1) AS GeodeticKm,
-  round((nearestApproachDistance(transform(Storm::tgeometry, 32617),
-    ST_Transform(ST_Point(-82.46, 27.95, 4326), 32617)) / 1000)::numeric, 1)
+  round(nearestApproachDistance(Storm,
+    geography 'Point(-82.46 27.95)') / 1000, 1) AS GeodeticKm,
+  round(nearestApproachDistance(transform(Storm::tgeometry, 32617),
+    ST_Transform(ST_Point(-82.46, 27.95, 4326), 32617)) / 1000, 1)
     AS UtmKm,
   getTimestamp(nearestApproachInstant(Storm,
     geography 'Point(-82.46 27.95)')) AS Instant
@@ -91,7 +91,7 @@ WHERE Name = 'Milton' AND Radii = 64;
 -- Which three storms swept the largest area with hurricane-force winds? MEOS has
 -- no union on the ellipsoid, so the union is computed on the temporal geometry
 SELECT Name,
-  round((ST_Area(traversedArea(Storm::tgeometry, true)::geography) / 1e6)::numeric)
+  round(ST_Area(traversedArea(Storm::tgeometry, true)::geography) / 1e6)
     AS AreaKm2
 FROM Storms2024_tgeo
 WHERE Radii = 64
@@ -102,7 +102,7 @@ LIMIT 3;
    Beryl   | 172013 */
 
 -- The wind swath that NOAA publishes for Kirk, for comparison
-SELECT round((ST_Area(ST_Union(s.Geom)::geography) / 1e6)::numeric) AS AreaKm2
+SELECT round(ST_Area(ST_Union(s.Geom)::geography) / 1e6) AS AreaKm2
 FROM StormSwath s
 WHERE s.StormId = 'AL122024' AND s.Radii = 64;
 -- 578907

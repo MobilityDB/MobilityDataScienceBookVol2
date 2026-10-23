@@ -54,7 +54,7 @@ SelectedTrip(TripId) AS (
   HAVING COUNT(*) >= 2 AND COUNT(*)
     FILTER (WHERE Trend <= 0) = 0 )
 SELECT TripId, array_agg(CellId ORDER BY StartTime) AS Cells,
-  array_agg(ROUND(Pm25::numeric, 2) ORDER BY StartTime) AS Pm25Seq
+  array_agg(ROUND(Pm25, 2) ORDER BY StartTime) AS Pm25Seq
 FROM TripCells WHERE TripId IN (SELECT TripId FROM SelectedTrip)
   GROUP BY TripId ORDER BY TripId;
 -- 12 | {35,34,44} | {399.44,424.71,469.26} ...
@@ -112,7 +112,7 @@ EpisodeDuration(TripId, EpisodeId, StartTime, EndTime, Trend,
   SELECT TripId, EpisodeId, MIN(StartTime), MAX(EndTime),
     MIN(Trend), MAX(EndTime) -MIN(StartTime),
     array_agg(CellId ORDER BY StartTime),
-      array_agg(ROUND(Pm25::numeric, 2) ORDER BY StartTime)
+      array_agg(ROUND(Pm25, 2) ORDER BY StartTime)
       FROM Episode
   GROUP BY TripId, EpisodeId
     HAVING MAX(StartTime) - MIN(StartTime) >= interval
@@ -198,7 +198,7 @@ Episode(TripId, StartTime, EndTime, Duration) AS (
     AND EndTime - StartTime < '1 minute' )
 SELECT t.TripId, e.StartTime, e.EndTime, e.Duration,
   array_agg(t.CellId ORDER BY t.StartTime) AS Cells,
-  array_agg(ROUND(t.Pm25::numeric, 2)
+  array_agg(ROUND(t.Pm25, 2)
     ORDER BY t.StartTime) AS Pm25seq
 FROM TripCells t, Episode e WHERE t.TripId = e.TripId
   AND t.StartTime BETWEEN e.StartTime AND e.EndTime
@@ -274,7 +274,7 @@ Pattern(TripId, EpisodeId, StartTime, EndTime, Duration, Cells,
   SELECT TripId, EpisodeId, MIN(StartTime), MAX(EndTime),
     MAX(EndTime) - MIN(StartTime),
     array_agg(CellId ORDER BY StartTime),
-      array_agg(ROUND(Pm25::numeric, 2) ORDER BY StartTime)
+      array_agg(ROUND(Pm25, 2) ORDER BY StartTime)
   FROM Episode WHERE Pm25 > 150 GROUP BY TripId, EpisodeId
   HAVING MAX(EndTime) - MIN(StartTime) >= interval '10 minutes'
     AND COUNT(*) >= 2 ),
