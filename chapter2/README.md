@@ -85,7 +85,8 @@ DejaVu Sans at 6.67 points, the size whose x-height is that of the captions.
 The folder `exercises` holds the programs of the answers to the MovingPandas and PyMEOS
 exercises of the chapter. Run them in that folder with `aisinput.csv` (step 4 above) copied into
 it: `mp_a.py`, `mp_b.py` and `mp_c.py` answer the MovingPandas exercise, and `pm_a.py`, `pm_b.py`
-and `pm_c.py` the PyMEOS one (`pm_b.py` and `pm_c.py` run the loading part of `pm_a.py`).
+and `pm_c.py` the PyMEOS one (`pm_b.py` and `pm_c.py` run the loading part of `pm_a.py`). `pm_d.py`
+answers the exercise on the design of the MEOS bindings and needs no data.
 
 ### JMEOS Programs
 

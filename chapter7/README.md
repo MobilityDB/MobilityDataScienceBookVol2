@@ -160,6 +160,13 @@ read as Parquet files, and `duckdb flock.duckdb -c ".read flock_pipelines.sql"` 
 vary from one run to the next, so `flock/results/` holds the results that the tables of the
 chapter print, with `run.log`, the log of the run that produced them.
 
+### Exercises
+
+Exercise 7.4 is worked by hand on the table `TestGeo` of the chapter;
+`exercises_by_hand.py` computes every number of its answers, with Python alone:
+
+    python3 exercises_by_hand.py
+
 ### BerlinMOD Data Generator
 
 These files create the BerlinMOD benchmark for the city of Hanoi, based on the hanoi.osm file that can be obtained from OpenStreetMap. To produce the database you shoul follow the step next.
