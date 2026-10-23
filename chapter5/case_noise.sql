@@ -113,7 +113,7 @@ WITH Wind AS (
   FROM ShipNoise s, WindSpeed w
   WHERE s.MMSI = 220334000 AND s.Trip && w.ValidTime AND
     ST_Intersects(w.Rast, trajectory(s.Trip)) ),
-Level AS (
+AmbientNoise AS (
   SELECT Wind, 10 * log10(1e8 + exp(ln(10) / 10 * (50 + 7.5 * exp(0.5 * ln(Wind)) +
     20 * log10(0.063) - 40 * log10(0.463) + 10 * log10(0.231 * 63)))) AS NL
   FROM Wind )
@@ -121,7 +121,7 @@ SELECT round(minValue(Wind), 1) AS MinWind, round(maxValue(Wind), 1) AS MaxWind,
   round(minValue(NL), 1) AS MinNL, round(maxValue(NL), 1) AS MaxNL,
   round(ST_Area(traversedArea(tcbuffer(o.Trip, noiseRadius(o.SL - l.NL, o.Depth)), true))
     / 1e6, 1) AS AreaWind
-FROM Level l, NoiseOne o;
+FROM AmbientNoise l, NoiseOne o;
 
 \echo == Listing: the depth, the wind, and the three moving regions of the noise of every vessel
 DROP TABLE IF EXISTS ShipDepth;
