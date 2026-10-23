@@ -188,8 +188,8 @@ matplotlib.rcParams['figure.max_open_warning'] = 0
 fig, axes = plt.subplots(4, 5, figsize=(50, 40))
 axes[0][0].set_title("Brussels Region")
 communes.plot(color=communes["color"], ax=axes[0][0], alpha=0.4)
-TemporalPointSequencePlotter.plot_sequences_xy(
-    trips["trip"], axes=axes[0][0], show_markers=False, show_grid=False)
+TemporalPointSequencePlotter.plot_sequences_xy(trips["trip"], axes=axes[0][0],
+    show_markers=False, show_grid=False)
 for i, commune in communes.iterrows():
     ax = axes[(i + 1) // 5][(i + 1) % 5]
     ax.set_title(commune["name"].split(" - ")[0])  # the French name

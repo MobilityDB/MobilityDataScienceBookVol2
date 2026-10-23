@@ -28,17 +28,15 @@ import movingpandas as mpd
 from datetime import datetime
 from shapely.geometry import Point
 
-df = pd.DataFrame(
-    [{"geometry": Point(0, 0), "t": datetime(2025, 1, 1, 12, 0, 0)},
-     {"geometry": Point(6, 0), "t": datetime(2025, 1, 1, 12, 6, 0)},
-     {"geometry": Point(6, 6), "t": datetime(2025, 1, 1, 12, 10, 0)},
-     {"geometry": Point(9, 9), "t": datetime(2025, 1, 1, 12, 15, 0)}]
-).set_index("t")
+df = pd.DataFrame([{"geometry": Point(0, 0), "t": datetime(2025, 1, 1, 12, 0, 0)},
+    {"geometry": Point(6, 0), "t": datetime(2025, 1, 1, 12, 6, 0)},
+    {"geometry": Point(6, 6), "t": datetime(2025, 1, 1, 12, 10, 0)},
+    {"geometry": Point(9, 9), "t": datetime(2025, 1, 1, 12, 15, 0)}]).set_index("t")
 gdf = gpd.GeoDataFrame(df, crs=31256)
 my_traj = mpd.Trajectory(gdf, 1)
 print(my_traj)
-segment = my_traj.get_segment_between(
-    datetime(2025, 1, 1, 12, 6, 0), datetime(2025, 1, 1, 12, 12, 0))
+segment = my_traj.get_segment_between(datetime(2025, 1, 1, 12, 6, 0),
+    datetime(2025, 1, 1, 12, 12, 0))
 print(segment)
 df = pd.DataFrame([{'geometry': Point(0, 0), 't': datetime(2025, 1, 1, 12, 0, 0)},
                    {'geometry': Point(6, 0), 't': datetime(2025, 1, 1, 12, 0, 6)},

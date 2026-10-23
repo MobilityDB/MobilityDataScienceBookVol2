@@ -53,13 +53,12 @@ simplifications["sed"] = simplifications["trip"].apply(
 
 # --- the listing printed in the chapter -------------------------------------------------
 from shapely.geometry import LineString, MultiPoint
-
 trip = simplifications.iloc[495]
 maps = {}
 for key, color in (("trip", "green"), ("dp", "red"), ("sed", "blue")):
     points = [(p.x, p.y) for p in trip[key].values()]
-    m = gpd.GeoSeries([LineString(points)], crs=3857).explore(
-        tiles=None, color=color, style_kwds={"weight": 1.5})
+    m = gpd.GeoSeries([LineString(points)], crs=3857).explore(tiles=None, color=color,
+        style_kwds={"weight": 1.5})
     gpd.GeoSeries([MultiPoint(points)], crs=3857).explode(index_parts=False).explore(
         m=m, color=color, marker_kwds={"radius": 1.5},
         style_kwds={"fillOpacity": 1, "weight": 0})

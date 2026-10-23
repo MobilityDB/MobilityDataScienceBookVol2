@@ -30,10 +30,8 @@ from pathlib import Path
 DATA = Path(os.environ.get('CH2_DATA', Path(__file__).resolve().parent / 'data'))  # input data, see README.md
 import pandas as pd
 
-ais = pd.read_csv(
-    f"{DATA}/aisclean-2026-01-20.csv",
-    usecols=["# Timestamp", "MMSI", "Latitude", "Longitude", "SOG"],
-)
+ais = pd.read_csv(f"{DATA}/aisclean-2026-01-20.csv",
+    usecols=["# Timestamp", "MMSI", "Latitude", "Longitude", "SOG"])
 print("rows", len(ais))
 ais.columns = ["t", "mmsi", "lat", "lon", "sog"]
 ais["t"] = pd.to_datetime(ais["t"], format='%d/%m/%Y %H:%M:%S')

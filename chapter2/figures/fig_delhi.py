@@ -158,13 +158,12 @@ def generalization(which):
 def _stops():
     my_traj_stop = my_traj_split.trajectories[2]
     detector = mpd.TrajectoryStopDetector(my_traj_stop)
-    stop_points = detector.get_stop_points(
-        min_duration=timedelta(seconds=60), max_diameter=100)
-    m = my_traj_stop.explore(color="slategray", style_kwds={"weight": 4},
-                             tiles=None, name="Trajectory")
+    stop_points = detector.get_stop_points(min_duration=timedelta(seconds=60),
+        max_diameter=100)
+    m = my_traj_stop.explore(color="slategray", style_kwds={"weight": 4}, tiles=None,
+        name="Trajectory")
     VectorTiles("liberty-city").add_to(m)
-    stop_points.explore(
-        m=m, color="deeppink", name="Stop points",
+    stop_points.explore(m=m, color="deeppink", name="Stop points",
         style_kwds={"fillOpacity": 1, "style_function": lambda x:
                     {"radius": x["properties"]["duration_s"] ** 0.5 / 1.2}})
     return m, detector
@@ -176,8 +175,8 @@ def stops():
 
 def segments():
     m, detector = _stops()
-    stop_segments = detector.get_stop_segments(
-        min_duration=timedelta(seconds=60), max_diameter=100)
+    stop_segments = detector.get_stop_segments(min_duration=timedelta(seconds=60),
+        max_diameter=100)
     stop_segments.explore(m=m, color="orange", style_kwds={"weight": 6},
                           name="Stop segments")
     return m
@@ -185,8 +184,8 @@ def segments():
 
 def stops_collect():
     detector = mpd.TrajectoryStopDetector(my_trajs)
-    stop_points = detector.get_stop_points(
-        min_duration=timedelta(seconds=120), max_diameter=100)
+    stop_points = detector.get_stop_points(min_duration=timedelta(seconds=120),
+        max_diameter=100)
     print("len(stop_points)", len(stop_points))
     m = my_trajs.explore(column="deviceId", tooltip="deviceId", popup=True,
         style_kwds={"weight": 4}, name="Trajectories", tiles=None)

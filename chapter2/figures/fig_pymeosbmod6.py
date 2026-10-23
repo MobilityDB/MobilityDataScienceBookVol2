@@ -63,8 +63,8 @@ def draw(name, groups):
         group = trips["trip"][i - 40:i]
         for trip in group:
             extent_aggregator.add(trip)
-        gpd.GeoSeries(group.apply(lambda tr: tr.to_shapely_geometry()),
-            crs=3857).explore(m=m, color=color, style_kwds={"weight": 1.5})
+        gpd.GeoSeries(group.apply(lambda tr: tr.to_shapely_geometry()), crs=3857).explore(
+            m=m, color=color, style_kwds={"weight": 1.5})
         extent = extent_aggregator.aggregation()
         extents.append((extent, color))
         print(f"{i} trips:", extent)

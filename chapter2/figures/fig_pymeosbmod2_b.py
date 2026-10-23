@@ -53,7 +53,8 @@ communes = gpd.GeoDataFrame(communes, geometry='geom')
 communes = communes.set_crs(3857)
 m = communes.explore(color=communes["color"], tiles=None, tooltip="name",
     style_kwds={"color": "#1f77b4", "weight": 1, "fillOpacity": 0.1})
-trajectories = gpd.GeoSeries(trips["trip"].apply(lambda tr: tr.to_shapely_geometry()), crs=3857)
+trajectories = gpd.GeoSeries(trips["trip"].apply(lambda tr: tr.to_shapely_geometry()),
+    crs=3857)
 trajectories.explore(m=m, color="blue", style_kwds={"weight": 1})
 VectorTiles("positron-city").add_to(m)
 # ------------------------------------------------------------------------------------------

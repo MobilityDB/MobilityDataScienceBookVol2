@@ -83,8 +83,7 @@ for k in range(0, len(mmsis), B):
         axis=1,
     )
     comparison["Points kept (%)"] = (
-        comparison["PyMEOS #points"] / comparison["original #points"] * 100
-    )
+        comparison["PyMEOS #points"] / comparison["original #points"] * 100)
     comparisons.append(comparison)
     query = "INSERT INTO pymeos.Ships(MMSI, Trajectory, SOG) VALUES"
     for mmsi, row in trajectories.iterrows():
