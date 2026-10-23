@@ -170,25 +170,14 @@ def segments():
 def stops_collect():
     detector = mpd.TrajectoryStopDetector(my_trajs)
     stop_points = detector.get_stop_points(
-        min_duration=timedelta(seconds=120), max_diameter=100
-    )
+        min_duration=timedelta(seconds=120), max_diameter=100)
     print("len(stop_points)", len(stop_points))
     m = my_trajs.explore(
-        column="deviceId",
-        tooltip="deviceId",
-        popup=True,
-        style_kwds={"weight": 4},
-        name="Trajectories",
-        tiles=None,
-    )
+        column="deviceId", tooltip="deviceId", popup=True, style_kwds={"weight": 4},
+        name="Trajectories", tiles=None)
     stop_points.explore(
-        m=m,
-        color="red",
-        tooltip="stop_id",
-        popup=True,
-        marker_kwds={"radius": 7},
-        name="Stop points",
-    )
+        m=m, color="red", tooltip="stop_id", popup=True, marker_kwds={"radius": 7},
+        name="Stop points")
     VectorTiles("liberty-city").add_to(m)
     folium.LayerControl().add_to(m)
     return m
@@ -197,11 +186,8 @@ def stops_collect():
 def stops_agg():
     generalized = mpd.MinDistanceGeneralizer(tc).generalize(tolerance=100)
     aggregator = mpd.TrajectoryCollectionAggregator(
-        generalized,
-        max_distance=1000,
-        min_distance=100,
-        min_stop_duration=timedelta(minutes=5),
-    )
+        generalized, max_distance=1000, min_distance=100,
+        min_stop_duration=timedelta(minutes=5))
     pts = aggregator.get_significant_points_gdf()
     clusters = aggregator.get_clusters_gdf()
     print("significant points", len(pts), "clusters", len(clusters))
