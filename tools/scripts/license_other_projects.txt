@@ -1,0 +1,2 @@
+# Files of this repository that carry the notice of another project, one
+# path per line; tools/license/banner.py leaves them as they are
