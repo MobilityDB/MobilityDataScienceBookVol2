@@ -210,6 +210,14 @@ is one. From `usecase/`, after `run_usecase.sh` has cloned the thesis:
 
     THESIS=data/FoundationModel PGDATABASE=ais python3 synthetic_gaps.py
 
+### Exercises
+
+Exercises 11.1, 11.3, 11.4, and 11.5 are worked by hand from the dimensions of
+the model and the conventions of its inputs; `exercises/by_hand.py` computes
+every number of their answers, with Python alone:
+
+    python3 exercises/by_hand.py
+
 ### Figures
 
 The directory `figures/` draws the figures of the use case from the tables of
