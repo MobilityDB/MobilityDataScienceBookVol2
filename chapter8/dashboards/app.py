@@ -159,8 +159,8 @@ def dashboard2():
             st.rerun()
         return
     pair = spark().sql("SELECT * FROM closepair").toPandas().iloc[0]
-    st.caption(f"{pair["callsign_1"]} ({pair["icao24_1"]}) and {pair["callsign_2"]} "
-               f"({pair["icao24_2"]}) come within {pair["distance"]:,.0f} m of each other "
+    st.caption(f"{pair['callsign_1']} ({pair['icao24_1']}) and {pair['callsign_2']} "
+               f"({pair['icao24_2']}) come within {pair['distance']:,.0f} m of each other "
                "in three dimensions, over Europe, while both fly")
     with st.spinner("MobilitySpark answers the panels"):
         distance, _ = panel("dashboard2.sql", 0)
