@@ -44,9 +44,11 @@ timeout = float(sys.argv[7]) if len(sys.argv) > 7 else 900
 width_mm = float(sys.argv[8]) if len(sys.argv) > 8 else 332.89723 / 72.27 * 25.4   # \textwidth of svmono
 
 # The zoom buttons and the attribution of Leaflet are hidden; the caption credits the basemap.
-# The page of a Streamlit app fills the figure, without the margins around its content.
+# The page of a Streamlit app fills the figure, without the margins around its content and
+# without its header, which would otherwise lie over the title of the page.
 HIDE = (".leaflet-control-zoom, .leaflet-control-attribution { display: none !important; }"
-        " [data-testid='stMainBlockContainer'] { padding: 8px 8px !important; }")
+        " [data-testid='stMainBlockContainer'] { padding: 8px 8px !important; }"
+        " [data-testid='stHeader'] { display: none !important; }")
 
 # A WebGL canvas prints blank unless its drawing buffer is kept after each frame.
 KEEP_BUFFER = """

@@ -75,7 +75,7 @@ $PY $EX/replay_flights.py > "$OUT/replay.log" 2>&1 &
 until grep -q "up to $(printf %02d $AFTER):59:50" "$OUT/replay.log"; do sleep 5; done
 echo "[$(date +%T)] capture after hour $AFTER"
 $PY $HERE/capture.py \
-  http://localhost:8501 "$OUT/flightsStreamDashboards.pdf" 1400 1450 \
+  http://localhost:8501 "$OUT/flightsStreamDashboards.pdf" 1400 1477 \
   "document.body.innerText.includes('rows read from Kafka') && document.body.innerText.includes('Positions $(printf %02d $AFTER):00')" \
   25 1800 > "$OUT/capture.log" 2>&1
 echo "[$(date +%T)] capture rc=$?"; tail -2 "$OUT/replay.log"
