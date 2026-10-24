@@ -99,8 +99,8 @@ class Rows:
                 if start in self.pairs:
                     self.pairs[start].append(row)
                 n, d = self.pair_counts.get(start, (0, float("inf")))
-                self.pair_counts[start] = (n + 1, min(d, row["distance"]))
-                if self.closest is None or row["distance"] < self.closest["distance"]:
+                self.pair_counts[start] = (n + 1, min(d, row["Distance"]))
+                if self.closest is None or row["Distance"] < self.closest["Distance"]:
                     self.closest = row
             else:
                 self.hours[row["window_start"]] = row
@@ -203,28 +203,28 @@ def altitude_scale(title, top, step):
 # ------------------------------------------------------------------------------- dashboards
 def dashboard1(data):
     st.subheader("1. Flights leaving Brussels")
-    climbing = pd.DataFrame(data.climbing, columns=["icao24", "callsign", "posts", "lon",
-                                                    "lat", "geoaltitude", "vertrate"])
+    climbing = pd.DataFrame(data.climbing, columns=["ICAO24", "CallSign", "PosTs", "Lon",
+                                                    "Lat", "GeoAltitude", "VertRate"])
     c1, c2, c3 = st.columns(3)
     c1.metric("Positions", f"{len(climbing):,}")
-    c2.metric("Aircraft", f"{climbing['icao24'].nunique():,}")
-    c3.metric("Last position", climbing["posts"].max()[11:19] if len(climbing) else "-")
+    c2.metric("Aircraft", f"{climbing['ICAO24'].nunique():,}")
+    c3.metric("Last position", climbing["PosTs"].max()[11:19] if len(climbing) else "-")
     left, right = st.columns(2)
     with left:
         heat = pdk.Layer("HeatmapLayer",
-                         data=climbing.assign(weight=2000 - climbing["geoaltitude"]),
-                         get_position=["lon", "lat"], get_weight="weight", radius_pixels=30,
+                         data=climbing.assign(weight=2000 - climbing["GeoAltitude"]),
+                         get_position=["Lon", "Lat"], get_weight="weight", radius_pixels=30,
                          color_range=HEAT)
         extent_map([heat], lonlat_extent(*BRUSSELS), MAP_WIDTH)
         color_scale("Noise: each position weighs 2,000 m minus its altitude", HEAT,
                     [(0, "low"), (1, "high")])
     with right:
-        climbing = climbing.assign(color=viridis(climbing["geoaltitude"], 0, 2000))
-        points = pdk.Layer("ScatterplotLayer", data=climbing, get_position=["lon", "lat"],
+        climbing = climbing.assign(color=viridis(climbing["GeoAltitude"], 0, 2000))
+        points = pdk.Layer("ScatterplotLayer", data=climbing, get_position=["Lon", "Lat"],
                            get_fill_color="color", get_radius=60, radius_min_pixels=2,
                            pickable=True)
         extent_map([points], lonlat_extent(*BRUSSELS), MAP_WIDTH,
-                   tooltip={"text": "{callsign} {geoaltitude} m at {posts}"})
+                   tooltip={"text": "{CallSign} {GeoAltitude} m at {PosTs}"})
         altitude_scale("Altitude (m)", 2000, 500)
 
 
@@ -236,14 +236,14 @@ def dashboard2(data):
     c1.metric("Pairs within 1 km", f"{counts['pairs'].sum():,}")
     c2.metric("Windows with a pair", f"{len(counts):,}")
     if data.closest is not None:
-        c3.metric("Closest so far", f"{data.closest['distance']:,.0f} m",
-                  f"{data.closest['icao24_1']} / {data.closest['icao24_2']}",
+        c3.metric("Closest so far", f"{data.closest['Distance']:,.0f} m",
+                  f"{data.closest['ICAO24_1']} / {data.closest['ICAO24_2']}",
                   delta_color="off")
     st.bar_chart(counts.assign(window=pd.to_datetime(counts["window"])), x="window", y="pairs",
                  height=190)
     recent = [row for start in list(data.windows)[-3:] for row in data.pairs.get(start, [])]
     if recent:
-        st.dataframe(pd.DataFrame(recent).sort_values("distance").head(8),
+        st.dataframe(pd.DataFrame(recent).sort_values("Distance").head(8),
                      hide_index=True, height=170)
     st.caption("The pairs of the last three windows, closest first")
 
@@ -258,12 +258,12 @@ def dashboard3(data):
         hour=lambda h: pd.to_datetime(h["window_start"]))
     last = hours.iloc[-1]
     c1, c2, c3 = st.columns(3)
-    c1.metric(f"Positions {last['hour']:%H:%M}", f"{last['positions']:,}")
-    c2.metric("Aircraft", f"{last['aircraft']:,}")
-    c3.metric("Mean altitude", f"{last['altitude']:,.0f} m")
-    st.bar_chart(hours, x="hour", y=["positions", "cruisingpositions"], stack=False,
+    c1.metric(f"Positions {last['hour']:%H:%M}", f"{last['Positions']:,}")
+    c2.metric("Aircraft", f"{last['Aircraft']:,}")
+    c3.metric("Mean altitude", f"{last['Altitude']:,.0f} m")
+    st.bar_chart(hours, x="hour", y=["Positions", "CruisingPositions"], stack=False,
                  height=190)
-    st.line_chart(hours, x="hour", y=["aircraft", "cruisingaircraft"], height=170)
+    st.line_chart(hours, x="hour", y=["Aircraft", "CruisingAircraft"], height=170)
 
 
 @st.fragment(run_every=REFRESH)

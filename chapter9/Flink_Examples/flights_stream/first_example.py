@@ -53,9 +53,9 @@ t_env.execute_sql("LOAD MODULE mobilitydb")
 # ----------------------------------------------------
 t_env.execute_sql(f"""
 CREATE TEMPORARY TABLE Positions (
-  icao24 STRING, callsign STRING, pts BIGINT, lon DOUBLE, lat DOUBLE, geoaltitude DOUBLE,
-  posts AS TO_TIMESTAMP_LTZ(pts, 3),
-  WATERMARK FOR posts AS posts - INTERVAL '30' SECOND
+  ICAO24 STRING, CallSign STRING, Pts BIGINT, Lon DOUBLE, Lat DOUBLE, GeoAltitude DOUBLE,
+  PosTs AS TO_TIMESTAMP_LTZ(Pts, 3),
+  WATERMARK FOR PosTs AS PosTs - INTERVAL '30' SECOND
 ) WITH (
   'connector' = 'filesystem', 'path' = '{HERE}/first_example.csv', 'format' = 'csv')
 """)
@@ -65,17 +65,17 @@ CREATE TEMPORARY TABLE Positions (
 # ----------------------------------------------------
 t_env.execute_sql("""
 CREATE TEMPORARY VIEW Trips AS
-SELECT window_start, window_end, window_time, callsign,
+SELECT window_start, window_end, window_time, CallSign,
   tgeogpointSeq(instants(mergeAgg(tgeogpointFromText(
-    CONCAT('Point(', CAST(lon AS STRING), ' ', CAST(lat AS STRING), ')@',
-      DATE_FORMAT(posts, 'yyyy-MM-dd HH:mm:ss.SSS'), '+00'))))) AS trip
-FROM TABLE(TUMBLE(TABLE Positions, DESCRIPTOR(posts), INTERVAL '30' SECOND))
-GROUP BY window_start, window_end, window_time, callsign
+    CONCAT('Point(', CAST(Lon AS STRING), ' ', CAST(Lat AS STRING), ')@',
+      DATE_FORMAT(PosTs, 'yyyy-MM-dd HH:mm:ss.SSS'), '+00'))))) AS Trip
+FROM TABLE(TUMBLE(TABLE Positions, DESCRIPTOR(PosTs), INTERVAL '30' SECOND))
+GROUP BY window_start, window_end, window_time, CallSign
 """)
 
 t_env.sql_query("""
-SELECT window_start, window_end, callsign, numInstants(trip) AS instants,
-  geoLength(trip) AS length, asText(trip) AS trip
+SELECT window_start, window_end, CallSign, numInstants(Trip) AS Instants,
+  geoLength(Trip) AS Length, asText(Trip) AS Trip
 FROM Trips
 """).execute().print()
 
@@ -86,7 +86,7 @@ FROM Trips
 t_env.execute_sql("CREATE TEMPORARY VIEW TripTimes AS SELECT window_time, trip FROM Trips")
 
 t_env.sql_query("""
-SELECT window_start, window_end, asText(tCount(trip)) AS aircraft
+SELECT window_start, window_end, asText(tCount(Trip)) AS Aircraft
 FROM TABLE(TUMBLE(TABLE TripTimes, DESCRIPTOR(window_time), INTERVAL '30' SECOND))
 GROUP BY window_start, window_end
 """).execute().print()

@@ -48,7 +48,7 @@
  * A session of an aircraft closes when the event time passes its last report by SESSION_GAP.
  *
  * The kept reports are written to the topic flights-positions, with the time of the report as
- * pts, in milliseconds since the epoch, and the attributes of the state vector that carries it.
+ * Pts, in milliseconds since the epoch, and the attributes of the state vector that carries it.
  * JMEOS loads libmeos.so from the directory src of the working directory.
  *
  *   java -cp "<lib of PyFlink>/*:target/flights-walk-1.0.jar:target/lib/*" flights.FlightsWalk
@@ -97,13 +97,13 @@ public class FlightsWalk {
     static final String KAFKA =
         "'connector' = 'kafka', 'properties.bootstrap.servers' = 'localhost:9092'";
 
-    static final String[] POSITION_FIELDS = {"icao24", "pts", "lon", "lat", "geoaltitude",
-        "vertrate", "velocity", "callsign"};
+    static final String[] POSITION_FIELDS = {"ICAO24", "Pts", "Lon", "Lat", "GeoAltitude",
+        "VertRate", "Velocity", "CallSign"};
     static final TypeInformation<Row> POSITION_TYPE = Types.ROW_NAMED(POSITION_FIELDS,
         Types.STRING, Types.LONG, Types.DOUBLE, Types.DOUBLE, Types.DOUBLE, Types.DOUBLE,
         Types.DOUBLE, Types.STRING);
     static final TypeInformation<Row> DROPPED_TYPE = Types.ROW_NAMED(
-        new String[] {"icao24", "sessionstart", "reports", "unreachable", "kept"},
+        new String[] {"ICAO24", "SessionStart", "Reports", "Unreachable", "Kept"},
         Types.STRING, Types.LONG, Types.LONG, Types.LONG, Types.LONG);
     static final OutputTag<Row> DROPPED = new OutputTag<>("dropped", DROPPED_TYPE);
 
@@ -127,14 +127,14 @@ public class FlightsWalk {
         // State Vectors to Positions" of chapter 9
         tEnv.executeSql("""
             CREATE TABLE StateVectors (
-              icao24 STRING, et BIGINT, lat DOUBLE, lon DOUBLE, velocity DOUBLE,
-              heading DOUBLE, vertrate DOUBLE, callsign STRING, onground BOOLEAN,
-              alert BOOLEAN, spi BOOLEAN, squawk STRING, baroaltitude DOUBLE,
-              geoaltitude DOUBLE, lastposupdate DOUBLE, lastcontact DOUBLE,
-              etts AS TO_TIMESTAMP_LTZ(et, 0),
-              posts AS TO_TIMESTAMP_LTZ(
-                CAST(ROUND(lastposupdate * 1000) AS BIGINT), 3),
-              WATERMARK FOR etts AS etts - INTERVAL '10' SECOND
+              ICAO24 STRING, Et BIGINT, Lat DOUBLE, Lon DOUBLE, Velocity DOUBLE,
+              Heading DOUBLE, VertRate DOUBLE, CallSign STRING, OnGround BOOLEAN,
+              Alert BOOLEAN, SPI BOOLEAN, Squawk STRING, BaroAltitude DOUBLE,
+              GeoAltitude DOUBLE, LastPosUpdate DOUBLE, LastContact DOUBLE,
+              EtTs AS TO_TIMESTAMP_LTZ(Et, 0),
+              PosTs AS TO_TIMESTAMP_LTZ(
+                CAST(ROUND(LastPosUpdate * 1000) AS BIGINT), 3),
+              WATERMARK FOR EtTs AS EtTs - INTERVAL '10' SECOND
             ) WITH (
               %s, 'topic' = 'flights-states', 'properties.group.id' = 'flights-walk',
               'scan.startup.mode' = 'earliest-offset', 'format' = 'json'%s)
@@ -143,33 +143,33 @@ public class FlightsWalk {
         // The position rule: the first state vector of each report
         tEnv.executeSql("""
             CREATE TEMPORARY VIEW Reports AS
-            SELECT icao24, posts, etts, lon, lat, geoaltitude, vertrate, velocity, callsign
+            SELECT ICAO24, PosTs, EtTs, Lon, Lat, GeoAltitude, VertRate, Velocity, CallSign
             FROM (
-              SELECT *, ROW_NUMBER() OVER (PARTITION BY icao24, lastposupdate
-                ORDER BY etts) AS rn
+              SELECT *, ROW_NUMBER() OVER (PARTITION BY ICAO24, LastPosUpdate
+                ORDER BY EtTs) AS Rn
               FROM StateVectors
-              WHERE squawk IS NOT NULL AND lat IS NOT NULL AND lon IS NOT NULL AND
-                lastposupdate IS NOT NULL )
-            WHERE rn = 1
+              WHERE Squawk IS NOT NULL AND Lat IS NOT NULL AND Lon IS NOT NULL AND
+                LastPosUpdate IS NOT NULL )
+            WHERE Rn = 1
             """);
 
         // The reachability rule: the walk of the reports of each aircraft
         DataStream<Row> reports = tEnv.toChangelogStream(tEnv.from("Reports"));
         SingleOutputStreamOperator<Row> positions = reports
-            .keyBy(r -> (String) r.getField("icao24"), Types.STRING)
+            .keyBy(r -> (String) r.getField("ICAO24"), Types.STRING)
             .process(new Walk())
             .returns(POSITION_TYPE)
             .name("FlightsWalk");
 
         tEnv.executeSql("""
             CREATE TABLE PositionsSink (
-              icao24 STRING, pts BIGINT, lon DOUBLE, lat DOUBLE, geoaltitude DOUBLE,
-              vertrate DOUBLE, velocity DOUBLE, callsign STRING
+              ICAO24 STRING, Pts BIGINT, Lon DOUBLE, Lat DOUBLE, GeoAltitude DOUBLE,
+              VertRate DOUBLE, Velocity DOUBLE, CallSign STRING
             ) WITH (%s, 'topic' = 'flights-positions', 'format' = 'json')
             """.formatted(KAFKA));
         tEnv.executeSql("""
             CREATE TABLE DroppedSink (
-              icao24 STRING, sessionstart BIGINT, reports BIGINT, unreachable BIGINT, kept BIGINT
+              ICAO24 STRING, SessionStart BIGINT, Reports BIGINT, Unreachable BIGINT, Kept BIGINT
             ) WITH (%s, 'topic' = 'flights-dropped', 'format' = 'json')
             """.formatted(KAFKA));
         StatementSet statements = tEnv.createStatementSet();
@@ -202,14 +202,14 @@ public class FlightsWalk {
         }
 
         Report(Row r) {
-            icao24 = (String) r.getField("icao24");
-            pts = ((java.time.Instant) r.getField("posts")).toEpochMilli();
-            lon = (Double) r.getField("lon");
-            lat = (Double) r.getField("lat");
-            geoaltitude = (Double) r.getField("geoaltitude");
-            vertrate = (Double) r.getField("vertrate");
-            velocity = (Double) r.getField("velocity");
-            callsign = (String) r.getField("callsign");
+            icao24 = (String) r.getField("ICAO24");
+            pts = ((java.time.Instant) r.getField("PosTs")).toEpochMilli();
+            lon = (Double) r.getField("Lon");
+            lat = (Double) r.getField("Lat");
+            geoaltitude = (Double) r.getField("GeoAltitude");
+            vertrate = (Double) r.getField("VertRate");
+            velocity = (Double) r.getField("Velocity");
+            callsign = (String) r.getField("CallSign");
         }
 
         Row toRow() {

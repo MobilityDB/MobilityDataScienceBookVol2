@@ -61,10 +61,10 @@ t_env.execute_sql("LOAD MODULE mobilitydb")
 # ----------------------------------------------------
 t_env.execute_sql(f"""
 CREATE TABLE Positions (
-  icao24 STRING, pts BIGINT, lon DOUBLE, lat DOUBLE, geoaltitude DOUBLE,
-  vertrate DOUBLE, velocity DOUBLE, callsign STRING,
-  posts AS TO_TIMESTAMP_LTZ(pts, 3),
-  WATERMARK FOR posts AS posts - INTERVAL '30' SECOND
+  ICAO24 STRING, Pts BIGINT, Lon DOUBLE, Lat DOUBLE, GeoAltitude DOUBLE,
+  VertRate DOUBLE, Velocity DOUBLE, CallSign STRING,
+  PosTs AS TO_TIMESTAMP_LTZ(Pts, 3),
+  WATERMARK FOR PosTs AS PosTs - INTERVAL '30' SECOND
 ) WITH (
   {KAFKA}, 'topic' = 'flights-positions', 'properties.group.id' = 'flights-dashboards',
   'scan.startup.mode' = 'earliest-offset', 'format' = 'json'
@@ -76,20 +76,20 @@ CREATE TABLE Positions (
 # ----------------------------------------------------
 t_env.execute_sql(f"""
 CREATE TABLE ClimbingBrussels (
-  icao24 STRING, callsign STRING, posts TIMESTAMP_LTZ(3), lon DOUBLE,
-  lat DOUBLE, geoaltitude DOUBLE, vertrate DOUBLE
+  ICAO24 STRING, CallSign STRING, PosTs TIMESTAMP_LTZ(3), Lon DOUBLE,
+  Lat DOUBLE, GeoAltitude DOUBLE, VertRate DOUBLE
 ) WITH ({KAFKA}, 'topic' = 'climbing-brussels', 'format' = 'json')
 """)
 t_env.execute_sql(f"""
 CREATE TABLE ClosePairs (
-  window_start TIMESTAMP(3), window_end TIMESTAMP(3), icao24_1 STRING,
-  icao24_2 STRING, distance DOUBLE
+  window_start TIMESTAMP(3), window_end TIMESTAMP(3), ICAO24_1 STRING,
+  ICAO24_2 STRING, Distance DOUBLE
 ) WITH ({KAFKA}, 'topic' = 'close-pairs', 'format' = 'json')
 """)
 t_env.execute_sql(f"""
 CREATE TABLE TrafficPerHour (
-  window_start TIMESTAMP(3), window_end TIMESTAMP(3), positions BIGINT,
-  aircraft BIGINT, altitude DOUBLE, cruisingpositions BIGINT, cruisingaircraft BIGINT
+  window_start TIMESTAMP(3), window_end TIMESTAMP(3), Positions BIGINT,
+  Aircraft BIGINT, Altitude DOUBLE, CruisingPositions BIGINT, CruisingAircraft BIGINT
 ) WITH ({KAFKA}, 'topic' = 'traffic-per-hour', 'format' = 'json')
 """)
 
@@ -99,17 +99,17 @@ CREATE TABLE TrafficPerHour (
 # ----------------------------------------------------
 t_env.execute_sql("""
 CREATE TEMPORARY VIEW Pieces AS
-SELECT window_start, window_end, icao24,
+SELECT window_start, window_end, ICAO24,
   tgeompointSeq(instants(mergeAgg(geoTransform(tgeompointFromText(CONCAT(
-    'SRID=4326;Point Z(', CAST(lon AS STRING), ' ', CAST(lat AS STRING), ' ',
-    CAST(geoaltitude AS STRING), ')@', DATE_FORMAT(posts,
-    'yyyy-MM-dd HH:mm:ss.SSS'), '+00')), 3035)))) AS trip
-FROM TABLE(TUMBLE(TABLE Positions, DESCRIPTOR(posts),
+    'SRID=4326;Point Z(', CAST(Lon AS STRING), ' ', CAST(Lat AS STRING), ' ',
+    CAST(GeoAltitude AS STRING), ')@', DATE_FORMAT(PosTs,
+    'yyyy-MM-dd HH:mm:ss.SSS'), '+00')), 3035)))) AS Trip
+FROM TABLE(TUMBLE(TABLE Positions, DESCRIPTOR(PosTs),
   INTERVAL '10' MINUTE))
-WHERE geoaltitude BETWEEN 3000 AND 15000 AND
-  velocity BETWEEN 100 AND 400 AND
-  lon BETWEEN -35.58 AND 44.83 AND lat BETWEEN 24.60 AND 84.73
-GROUP BY window_start, window_end, icao24
+WHERE GeoAltitude BETWEEN 3000 AND 15000 AND
+  Velocity BETWEEN 100 AND 400 AND
+  Lon BETWEEN -35.58 AND 44.83 AND Lat BETWEEN 24.60 AND 84.73
+GROUP BY window_start, window_end, ICAO24
 """)
 
 statements = t_env.create_statement_set()
@@ -117,38 +117,38 @@ statements = t_env.create_statement_set()
 # DASHBOARD 1: the positions of the flights over Brussels below 2,000 meters while they climb
 statements.add_insert_sql("""
 INSERT INTO ClimbingBrussels
-SELECT icao24, TRIM(callsign), posts, lon, lat, geoaltitude, vertrate
+SELECT ICAO24, TRIM(CallSign), PosTs, Lon, Lat, GeoAltitude, VertRate
 FROM Positions
-WHERE eIntersects(tgeogpointFromText(CONCAT('Point(', CAST(lon AS STRING), ' ',
-    CAST(lat AS STRING), ')@', DATE_FORMAT(posts, 'yyyy-MM-dd HH:mm:ss.SSS'),
+WHERE eIntersects(tgeogpointFromText(CONCAT('Point(', CAST(Lon AS STRING), ' ',
+    CAST(Lat AS STRING), ')@', DATE_FORMAT(PosTs, 'yyyy-MM-dd HH:mm:ss.SSS'),
     '+00')), geography(stboxFromText(
     'SRID=4326;GEODSTBOX X((4.25,50.75),(4.60,50.95))'))) AND
-  vertrate BETWEEN 1 AND 20 AND geoaltitude < 2000
+  VertRate BETWEEN 1 AND 20 AND GeoAltitude < 2000
 """)
 
 # DASHBOARD 2: the pairs of airborne aircraft within one kilometer of each other in three
 # dimensions, per window of ten minutes
 statements.add_insert_sql("""
 INSERT INTO ClosePairs
-SELECT p1.window_start, p1.window_end, p1.icao24 AS icao24_1,
-  p2.icao24 AS icao24_2, nearestApproachDistance(p1.trip, p2.trip) AS distance
+SELECT p1.window_start, p1.window_end, p1.ICAO24 AS ICAO24_1,
+  p2.ICAO24 AS ICAO24_2, nearestApproachDistance(p1.Trip, p2.Trip) AS Distance
 FROM Pieces p1 JOIN Pieces p2 ON p1.window_start = p2.window_start AND
-  p1.window_end = p2.window_end AND p1.icao24 > p2.icao24 AND
-  stboxOverlaps(p1.trip, expandSpace(p2.trip, 1000))
-WHERE nearestApproachDistance(p1.trip, p2.trip) < 1000
+  p1.window_end = p2.window_end AND p1.ICAO24 > p2.ICAO24 AND
+  stboxOverlaps(p1.Trip, expandSpace(p2.Trip, 1000))
+WHERE nearestApproachDistance(p1.Trip, p2.Trip) < 1000
 """)
 
 # DASHBOARD 3: positions, aircraft, and average altitude of the flights per hour, and of the
 # cruising ones
 statements.add_insert_sql("""
 INSERT INTO TrafficPerHour
-SELECT window_start, window_end, COUNT(*) AS positions,
-  COUNT(DISTINCT icao24) AS aircraft, AVG(geoaltitude) AS altitude,
+SELECT window_start, window_end, COUNT(*) AS Positions,
+  COUNT(DISTINCT ICAO24) AS Aircraft, AVG(GeoAltitude) AS Altitude,
   COUNT(*) FILTER (WHERE spanContains(floatspanFromText('[3000, 8000)'),
-    geoaltitude)) AS cruisingpositions,
-  COUNT(DISTINCT icao24) FILTER (WHERE spanContains(
-    floatspanFromText('[3000, 8000)'), geoaltitude)) AS cruisingaircraft
-FROM TABLE(TUMBLE(TABLE Positions, DESCRIPTOR(posts),
+    GeoAltitude)) AS CruisingPositions,
+  COUNT(DISTINCT ICAO24) FILTER (WHERE spanContains(
+    floatspanFromText('[3000, 8000)'), GeoAltitude)) AS CruisingAircraft
+FROM TABLE(TUMBLE(TABLE Positions, DESCRIPTOR(PosTs),
   INTERVAL '1' HOUR))
 GROUP BY window_start, window_end
 """)

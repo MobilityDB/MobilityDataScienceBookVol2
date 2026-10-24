@@ -75,14 +75,14 @@ res = {}
 lateness_max, late30, late60, n = None, 0, 0, 0
 with open(f"{OUT}/positions.csv", "w") as f:
     for r in stream_rows("flights-positions"):
-        t = r["pts"]
+        t = r["Pts"]
         if lateness_max is not None:
             if t < lateness_max - 30000:
                 late30 += 1
             if t < lateness_max - 60000:
                 late60 += 1
         lateness_max = t if lateness_max is None else max(lateness_max, t)
-        f.write(f"{r['icao24']},{t}\n")
+        f.write(f"{r['ICAO24']},{t}\n")
         n += 1
 res["stream_positions"], res["late30"], res["late60"] = n, late30, late60
 con = duckdb.connect()
@@ -115,15 +115,15 @@ con.execute(f"""COPY (
 res["aircraft_differ"] = q(f"SELECT count(*) FROM read_csv('{OUT}/aircraft_differ.csv')")
 dropped = dump("flights-dropped")
 res["dropped_sessions"] = len(dropped)
-res["dropped_aircraft"] = len({d["icao24"] for d in dropped})
-res["dropped_kept_positions"] = sum(d["kept"] for d in dropped)
+res["dropped_aircraft"] = len({d["ICAO24"] for d in dropped})
+res["dropped_kept_positions"] = sum(d["Kept"] for d in dropped)
 json.dump(dropped, open(f"{OUT}/dropped.json", "w"))
 
 # ---------------------------------------------------------------- dashboard 1
 d1 = dump("climbing-brussels")
 res["d1_rows"] = len(d1)
-res["d1_flights"] = len({(r["icao24"], r["callsign"]) for r in d1})
-res["d1_aircraft"] = len({r["icao24"] for r in d1})
+res["d1_flights"] = len({(r["ICAO24"], r["CallSign"]) for r in d1})
+res["d1_aircraft"] = len({r["ICAO24"] for r in d1})
 json.dump(d1, open(f"{OUT}/d1.json", "w"))
 b1 = list(csv.DictReader(open(f"{BASE}/d1.csv")))
 res["d1_base_rows"] = len(b1)
@@ -141,21 +141,21 @@ def millis_of_day(ts):
 bkeys = {(r["icao24"], millis_of_day(r["t"])): r for r in b1}
 match, match_xy = 0, 0
 for r in d1:
-    k = (r["icao24"], millis_of_day(r["posts"]))
+    k = (r["ICAO24"], millis_of_day(r["PosTs"]))
     if k in bkeys:
         match += 1
         b = bkeys[k]
-        if abs(float(b["lon"]) - r["lon"]) < 1e-9 and abs(float(b["lat"]) - r["lat"]) < 1e-9:
+        if abs(float(b["lon"]) - r["Lon"]) < 1e-9 and abs(float(b["lat"]) - r["Lat"]) < 1e-9:
             match_xy += 1
 res["d1_rows_in_baseline"], res["d1_rows_in_baseline_same_xy"] = match, match_xy
 
 # ---------------------------------------------------------------- dashboard 2
 d2 = dump("close-pairs")
 res["d2_pairs"] = len(d2)
-res["d2_distinct_pairs"] = len({(r["icao24_1"], r["icao24_2"]) for r in d2})
+res["d2_distinct_pairs"] = len({(r["ICAO24_1"], r["ICAO24_2"]) for r in d2})
 res["d2_windows"] = len({r["window_start"] for r in d2})
 if d2:
-    res["d2_closest"] = min(d2, key=lambda r: (r["distance"], r["icao24_1"], r["icao24_2"]))
+    res["d2_closest"] = min(d2, key=lambda r: (r["Distance"], r["ICAO24_1"], r["ICAO24_2"]))
 json.dump(d2, open(f"{OUT}/d2.json", "w"))
 
 # ---------------------------------------------------------------- dashboard 3

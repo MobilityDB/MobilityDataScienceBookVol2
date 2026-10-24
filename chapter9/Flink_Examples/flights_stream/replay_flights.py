@@ -30,8 +30,9 @@ The state vectors are those of the Parquet files that flights/fetch_data.sh down
 data/flights/parquet/hour=<Unix time of the hour>/, one file per hour, of which the replay keeps
 the state vectors at every tenth second, the time step of the public CSV samples of the OpenSky
 Network, as the flights tables of chapter 8 do. DuckDB reads each hour, sorts it by time, and
-writes each state vector as JSON. The column time of the files is sent as et, since time is a
-reserved word of Flink SQL, and the other columns keep their names in lower case. The day has 69
+writes each state vector as JSON, under the names the book gives the columns (ICAO24, CallSign,
+GeoAltitude): the column time of the files is sent as Et, since time is a reserved word of Flink
+SQL. The day has 69
 million state vectors at every tenth second, so the producer is that of confluent-kafka, a client
 of the C library librdkafka, which sends about 300,000 events per second. At the default
 speed-up of 20, the busiest hour of the day, 4.2 million state vectors, lasts three minutes, a
@@ -55,11 +56,11 @@ MIN_SLEEP, MAX_SLEEP = 0.0, 1.0
 # One JSON event per state vector; DuckDB writes it, and a NULL column is a JSON null
 EVENT = """
 SELECT time, to_json({
-    'icao24': icao24, 'et': time, 'lat': lat, 'lon': lon, 'velocity': velocity,
-    'heading': heading, 'vertrate': vertRate, 'callsign': callsign, 'onground': onGround,
-    'alert': alert, 'spi': spi, 'squawk': squawk, 'baroaltitude': baroAltitude,
-    'geoaltitude': geoAltitude, 'lastposupdate': lastPosUpdate,
-    'lastcontact': lastContact})::VARCHAR
+    'ICAO24': icao24, 'Et': time, 'Lat': lat, 'Lon': lon, 'Velocity': velocity,
+    'Heading': heading, 'VertRate': vertRate, 'CallSign': callsign, 'OnGround': onGround,
+    'Alert': alert, 'SPI': spi, 'Squawk': squawk, 'BaroAltitude': baroAltitude,
+    'GeoAltitude': geoAltitude, 'LastPosUpdate': lastPosUpdate,
+    'LastContact': lastContact})::VARCHAR
 FROM read_parquet(?)
 WHERE time % 10 = 0
 ORDER BY time

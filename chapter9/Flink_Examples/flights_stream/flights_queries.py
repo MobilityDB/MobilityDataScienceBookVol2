@@ -58,10 +58,10 @@ t_env.execute_sql("LOAD MODULE mobilitydb")
 # ----------------------------------------------------
 t_env.execute_sql(f"""
 CREATE TABLE Positions (
-  icao24 STRING, pts BIGINT, lon DOUBLE, lat DOUBLE, geoaltitude DOUBLE,
-  vertrate DOUBLE, velocity DOUBLE, callsign STRING,
-  posts AS TO_TIMESTAMP_LTZ(pts, 3),
-  WATERMARK FOR posts AS posts - INTERVAL '30' SECOND
+  ICAO24 STRING, Pts BIGINT, Lon DOUBLE, Lat DOUBLE, GeoAltitude DOUBLE,
+  VertRate DOUBLE, Velocity DOUBLE, CallSign STRING,
+  PosTs AS TO_TIMESTAMP_LTZ(Pts, 3),
+  WATERMARK FOR PosTs AS PosTs - INTERVAL '30' SECOND
 ) WITH (
   {KAFKA}, 'topic' = 'flights-positions', 'properties.group.id' = 'flights-queries',
   'scan.startup.mode' = 'earliest-offset', 'format' = 'json'
@@ -73,26 +73,26 @@ CREATE TABLE Positions (
 # ----------------------------------------------------
 t_env.execute_sql(f"""
 CREATE TABLE HourlyTrips (
-  window_start TIMESTAMP(3), window_end TIMESTAMP(3), icao24 STRING, instants INT,
-  length DOUBLE, trajectory STRING
+  window_start TIMESTAMP(3), window_end TIMESTAMP(3), ICAO24 STRING, Instants INT,
+  Length DOUBLE, Trajectory STRING
 ) WITH ({KAFKA}, 'topic' = 'hourly-trips', 'format' = 'json')
 """)
 t_env.execute_sql(f"""
 CREATE TABLE BrusselsArrivals (
-  icao24 STRING, session_start TIMESTAMP(3), session_end TIMESTAMP(3), instants INT,
-  length DOUBLE, origin STRING, route STRING
+  ICAO24 STRING, SessionStart TIMESTAMP(3), SessionEnd TIMESTAMP(3), Instants INT,
+  Length DOUBLE, Origin STRING, Route STRING
 ) WITH ({KAFKA}, 'topic' = 'brussels-arrivals', 'format' = 'json')
 """)
 t_env.execute_sql(f"""
 CREATE TABLE AirborneHourly (
-  window_start TIMESTAMP(3), window_end TIMESTAMP(3), instants INT, peak INT,
-  peak_time STRING, average DOUBLE, aircraft STRING
+  window_start TIMESTAMP(3), window_end TIMESTAMP(3), Instants INT, Peak INT,
+  PeakTime STRING, Average DOUBLE, Aircraft STRING
 ) WITH ({KAFKA}, 'topic' = 'airborne-hourly', 'format' = 'json')
 """)
 t_env.execute_sql(f"""
 CREATE TABLE Holding (
-  fix STRING, icao24 STRING, callsign STRING, session_start TIMESTAMP(3),
-  session_end TIMESTAMP(3), periods STRING, length DOUBLE, trajectory STRING
+  Fix STRING, ICAO24 STRING, CallSign STRING, SessionStart TIMESTAMP(3),
+  SessionEnd TIMESTAMP(3), Periods STRING, Length DOUBLE, Trajectory STRING
 ) WITH ({KAFKA}, 'topic' = 'holding', 'format' = 'json')
 """)
 
@@ -101,10 +101,10 @@ CREATE TABLE Holding (
 # ----------------------------------------------------
 t_env.execute_sql("""
 CREATE TEMPORARY VIEW Instants AS
-SELECT icao24, TRIM(callsign) AS callsign, posts, lon, lat, velocity, geoaltitude,
-  CONCAT('Point(', CAST(lon AS STRING), ' ', CAST(lat AS STRING), ')@',
-    DATE_FORMAT(posts, 'yyyy-MM-dd HH:mm:ss.SSS'), '+00') AS inst,
-  CONCAT('@', DATE_FORMAT(posts, 'yyyy-MM-dd HH:mm:ss.SSS'), '+00') AS ts
+SELECT ICAO24, TRIM(CallSign) AS CallSign, PosTs, Lon, Lat, Velocity, GeoAltitude,
+  CONCAT('Point(', CAST(Lon AS STRING), ' ', CAST(Lat AS STRING), ')@',
+    DATE_FORMAT(PosTs, 'yyyy-MM-dd HH:mm:ss.SSS'), '+00') AS Inst,
+  CONCAT('@', DATE_FORMAT(PosTs, 'yyyy-MM-dd HH:mm:ss.SSS'), '+00') AS Ts
 FROM Positions
 """)
 
@@ -113,12 +113,12 @@ FROM Positions
 # ----------------------------------------------------
 t_env.execute_sql("""
 CREATE TEMPORARY VIEW Fixes AS
-SELECT fix, geographyFromHexEWKB(hex) AS geog
+SELECT Fix, geographyFromHexEWKB(Hex) AS Geog
 FROM (VALUES
   ('Bovingdon', '0101000020E61000009A9999999999E1BFB0726891EDDC4940'),
   ('Lambourne', '0101000020E6100000DBF97E6ABC74C33FA69BC420B0D24940'),
   ('Ockham', '0101000020E6100000CFF753E3A59BDCBFD7A3703D0AA74940'),
-  ('Biggin Hill', '0101000020E6100000EC51B81E85EBA13FEE7C3F355EAA4940')) AS f(fix, hex)
+  ('Biggin Hill', '0101000020E6100000EC51B81E85EBA13FEE7C3F355EAA4940')) AS f(Fix, Hex)
 """)
 
 # ----------------------------------------------------
@@ -127,17 +127,17 @@ FROM (VALUES
 # ----------------------------------------------------
 t_env.execute_sql("""
 CREATE TEMPORARY VIEW FlyingHourly AS
-SELECT window_time AS rowtime, icao24,
-  atTime(trip, getTime(atSpan(speed, floatspanFromText('[50, 400]')))) AS flying
+SELECT window_time AS RowTime, ICAO24,
+  atTime(Trip, getTime(atSpan(Speed, floatspanFromText('[50, 400]')))) AS Flying
 FROM (
-  SELECT window_start, window_end, window_time, icao24,
-    tgeompointSeq(instants(mergeAgg(tgeompointFromText(CONCAT('SRID=4326;', inst)))))
-      AS trip,
-    tfloatSeq(instants(mergeAgg(tfloatFromText(CONCAT(CAST(velocity AS STRING), ts)))
-      FILTER (WHERE velocity IS NOT NULL))) AS speed
-  FROM TABLE(TUMBLE(TABLE Instants, DESCRIPTOR(posts), INTERVAL '1' HOUR))
-  WHERE lon BETWEEN -35.58 AND 44.83 AND lat BETWEEN 24.60 AND 84.73
-  GROUP BY window_start, window_end, window_time, icao24 )
+  SELECT window_start, window_end, window_time, ICAO24,
+    tgeompointSeq(instants(mergeAgg(tgeompointFromText(CONCAT('SRID=4326;', Inst)))))
+      AS Trip,
+    tfloatSeq(instants(mergeAgg(tfloatFromText(CONCAT(CAST(Velocity AS STRING), Ts)))
+      FILTER (WHERE Velocity IS NOT NULL))) AS Speed
+  FROM TABLE(TUMBLE(TABLE Instants, DESCRIPTOR(PosTs), INTERVAL '1' HOUR))
+  WHERE Lon BETWEEN -35.58 AND 44.83 AND Lat BETWEEN 24.60 AND 84.73
+  GROUP BY window_start, window_end, window_time, ICAO24 )
 """)
 
 statements = t_env.create_statement_set()
@@ -145,31 +145,31 @@ statements = t_env.create_statement_set()
 # QUERY 1: the trajectory of each aircraft over the envelope of Europe in each hour
 statements.add_insert_sql("""
 INSERT INTO HourlyTrips
-SELECT window_start, window_end, icao24, numInstants(trip),
-  geoLength(geoTransform(trip, 3035)), asHexEWKB(trajectory(trip))
+SELECT window_start, window_end, ICAO24, numInstants(Trip),
+  geoLength(geoTransform(Trip, 3035)), asHexEWKB(trajectory(Trip))
 FROM (
-  SELECT window_start, window_end, icao24,
-    tgeompointSeq(instants(mergeAgg(tgeompointFromText(CONCAT('SRID=4326;', inst)))))
-      AS trip
-  FROM TABLE(TUMBLE(TABLE Instants, DESCRIPTOR(posts),
+  SELECT window_start, window_end, ICAO24,
+    tgeompointSeq(instants(mergeAgg(tgeompointFromText(CONCAT('SRID=4326;', Inst)))))
+      AS Trip
+  FROM TABLE(TUMBLE(TABLE Instants, DESCRIPTOR(PosTs),
     INTERVAL '1' HOUR))
-  WHERE lon BETWEEN -35.58 AND 44.83 AND lat BETWEEN 24.60 AND 84.73
-  GROUP BY window_start, window_end, icao24 )
+  WHERE Lon BETWEEN -35.58 AND 44.83 AND Lat BETWEEN 24.60 AND 84.73
+  GROUP BY window_start, window_end, ICAO24 )
 """)
 
 # QUERY 2: the flights that end at Brussels, a flight being the reports of an aircraft until a
 # silence of one hour
 statements.add_insert_sql("""
 INSERT INTO BrusselsArrivals
-SELECT icao24, window_start, window_end, numInstants(trip), geoLength(trip),
-  asHexEWKB(startValue(trip)), asHexEWKB(trajectory(trip))
+SELECT ICAO24, window_start, window_end, numInstants(Trip), geoLength(Trip),
+  asHexEWKB(startValue(Trip)), asHexEWKB(trajectory(Trip))
 FROM (
-  SELECT icao24, window_start, window_end,
-    tgeogpointSeq(instants(mergeAgg(tgeogpointFromText(inst)))) AS trip
-  FROM TABLE(SESSION(TABLE Instants PARTITION BY icao24,
-    DESCRIPTOR(posts), INTERVAL '1' HOUR))
-  GROUP BY icao24, window_start, window_end )
-WHERE eIntersects(atTime(trip, endTimestamp(trip)), geography(stboxFromText(
+  SELECT ICAO24, window_start, window_end,
+    tgeogpointSeq(instants(mergeAgg(tgeogpointFromText(Inst)))) AS Trip
+  FROM TABLE(SESSION(TABLE Instants PARTITION BY ICAO24,
+    DESCRIPTOR(PosTs), INTERVAL '1' HOUR))
+  GROUP BY ICAO24, window_start, window_end )
+WHERE eIntersects(atTime(Trip, endTimestamp(Trip)), geography(stboxFromText(
   'SRID=4326;GEODSTBOX X((4.25,50.75),(4.60,50.95))')))
 """)
 
@@ -177,13 +177,13 @@ WHERE eIntersects(atTime(trip, endTimestamp(trip)), geography(stboxFromText(
 # each hour, an aircraft flying while its velocity lies between 50 and 400 m/s
 statements.add_insert_sql("""
 INSERT INTO AirborneHourly
-SELECT window_start, window_end, numInstants(aircraft), maxValue(aircraft),
-  CAST(startTimestamp(atValue(aircraft, maxValue(aircraft))) AS STRING), twAvg(aircraft),
-  asText(aircraft)
+SELECT window_start, window_end, numInstants(Aircraft), maxValue(Aircraft),
+  CAST(startTimestamp(atValue(Aircraft, maxValue(Aircraft))) AS STRING), twAvg(Aircraft),
+  asText(Aircraft)
 FROM (
-  SELECT window_start, window_end, tCount(flying) AS aircraft
-  FROM TABLE(TUMBLE(TABLE FlyingHourly, DESCRIPTOR(rowtime), INTERVAL '1' HOUR))
-  WHERE flying IS NOT NULL
+  SELECT window_start, window_end, tCount(Flying) AS Aircraft
+  FROM TABLE(TUMBLE(TABLE FlyingHourly, DESCRIPTOR(RowTime), INTERVAL '1' HOUR))
+  WHERE Flying IS NOT NULL
   GROUP BY window_start, window_end )
 """)
 
@@ -192,23 +192,23 @@ FROM (
 # 5,000 meters, the distance measured on the WGS 84 spheroid
 statements.add_insert_sql("""
 INSERT INTO Holding
-SELECT f.fix, b.icao24, b.callsign, b.window_start, b.window_end,
-  asText(getTime(atTime(b.band, whenTrue(tDwithin(b.band, f.geog, 15000.0))))),
-  geoLength(atTime(b.band, whenTrue(tDwithin(b.band, f.geog, 15000.0)))),
-  asHexEWKB(trajectory(atTime(b.band, whenTrue(tDwithin(b.band, f.geog, 15000.0)))))
+SELECT f.Fix, b.ICAO24, b.CallSign, b.window_start, b.window_end,
+  asText(getTime(atTime(b.Band, whenTrue(tDwithin(b.Band, f.Geog, 15000.0))))),
+  geoLength(atTime(b.Band, whenTrue(tDwithin(b.Band, f.Geog, 15000.0)))),
+  asHexEWKB(trajectory(atTime(b.Band, whenTrue(tDwithin(b.Band, f.Geog, 15000.0)))))
 FROM (
-  SELECT icao24, callsign, window_start, window_end,
-    atTime(trip, getTime(atSpan(altitude, floatspanFromText('[2000, 5000]')))) AS band
+  SELECT ICAO24, CallSign, window_start, window_end,
+    atTime(Trip, getTime(atSpan(Altitude, floatspanFromText('[2000, 5000]')))) AS Band
   FROM (
-    SELECT icao24, MAX(callsign) AS callsign, window_start, window_end,
-      tgeogpointSeq(instants(mergeAgg(tgeogpointFromText(inst)))) AS trip,
-      tfloatSeq(instants(mergeAgg(tfloatFromText(CONCAT(CAST(geoaltitude AS STRING), ts)))
-        FILTER (WHERE geoaltitude IS NOT NULL))) AS altitude
-    FROM TABLE(SESSION(TABLE Instants PARTITION BY icao24,
-      DESCRIPTOR(posts), INTERVAL '1' HOUR))
-    GROUP BY icao24, window_start, window_end ) ) b, Fixes f
-WHERE b.band IS NOT NULL AND eDwithin(b.band, f.geog, 15000.0) AND
-  atTime(b.band, whenTrue(tDwithin(b.band, f.geog, 15000.0))) IS NOT NULL
+    SELECT ICAO24, MAX(CallSign) AS CallSign, window_start, window_end,
+      tgeogpointSeq(instants(mergeAgg(tgeogpointFromText(Inst)))) AS Trip,
+      tfloatSeq(instants(mergeAgg(tfloatFromText(CONCAT(CAST(GeoAltitude AS STRING), Ts)))
+        FILTER (WHERE GeoAltitude IS NOT NULL))) AS Altitude
+    FROM TABLE(SESSION(TABLE Instants PARTITION BY ICAO24,
+      DESCRIPTOR(PosTs), INTERVAL '1' HOUR))
+    GROUP BY ICAO24, window_start, window_end ) ) b, Fixes f
+WHERE b.Band IS NOT NULL AND eDwithin(b.Band, f.Geog, 15000.0) AND
+  atTime(b.Band, whenTrue(tDwithin(b.Band, f.Geog, 15000.0))) IS NOT NULL
 """)
 
 job = statements.execute()
