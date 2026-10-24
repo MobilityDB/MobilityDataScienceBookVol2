@@ -32,15 +32,16 @@ traffic-per-hour (dashboard 3, one row per hour), which flights_dashboards.py wr
 their rows in memory: all the rows of dashboards 1 and 3, and those of the recent windows of
 dashboard 2. The reader is #kafka_reader of Geofencing/mapserver_geofence.py. The page redraws
 its maps and charts every few seconds as new rows arrive. The maps are pydeck layers, drawn by
-viridis and map_chart as the dashboards of chapter 8 (chapter8/dashboards/app.py) draw theirs,
-whose panels these follow, over the OSM Shortbread vector tiles in the colors of the maps of the
-book, as the basemap of Geofencing/dashboard_geofence.html: the style static/shortbread.json,
-which the app serves itself.
+viridis, extent_map and color_scale as the dashboards of chapter 8 (chapter8/dashboards/app.py)
+draw theirs, whose panels these follow, on the extent of their figure in chapter 8, over the OSM
+Shortbread vector tiles in the colors of the maps of the book, as the basemap of
+Geofencing/dashboard_geofence.html: the style static/shortbread.json, which the app serves itself.
 
     streamlit run app.py --server.enableStaticServing true --theme.base light \
         --client.toolbarMode viewer
 """
 import json
+import math
 import threading
 from collections import deque
 
@@ -54,7 +55,15 @@ KAFKA_BROKERS = "localhost:9092"
 TOPICS = ["climbing-brussels", "close-pairs", "traffic-per-hour"]
 RECENT_WINDOWS = 18  # the windows of ten minutes of dashboard 2 kept in memory: three hours
 REFRESH = 5  # seconds between two redraws of the page
+R = 6378137.0  # the radius of the sphere of EPSG:3857, in meters
+# The extent of the maps of dashboard 1, in EPSG:3857, that of their figure in chapter8.tex:
+# the envelope of Brussels to which the query restricts the positions, with a margin
+BRUSSELS = (4.20, 4.65, 50.72, 50.98)
+MAP_WIDTH = 500  # pixels of a map of dashboard 1
 VIRIDIS = np.array([[68, 1, 84], [59, 82, 139], [33, 145, 140], [94, 201, 98], [253, 231, 37]])
+# The colors of the heat maps: those that deck.gl gives a HeatmapLayer by default
+HEAT = [[255, 255, 178], [254, 217, 118], [254, 178, 76], [253, 141, 60], [240, 59, 32],
+        [189, 0, 38]]
 # The base map: a MapLibre style over the OSM Shortbread vector tiles, served by the app
 BASE_MAP = f"http://localhost:{st.get_option('server.port')}/app/static/shortbread.json"
 
@@ -137,12 +146,58 @@ def viridis(values, vmin, vmax):
     return (VIRIDIS[i] * (1 - f) + VIRIDIS[i + 1] * f).astype(int).tolist()
 
 
-def map_chart(layers, lat, lon, zoom, tooltip=None, height=340):
+def map_chart(layers, lat, lon, zoom, tooltip=None, height=340, width="stretch"):
     """A map of pydeck layers over the base map."""
     deck = pdk.Deck(layers=layers, map_style=BASE_MAP,
                     initial_view_state=pdk.ViewState(latitude=lat, longitude=lon, zoom=zoom),
                     tooltip=tooltip)
-    st.pydeck_chart(deck, height=height)
+    st.pydeck_chart(deck, height=height, width=width)
+
+
+def mercator(lon, lat):
+    """The coordinates in EPSG:3857 of a longitude and a latitude."""
+    return R * math.radians(lon), R * math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
+
+
+def extent_map(layers, extent, width, tooltip=None):
+    """A map by #map_chart, width pixels wide, of exactly the extent x0, x1, y0, y1 of EPSG:3857,
+    that of its figure in the book (#extent3857 of chapter8/figures/mapjob.py): the zoom at which
+    the extent fills the width, on the tiles of 512 pixels of deck.gl, and the height of the
+    extent at this zoom."""
+    x0, x1, y0, y1 = extent
+    zoom = math.log2(width * 2 * math.pi * R / (512 * (x1 - x0)))
+    lon = math.degrees((x0 + x1) / 2 / R)
+    lat = math.degrees(2 * math.atan(math.exp((y0 + y1) / 2 / R)) - math.pi / 2)
+    map_chart(layers, lat, lon, zoom, tooltip, height=round(width * (y1 - y0) / (x1 - x0)),
+              width=width)
+
+
+def lonlat_extent(lon0, lon1, lat0, lat1):
+    """The extent in EPSG:3857 of a range of longitudes and of latitudes."""
+    (x0, y0), (x1, y1) = mercator(lon0, lat0), mercator(lon1, lat1)
+    return x0, x1, y0, y1
+
+
+def color_scale(title, colors, ticks, width=MAP_WIDTH):
+    """The scale of the colors of a map, set under it, width pixels wide, as #overlay of
+    chapter8/figures/flights_maps.py sets the scale of the figures of the book: its title, a bar
+    of the colors and the labels of ticks, a list of (fraction of the bar, label)."""
+    stops = ", ".join(f"rgb({r},{g},{b}) {100 * i / (len(colors) - 1):.0f}%"
+                      for i, (r, g, b) in enumerate(colors))
+    labels = "".join(
+        f'<span style="position:absolute; left:{100 * f:.2f}%; '
+        f'transform:translateX(-{100 * f:.0f}%)">{label}</span>' for f, label in ticks)
+    st.html(f'<div style="width:{width}px; font-size:0.875rem; color:rgba(49,51,63,0.6)">'
+            f'{title}'
+            f'<div style="height:10px; margin-top:4px; border:1px solid rgba(49,51,63,0.3); '
+            f'background:linear-gradient(to right, {stops})"></div>'
+            f'<div style="position:relative; height:1.4em">{labels}</div></div>')
+
+
+def altitude_scale(title, top, step):
+    """The viridis scale of the altitudes from 0 to top meters, with a tick every step meters,
+    by #color_scale."""
+    color_scale(title, VIRIDIS.tolist(), [(m / top, f"{m:,}") for m in range(0, top + 1, step)])
 
 
 # ------------------------------------------------------------------------------- dashboards
@@ -158,17 +213,19 @@ def dashboard1(data):
     with left:
         heat = pdk.Layer("HeatmapLayer",
                          data=climbing.assign(weight=2000 - climbing["geoaltitude"]),
-                         get_position=["lon", "lat"], get_weight="weight", radius_pixels=30)
-        map_chart([heat], 50.86, 4.45, 9.6)
-        st.caption("Noise heatmap: each position weighs 2,000 m minus its altitude")
+                         get_position=["lon", "lat"], get_weight="weight", radius_pixels=30,
+                         color_range=HEAT)
+        extent_map([heat], lonlat_extent(*BRUSSELS), MAP_WIDTH)
+        color_scale("Noise: each position weighs 2,000 m minus its altitude", HEAT,
+                    [(0, "low"), (1, "high")])
     with right:
         climbing = climbing.assign(color=viridis(climbing["geoaltitude"], 0, 2000))
         points = pdk.Layer("ScatterplotLayer", data=climbing, get_position=["lon", "lat"],
                            get_fill_color="color", get_radius=60, radius_min_pixels=2,
                            pickable=True)
-        map_chart([points], 50.86, 4.45, 9.6,
-                  tooltip={"text": "{callsign} {geoaltitude} m at {posts}"})
-        st.caption("Altitude, from 0 m (purple) to 2,000 m (yellow)")
+        extent_map([points], lonlat_extent(*BRUSSELS), MAP_WIDTH,
+                   tooltip={"text": "{callsign} {geoaltitude} m at {posts}"})
+        altitude_scale("Altitude (m)", 2000, 500)
 
 
 def dashboard2(data):

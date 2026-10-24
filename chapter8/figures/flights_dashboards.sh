@@ -37,6 +37,6 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=$(mkdir -p "${1:?out}" && cd "$1" && pwd)
 PY=${PYTHON:-python3}
 $PY "$HERE/../../chapter9/figures/capture.py" \
-  "http://localhost:8501/?embed=true" "$OUT/flightsDashboards.pdf" 1400 1810 \
+  "http://localhost:8501/?embed=true" "$OUT/flightsDashboards.pdf" 1400 2120 \
   "document.querySelectorAll('[data-testid=\"stDeckGlJsonChart\"] canvas').length >= 6 && document.body.innerText.includes('come within') && document.body.innerText.includes('Cruising flights') && !document.querySelector('[data-testid=\"stSpinner\"]')" \
   25 1800

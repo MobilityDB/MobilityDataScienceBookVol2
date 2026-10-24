@@ -34,7 +34,8 @@ latitudes), which the client of Spark Connect reads into pandas.
 
 The page shows the three dashboards one below the other, as the page of the stream dashboards of
 chapter 9 (chapter9/Flink_Examples/flights_stream/app.py) does. The maps are pydeck layers, as
-the maps of the notebook "8.2 Queries and Visualization" are, over the OSM Shortbread vector tiles
+the maps of the notebook "8.2 Queries and Visualization" are, each on the extent of its figure in
+the chapter and with the scale of its colors below it, over the OSM Shortbread vector tiles
 in the colors of the maps of the book: the style static/shortbread.json, which the app serves
 itself, the style of the app of chapter 9.
 
@@ -58,10 +59,20 @@ WAREHOUSE = os.environ.get("WAREHOUSE", "hdfs://namenode:9000/spark-warehouse")
 NOTEBOOK_TABLES = ["flightsinput", "flightspositions", "flightsday", "flights"]
 DASHBOARD_TABLES = ["flightseu", "flightseu3d", "airborne3d", "closepair"]
 VIRIDIS = np.array([[68, 1, 84], [59, 82, 139], [33, 145, 140], [94, 201, 98], [253, 231, 37]])
+# The colors of the heat maps: those that deck.gl gives a HeatmapLayer by default
+HEAT = [[255, 255, 178], [254, 217, 118], [254, 178, 76], [253, 141, 60], [240, 59, 32],
+        [189, 0, 38]]
 AIRCRAFT_COLORS = {1: [230, 85, 13], 2: [49, 130, 189]}
 # The base map: a MapLibre style over the OSM Shortbread vector tiles, served by the app
 BASE_MAP = f"http://localhost:{st.get_option('server.port')}/app/static/shortbread.json"
 MAX_POINTS = 100_000  # the positions a map of dashboard 3 draws, at most
+R = 6378137.0  # the radius of the sphere of EPSG:3857, in meters
+# The extents of the maps, in EPSG:3857, those of their figures in chapter8.tex: the envelope of
+# Brussels to which the query of dashboard 1 restricts the positions with a margin, and Europe
+# where the positions of dashboard 3 lie
+BRUSSELS = (4.20, 4.65, 50.72, 50.98)
+EUROPE = (-20.0, 40.0, 30.0, 66.0)
+MAP_WIDTH = 500  # pixels of a map of dashboards 1 and 3
 
 st.set_page_config(page_title="Air traffic over Europe", layout="wide")
 
@@ -120,13 +131,59 @@ def viridis(values, vmin, vmax):
     return (VIRIDIS[i] * (1 - f) + VIRIDIS[i + 1] * f).astype(int).tolist()
 
 
-def map_chart(layers, lat, lon, zoom, tooltip=None, height=340):
+def map_chart(layers, lat, lon, zoom, tooltip=None, height=340, width="stretch"):
     """A map of pydeck layers over the base map, of the height of #map_chart in the app of
     chapter 9, drawn as the maps of the notebook 8.2 are."""
     deck = pdk.Deck(layers=layers, map_style=BASE_MAP,
                     initial_view_state=pdk.ViewState(latitude=lat, longitude=lon, zoom=zoom),
                     tooltip=tooltip)
-    st.pydeck_chart(deck, height=height)
+    st.pydeck_chart(deck, height=height, width=width)
+
+
+def mercator(lon, lat):
+    """The coordinates in EPSG:3857 of a longitude and a latitude."""
+    return R * math.radians(lon), R * math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
+
+
+def extent_map(layers, extent, width, tooltip=None):
+    """A map by #map_chart, width pixels wide, of exactly the extent x0, x1, y0, y1 of EPSG:3857,
+    that of its figure in the book (#extent3857 of figures/mapjob.py): the zoom at which the
+    extent fills the width, on the tiles of 512 pixels of deck.gl, and the height of the extent
+    at this zoom."""
+    x0, x1, y0, y1 = extent
+    zoom = math.log2(width * 2 * math.pi * R / (512 * (x1 - x0)))
+    lon = math.degrees((x0 + x1) / 2 / R)
+    lat = math.degrees(2 * math.atan(math.exp((y0 + y1) / 2 / R)) - math.pi / 2)
+    map_chart(layers, lat, lon, zoom, tooltip, height=round(width * (y1 - y0) / (x1 - x0)),
+              width=width)
+
+
+def lonlat_extent(lon0, lon1, lat0, lat1):
+    """The extent in EPSG:3857 of a range of longitudes and of latitudes."""
+    (x0, y0), (x1, y1) = mercator(lon0, lat0), mercator(lon1, lat1)
+    return x0, x1, y0, y1
+
+
+def color_scale(title, colors, ticks, width=MAP_WIDTH):
+    """The scale of the colors of a map, set under it, width pixels wide, as #overlay of
+    figures/flights_maps.py sets the scale of the figures of the book: its title, a bar of the
+    colors and the labels of ticks, a list of (fraction of the bar, label)."""
+    stops = ", ".join(f"rgb({r},{g},{b}) {100 * i / (len(colors) - 1):.0f}%"
+                      for i, (r, g, b) in enumerate(colors))
+    labels = "".join(
+        f'<span style="position:absolute; left:{100 * f:.2f}%; '
+        f'transform:translateX(-{100 * f:.0f}%)">{label}</span>' for f, label in ticks)
+    st.html(f'<div style="width:{width}px; font-size:0.875rem; color:rgba(49,51,63,0.6)">'
+            f'{title}'
+            f'<div style="height:10px; margin-top:4px; border:1px solid rgba(49,51,63,0.3); '
+            f'background:linear-gradient(to right, {stops})"></div>'
+            f'<div style="position:relative; height:1.4em">{labels}</div></div>')
+
+
+def altitude_scale(title, top, step):
+    """The viridis scale of the altitudes from 0 to top meters, with a tick every step meters,
+    by #color_scale."""
+    color_scale(title, VIRIDIS.tolist(), [(m / top, f"{m:,}") for m in range(0, top + 1, step)])
 
 
 # ------------------------------------------------------------------------------- dashboards
@@ -142,18 +199,20 @@ def dashboard1():
     left, right = st.columns(2)
     with left:
         heat = pdk.Layer("HeatmapLayer", data=rows.assign(Weight=2000 - rows["GeoAltitude"]),
-                         get_position=["Lon", "Lat"], get_weight="Weight", radius_pixels=30)
-        map_chart([heat], 50.86, 4.45, 9.6)
-        st.caption("Noise heatmap: each position weighs 2,000 m minus its geometric altitude")
+                         get_position=["Lon", "Lat"], get_weight="Weight", radius_pixels=30,
+                         color_range=HEAT)
+        extent_map([heat], lonlat_extent(*BRUSSELS), MAP_WIDTH)
+        color_scale("Noise: each position weighs 2,000 m minus its geometric altitude", HEAT,
+                    [(0, "low"), (1, "high")])
     with right:
         rows = rows.assign(color=viridis(rows["GeoAltitude"], 0, 2000),
                            Time=rows["T"].astype(str))
         points = pdk.Layer("ScatterplotLayer", data=rows, get_position=["Lon", "Lat"],
                            get_fill_color="color", get_radius=60, radius_min_pixels=2,
                            pickable=True)
-        map_chart([points], 50.86, 4.45, 9.6,
-                  tooltip={"text": "{CallSign} {GeoAltitude} m at {Time}"})
-        st.caption("Geometric altitude, from 0 m (purple) to 2,000 m (yellow)")
+        extent_map([points], lonlat_extent(*BRUSSELS), MAP_WIDTH,
+                   tooltip={"text": "{CallSign} {GeoAltitude} m at {Time}"})
+        altitude_scale("Geometric altitude (m)", 2000, 500)
 
 
 def dashboard2():
@@ -202,16 +261,19 @@ def dashboard2():
         points = pdk.Layer("ScatterplotLayer", data=positions, get_position=["lon", "lat"],
                            get_fill_color="color", get_radius=400, radius_min_pixels=2,
                            pickable=True)
-        width = max(positions["lon"].max() - positions["lon"].min(), 0.1)
-        zoom = max(1.0, min(8.0, math.log2(180 / width)))
-        map_chart([points], positions["lat"].mean(), positions["lon"].mean(), zoom,
-                  tooltip={"text": "{Flight} at {T}"}, height=300)
+        # The square around the two tracks with a margin of 60 km, as #mapjob of
+        # figures/flights_dashboard2_maps.py draws it
+        x, y = zip(*map(mercator, positions["lon"], positions["lat"]))
+        cx, cy = (min(x) + max(x)) / 2, (min(y) + max(y)) / 2
+        half = max(max(x) - min(x), max(y) - min(y)) / 2 + 60_000
+        extent_map([points], (cx - half, cx + half, cy - half, cy + half), 300,
+                   tooltip={"text": "{Flight} at {T}"})
 
 
 def dashboard3():
     st.subheader("3. Air traffic between 8 and 9 o'clock")
-    st.caption("The figures count the flights of the data all over the world; the maps are "
-               "centred on Europe")
+    st.caption("The figures count the flights of the data all over the world; the maps show "
+               "Europe")
     for column, index, caption in zip(st.columns(2), [0, 1], [
             "GPS location over time: all the positions",
             "Cruising flights: the positions between 3,000 and 8,000 m"]):
@@ -230,9 +292,9 @@ def dashboard3():
             shown = shown.assign(color=viridis(shown["Altitude"], 0, 12000))
             points = pdk.Layer("ScatterplotLayer", data=shown, get_position=["Lon", "Lat"],
                                get_fill_color="color", get_radius=1500, radius_min_pixels=1)
-            map_chart([points], 50.0, 10.0, 2.9)
-            st.caption(f"Altitude, from 0 m (purple) to 12,000 m (yellow), of {len(shown):,} "
-                       "positions drawn at random")
+            extent_map([points], lonlat_extent(*EUROPE), MAP_WIDTH)
+            altitude_scale(f"Altitude (m) of {len(shown):,} positions drawn at random",
+                           12000, 3000)
 
 
 st.title("Air traffic over Europe")
