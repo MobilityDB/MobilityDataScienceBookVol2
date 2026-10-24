@@ -180,11 +180,12 @@ renders the QGIS jobs that they write (see the comment at its top for `QGIS_PY`)
 `flights_dashboard2.sql` writes into `out/` the answers of MobilityDB that the figures of
 dashboard 2 draw, from the tables of `flights/flights_build.sql` and
 `flights/flights_dashboards.sql`, and prints the closest pair and the place of its nearest
-approach; `flights_dashboard2_maps.py` draws from them the distance and the altitudes of the two
-aircraft as vector charts and writes the QGIS job of their position reports:
+approach; `flights_dashboard2_maps.py` draws from them the panels of dashboard 2 as the dashboard
+draws them, the distance and the altitudes of the two aircraft as vector charts, and writes the
+QGIS job of their position reports:
 
     mkdir -p out && psql -d flights -f figures/flights_dashboard2.sql
-    python figures/flights_dashboard2_maps.py out figs 36.4376427601968 41.75345135029372 THY325 BOX571
+    python figures/flights_dashboard2_maps.py out figs THY325 BOX571
     bash figures/render.sh figs flightsDashboard2_map.json
 
 `flights_dashboards.sh` prints the page of the Streamlit dashboards of the air traffic use case
