@@ -70,10 +70,21 @@ st.set_page_config(page_title="Air traffic over Europe", layout="wide")
 @st.cache_resource
 def spark():
     """The session of the app in the Spark Connect server, with the tables of the use case."""
+    from pyspark.errors import AnalysisException
     from pyspark.sql import SparkSession
     session = SparkSession.builder.remote(SPARK_REMOTE).getOrCreate()
     session.conf.set("spark.sql.session.timeZone", "UTC")
     for table in NOTEBOOK_TABLES:
+        session.sql(f"CREATE TABLE IF NOT EXISTS {table} USING DELTA "
+                    f"LOCATION '{WAREHOUSE}/{table}'")
+    # The tables of dashboard 2 from their folders as well, once built: a folder that does not
+    # hold a Delta table yet fails to read, and leaves the table to the button of the dashboard
+    # (CREATE TABLE on such a folder would create an empty table there)
+    for table in DASHBOARD_TABLES:
+        try:
+            session.read.format("delta").load(f"{WAREHOUSE}/{table}").schema
+        except AnalysisException:
+            continue
         session.sql(f"CREATE TABLE IF NOT EXISTS {table} USING DELTA "
                     f"LOCATION '{WAREHOUSE}/{table}'")
     return session
