@@ -129,7 +129,8 @@ def columbus_map(width, tex_width):
     lines += tikz_open("figs/chap8/columbus.pdf", tex_width)
     lines.append("\\begin{scope}[x={(img.south east)}, y={(img.north west)}, font=\\captionstyle]")
     # Two stations at the same place (7 Ave & Central Park South and its pillar) stack their
-    # labels, one line apart, so that neither hides the other
+    # labels, one caption line (0.133 in) apart whatever the width, so that neither hides the other
+    step = 0.133 / (width * (y1 - y0) / (x1 - x0))
     placed = []
     for _, r in df.sort_values("station").iterrows():
         fx, fy = (r.x - x0) / (x1 - x0), (r.y - y0) / (y1 - y0)
@@ -137,7 +138,7 @@ def columbus_map(width, tex_width):
         placed.append((fx, fy))
         lines.append("\\node[anchor=south west, fill=white, fill opacity=0.85, text opacity=1, "
                      "inner sep=1pt] at (%.4f, %.4f) {%.2f};"
-                     % (fx + 0.012, fy + 0.008 - 0.045 * stacked, r["ratio"]))
+                     % (fx + 0.012, fy + 0.008 - step * stacked, r["ratio"]))
     lines += ["\\end{scope}", "\\end{tikzpicture}"]
     open(f"{OUT}/columbus_overlay.tex", "w", encoding="utf-8").write("\n".join(lines) + "\n")
     return df[["station", "no_start_trips", "no_end_trips", "ratio"]].sort_values("station")
@@ -150,4 +151,4 @@ if __name__ == "__main__":
                               0.48 * TEXTWIDTH, "\\linewidth"))
     print("dest", choropleth("afternoon_dest", "map2new.pdf", "Afternoon trips",
                              0.48 * TEXTWIDTH, "\\linewidth"))
-    print(columbus_map(0.64 * TEXTWIDTH, "0.64\\textwidth").to_string(index=False))
+    print(columbus_map(0.555 * TEXTWIDTH, "0.555\\textwidth").to_string(index=False))
