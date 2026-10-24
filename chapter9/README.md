@@ -136,7 +136,10 @@ directory that holds `data/` and `src/libmeos.so`, with `MEOS_LIB` the directory
   from the database that `flights/build.sh` and `flights/run_all.sh` build.
 - `dashboards_session.sh <out>` runs the walk and `flights_dashboards.py`, and `compare.py` then
   dumps their topics into `<out>` and compares the positions and the rows of dashboard 1 with
-  those of MobilityDB in `$BASELINE` (default: `baseline`), writing `<out>/summary.json`.
+  those of MobilityDB in `$BASELINE` (default: `baseline`), writing `<out>/summary.json`;
+  `chapter8/figures/flights_stream_dashboards_maps.py <out> <figs>` draws from these dumps the
+  panels of the three dashboards over the whole day, as `app.py` draws them (the two maps of
+  dashboard 1 then rendered by `chapter8/figures/render.sh`).
 - `queries_session.sh <out>` runs the walk and `flights_queries.py` and dumps the topics
   `hourly-trips`, `brussels-arrivals`, `airborne-hourly` and `holding` into `<out>`;
   `compare_queries.py <out> <flights/out>` compares the last two with the answers of

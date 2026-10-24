@@ -48,7 +48,6 @@ from matplotlib import font_manager
 
 from mapjob import TO3857, job, padded, points  # noqa: E402
 
-ANSWERS, OUT = sys.argv[1], sys.argv[2]
 TEXTWIDTH = 11.7 / 2.54
 # The altitudes of panel (a) take 0.55 of the text width and the square map of panel (b) 0.43 of
 # it, at the height of the chart
@@ -127,6 +126,7 @@ def mapjob():
 
 
 if __name__ == "__main__":
+    ANSWERS, OUT = sys.argv[1], sys.argv[2]
     names = {1: sys.argv[3], 2: sys.argv[4]}
     print("distance rows", distance())
     print("altitude rows", altitude(names))

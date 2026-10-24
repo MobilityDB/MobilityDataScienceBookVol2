@@ -51,7 +51,6 @@ from PIL import Image
 
 from mapjob import TO3857, extent3857, job, points, rgba, size
 
-ANSWERS, OUT = sys.argv[1], sys.argv[2]
 TEXTWIDTH = 11.7 / 2.54          # inches
 GAP = 0.2 / 2.54                 # inches between the two panels
 PANEL = (TEXTWIDTH - GAP) / 2    # inches
@@ -83,8 +82,8 @@ def gaussian(grid, sigma):
     return np.real(np.fft.ifft2(np.fft.fft2(grid) * kernel))
 
 
-def scaled(stem, cmap, ticks, title):
-    """<stem>_scaled.tex: the \\subfloat panel <stem>.pdf of its figure in chapter8.tex with the
+def scaled(out, stem, cmap, ticks, title, figs="figs/chap8"):
+    """<out>/<stem>_scaled.tex: the \\subfloat panel <figs>/<stem>.pdf of its figure with the
     scale of its colors under it, as #color_scale of chapter8/dashboards/app.py sets the scale
     under each map of the dashboards: the title, a bar as wide as the map with the colors of cmap
     (the viridis of #colors, or HEAT) in eight shaded segments, and below it the labels of ticks,
@@ -96,7 +95,7 @@ def scaled(stem, cmap, ticks, title):
               for k in range(n + 1)]
     lines += ["\\begin{tikzpicture}[x=0.49\\textwidth, y=1cm, font=\\captionstyle]",
               "\\node[anchor=south west, inner sep=0] (img) "
-              f"{{\\includegraphics[width=0.49\\textwidth]{{figs/chap8/{stem}.pdf}}}};",
+              f"{{\\includegraphics[width=0.49\\textwidth]{{{figs}/{stem}.pdf}}}};",
               "\\begin{scope}[shift={(img.south west)}]",
               "\\node[anchor=north west, inner sep=0] at (0, -0.10) {%s};" % title]
     for k in range(n):
@@ -108,7 +107,7 @@ def scaled(stem, cmap, ticks, title):
         anchor = "north west" if f == 0 else "north east" if f == 1 else "north"
         lines.append("\\node[anchor=%s, inner sep=0] at (%.4f, -0.66) {%s};" % (anchor, f, label))
     lines += ["\\end{scope}", "\\end{tikzpicture}%"]
-    open(f"{OUT}/{stem}_scaled.tex", "w", encoding="utf-8").write("\n".join(lines) + "\n")
+    open(f"{out}/{stem}_scaled.tex", "w", encoding="utf-8").write("\n".join(lines) + "\n")
 
 
 def altitude_ticks(top, step):
@@ -149,8 +148,8 @@ def dashboard1():
     job(OUT, "flightsDashboard1_right", extent, PANEL, [
         {"path": "flightsDashboard1_positions.geojson", "kind": "marker", "color_field": "color",
          "style": {"name": "circle", "color": "0,0,0,255", "outline_style": "no", "size": "0.35"}}])
-    scaled("flightsDashboard1_left", HEAT, [(0, "low"), (1, "high")], "Noise")
-    scaled("flightsDashboard1_right", VIRIDIS, altitude_ticks(2000, 500), "Altitude (m)")
+    scaled(OUT, "flightsDashboard1_left", HEAT, [(0, "low"), (1, "high")], "Noise")
+    scaled(OUT, "flightsDashboard1_right", VIRIDIS, altitude_ticks(2000, 500), "Altitude (m)")
     return len(rows), rows["ICAO24"].nunique()
 
 
@@ -171,11 +170,12 @@ def dashboard3():
              "image": True,
              "style": {"name": "circle", "color": "0,0,0,255", "outline_style": "no", "size": "0.12"}}],
             streets=None, border="#9a9a9a")
-        scaled(stem, VIRIDIS, altitude_ticks(12000, 3000), "Altitude (m)")
+        scaled(OUT, stem, VIRIDIS, altitude_ticks(12000, 3000), "Altitude (m)")
         counts.append((name, len(rows), len(shown)))
     return counts
 
 
 if __name__ == "__main__":
+    ANSWERS, OUT = sys.argv[1], sys.argv[2]
     print("dashboard 1: positions, aircraft", dashboard1())
     print("dashboard 3: file, drawable, drawn", dashboard3())

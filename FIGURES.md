@@ -185,6 +185,9 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 | 9.7 | The trajectories of the 3,046 aircraft over Europe in the window of the stream from 8 to 9 o'clock UTC on March 1, 2026 | `flightsStreamQuery1.pdf` | `chapter8/figures/flights_stream_maps.py` |
 | 9.8 | The 190 flights arriving at Brussels on March 1, 2026, as sessions of the stream: their routes (green) and their origins (black) | `flightsStreamQuery2.pdf` | `chapter8/figures/flights_stream_maps.py` |
 | 9.9 | The dashboards of the air traffic stream while the day is replayed at 20 times its real speed, with the answers up to noon | `flightsStreamDashboards.pdf` | `chapter9/figures/flights_dashboards.sh` |
+| 9.10 | Flights leaving Brussels on March 1, 2026, below 2,000 meters while they climb, as the stream answers them over the day | `flightsStreamDashboard1_left.pdf`, `flightsStreamDashboard1_right.pdf`, `flightsStreamDashboard1_left_scaled`, `flightsStreamDashboard1_right_scaled` | `chapter8/figures/flights_stream_dashboards_maps.py` |
+| 9.11 | Number of pairs of airborne aircraft within one kilometer of each other in three dimensions, per window of ten minutes, on March 1, 2026 | `flightsStreamDashboard2.pdf` | `chapter8/figures/flights_stream_dashboards_maps.py` |
+| 9.12 | Air traffic over Europe per hour on March 1, 2026 | `flightsStreamDashboard3_positions.pdf`, `flightsStreamDashboard3_aircraft.pdf` | `chapter8/figures/flights_stream_dashboards_maps.py` |
 
 ### Chapter 10
 
