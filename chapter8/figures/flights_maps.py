@@ -34,8 +34,9 @@ width: the Shortbread basemap of the book as one image of 300 dpi, and the posit
 colors of the dashboards, viridis on the altitude. The 7,305 positions of dashboard 1 are
 vectors; the 100,000 positions of a panel of dashboard 3 and the noise heat map of dashboard 1, a
 density surface, are dense layers drawn as one image of 300 dpi. The panels carry no text: they
-are the \\subfloat panels of their figure in chapter8.tex, each set by <panel>_overlay.tex with
-the scale of its colors inside the map, its ticks and its title in the style of the captions.
+are the \\subfloat panels of their figure in chapter8.tex, each set by <panel>_scaled.tex with
+the scale of its colors under the map, as in the dashboards, its title and its labels in the style
+of the captions.
 Dashboard 3 draws, as the dashboard does, a sample of MAX_POINTS positions taken at random with
 the seed 0 among those with a position and an altitude.
 """
@@ -82,47 +83,38 @@ def gaussian(grid, sigma):
     return np.real(np.fft.ifft2(np.fft.fft2(grid) * kernel))
 
 
-def overlay(stem, corner, cmap, ticks, title):
-    """<stem>_overlay.tex: the \\subfloat panel <stem>.pdf of its figure in chapter8.tex with the
-    scale of its colors inside the map, in the corner (south east or north west) where no position
-    lies, as chapter5/figures/overlay_bathymetry_laeso.py, a script without a function for it,
-    sets the scale of its map: on a white box, the title, the colors of cmap (the viridis of
-    #colors, or HEAT) in eight shaded segments, and below them the ticks, a list of (fraction of
-    the bar, label or None), in the style of the captions."""
-    n, length = 8, 2.4     # segments, centimeters
+def scaled(stem, cmap, ticks, title):
+    """<stem>_scaled.tex: the \\subfloat panel <stem>.pdf of its figure in chapter8.tex with the
+    scale of its colors under it, as #color_scale of chapter8/dashboards/app.py sets the scale
+    under each map of the dashboards: the title, a bar as wide as the map with the colors of cmap
+    (the viridis of #colors, or HEAT) in eight shaded segments, and below it the labels of ticks,
+    a list of (fraction of the bar, label), in the style of the captions."""
+    n = 8
     name = stem.replace("_", "")
     lines = [f"% Written by flights_maps.py: the panel {stem} with the scale of its colors."]
     lines += ["\\definecolor{%sv%d}{rgb}{%.4f,%.4f,%.4f}%%" % (name, k, *cmap(k / n)[:3])
               for k in range(n + 1)]
-    shift = {"south east": "shift={(img.south east)}, xshift=-%.2fcm, yshift=0.22cm"
-                           % (length + 0.25),
-             "north west": "shift={(img.north west)}, xshift=0.13cm, yshift=-0.92cm"}[corner]
-    lines += ["\\begin{tikzpicture}",
+    lines += ["\\begin{tikzpicture}[x=0.49\\textwidth, y=1cm, font=\\captionstyle]",
               "\\node[anchor=south west, inner sep=0] (img) "
               f"{{\\includegraphics[width=0.49\\textwidth]{{figs/chap8/{stem}.pdf}}}};",
-              f"\\begin{{scope}}[{shift}, font=\\captionstyle]",
-              "\\fill[white, opacity=0.85] (-0.12, -0.14) rectangle (%.2f, 0.78);"
-              % (length + 0.12),
-              "\\node[anchor=south west, inner sep=0] at (0, 0.44) {%s};" % title]
+              "\\begin{scope}[shift={(img.south west)}]",
+              "\\node[anchor=north west, inner sep=0] at (0, -0.10) {%s};" % title]
     for k in range(n):
         lines.append("\\shade[left color=%sv%d, right color=%sv%d] "
-                     "(%.3f, 0.28) rectangle (%.3f, 0.40);"
-                     % (name, k, name, k + 1, length * k / n, length * (k + 1) / n))
-    lines.append("\\draw[line width=0.2pt] (0, 0.28) rectangle (%.2f, 0.40);" % length)
+                     "(%.4f, -0.58) rectangle (%.4f, -0.44);"
+                     % (name, k, name, k + 1, k / n, (k + 1) / n))
+    lines.append("\\draw[line width=0.2pt] (0, -0.58) rectangle (1, -0.44);")
     for f, label in ticks:
         anchor = "north west" if f == 0 else "north east" if f == 1 else "north"
-        node = "" if label is None else " node[anchor=%s, inner sep=0.5pt] {%s}" % (anchor, label)
-        lines.append("\\draw[line width=0.2pt] (%.3f, 0.28) -- ++(0, -0.04)%s;"
-                     % (length * f, node))
+        lines.append("\\node[anchor=%s, inner sep=0] at (%.4f, -0.66) {%s};" % (anchor, f, label))
     lines += ["\\end{scope}", "\\end{tikzpicture}%"]
-    open(f"{OUT}/{stem}_overlay.tex", "w", encoding="utf-8").write("\n".join(lines) + "\n")
+    open(f"{OUT}/{stem}_scaled.tex", "w", encoding="utf-8").write("\n".join(lines) + "\n")
 
 
-def altitude_ticks(top):
-    """The ticks of #overlay for the altitudes from 0 to top meters: labels at both ends, and a
-    tick without label at each quarter between them."""
-    return [(q / 4, f"{q * top // 4:,}".replace(",", "\\,") if q in (0, 4) else None)
-            for q in range(5)]
+def altitude_ticks(top, step):
+    """The ticks of #scaled for the altitudes from 0 to top meters, a label every step meters, as
+    #altitude_scale of chapter8/dashboards/app.py labels them."""
+    return [(m / top, f"{m:,}") for m in range(0, top + 1, step)]
 
 
 def heat_image(rows, extent, path):
@@ -157,8 +149,8 @@ def dashboard1():
     job(OUT, "flightsDashboard1_right", extent, PANEL, [
         {"path": "flightsDashboard1_positions.geojson", "kind": "marker", "color_field": "color",
          "style": {"name": "circle", "color": "0,0,0,255", "outline_style": "no", "size": "0.35"}}])
-    overlay("flightsDashboard1_left", "south east", HEAT, [(0, "low"), (1, "high")], "Noise")
-    overlay("flightsDashboard1_right", "south east", VIRIDIS, altitude_ticks(2000), "Altitude (m)")
+    scaled("flightsDashboard1_left", HEAT, [(0, "low"), (1, "high")], "Noise")
+    scaled("flightsDashboard1_right", VIRIDIS, altitude_ticks(2000, 500), "Altitude (m)")
     return len(rows), rows["ICAO24"].nunique()
 
 
@@ -179,7 +171,7 @@ def dashboard3():
              "image": True,
              "style": {"name": "circle", "color": "0,0,0,255", "outline_style": "no", "size": "0.12"}}],
             streets=None, border="#9a9a9a")
-        overlay(stem, "north west", VIRIDIS, altitude_ticks(12000), "Altitude (m)")
+        scaled(stem, VIRIDIS, altitude_ticks(12000, 3000), "Altitude (m)")
         counts.append((name, len(rows), len(shown)))
     return counts
 
