@@ -15,15 +15,15 @@ described in the appendix "The Citi Bike Data of the Book"; build them first.
 
 ### Software
 
-- Python 3.12 with `apache-flink` 2.1.0 (PyFlink), `kafka-python`, and `flask`:
+- Python 3.12 with `apache-flink` 2.1.3 (PyFlink), `kafka-python`, and `flask`:
 
-      pip install apache-flink==2.1.0 kafka-python flask
+      pip install apache-flink==2.1.3 kafka-python flask
 
 - The Kafka SQL connector of Flink, copied into the `lib` directory of PyFlink:
 
       L=$(python -c "import pyflink, os; print(os.path.dirname(pyflink.__file__))")/lib
-      curl -fL -o $L/flink-sql-connector-kafka-4.0.1-2.0.jar \
-        https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/4.0.1-2.0/flink-sql-connector-kafka-4.0.1-2.0.jar
+      curl -fL -o $L/flink-sql-connector-kafka-5.0.0-2.1.jar \
+        https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/5.0.0-2.1/flink-sql-connector-kafka-5.0.0-2.1.jar
 
 - A Kafka broker on `localhost:9092`, for instance in Docker:
 

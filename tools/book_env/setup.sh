@@ -31,7 +31,7 @@
 #   . tools/book_env/env.sh
 #
 # The packages are those of the `pip install` lines of the READMEs and scripts of this repository,
-# with the version that any of them pins, and the requirements of chapter 11. PyFlink 2.1.0 needs
+# with the version that any of them pins, and the requirements of chapter 11. PyFlink 2.1.3 needs
 # a pyarrow older than 21 and the other chapters pin pyarrow 26.0.0, so the packages of chapter 9
 # go into a venv of their own:
 #
@@ -92,9 +92,9 @@ echo "== venv-flink: the packages of chapter 9"
 mapfile -t FLINK < <(reqs flink)
 venv "$BOOK_ENV/venv-flink" "${FLINK[@]}"
 PYLIB=$("$BOOK_ENV/venv-flink/bin/python" -c "import pyflink, os; print(os.path.dirname(pyflink.__file__))")/lib
-KAFKA_JAR=flink-sql-connector-kafka-4.0.1-2.0.jar
+KAFKA_JAR=flink-sql-connector-kafka-5.0.0-2.1.jar
 [ -s "$PYLIB/$KAFKA_JAR" ] || curl -fsSL -o "$PYLIB/$KAFKA_JAR" \
-  "https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/4.0.1-2.0/$KAFKA_JAR"
+  "https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/5.0.0-2.1/$KAFKA_JAR"
 
 echo "== Playwright Chromium in $PLAYWRIGHT_BROWSERS_PATH"
 "$BOOK_ENV/venv/bin/playwright" install chromium
