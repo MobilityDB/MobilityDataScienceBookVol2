@@ -100,7 +100,7 @@ CREATE TABLE TrafficPerHour (
 t_env.execute_sql("""
 CREATE TEMPORARY VIEW Pieces AS
 SELECT window_start, window_end, ICAO24,
-  tgeompointSeq(instants(mergeAgg(geoTransform(tgeompointFromText(CONCAT(
+  tgeompointSeq(instants(mergeAgg(geoTransform(tgeompointFromText(concat(
     'SRID=4326;Point Z(', CAST(Lon AS STRING), ' ', CAST(Lat AS STRING), ' ',
     CAST(GeoAltitude AS STRING), ')@', DATE_FORMAT(PosTs,
     'yyyy-MM-dd HH:mm:ss.SSS'), '+00')), 3035)))) AS Trip
@@ -119,7 +119,7 @@ statements.add_insert_sql("""
 INSERT INTO ClimbingBrussels
 SELECT ICAO24, TRIM(CallSign), PosTs, Lon, Lat, GeoAltitude, VertRate
 FROM Positions
-WHERE eIntersects(tgeogpointFromText(CONCAT('Point(', CAST(Lon AS STRING), ' ',
+WHERE eIntersects(tgeogpointFromText(concat('Point(', CAST(Lon AS STRING), ' ',
     CAST(Lat AS STRING), ')@', DATE_FORMAT(PosTs, 'yyyy-MM-dd HH:mm:ss.SSS'),
     '+00')), geography(stboxFromText(
     'SRID=4326;GEODSTBOX X((4.25,50.75),(4.60,50.95))'))) AND

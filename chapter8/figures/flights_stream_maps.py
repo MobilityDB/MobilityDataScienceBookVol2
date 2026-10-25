@@ -55,7 +55,7 @@ def messages(topic):
 def query1():
     rows = [m for m in messages("hourly-trips") if m["window_start"].startswith("2026-03-01 08:00")]
     features(f"{OUT}/flightsStreamQuery1_trips.geojson",
-             [(wkb.loads(m["trajectory"], hex=True), {}) for m in rows])
+             [(wkb.loads(m["Trajectory"], hex=True), {}) for m in rows])
     job(OUT, "flightsStreamQuery1", extent3857(*EUROPE), MAPWIDTH, [
         {"path": "flightsStreamQuery1_trips.geojson", "kind": "line", "image": True,
          "style": {"line_color": FLIGHTS_COLOR, "line_width": "0.12"}}],
@@ -65,9 +65,9 @@ def query1():
 
 def query2():
     rows = messages("brussels-arrivals")
-    origins = [wkb.loads(m["origin"], hex=True) for m in rows]
+    origins = [wkb.loads(m["Origin"], hex=True) for m in rows]
     features(f"{OUT}/flightsStreamQuery2_routes.geojson",
-             [(wkb.loads(m["route"], hex=True), {}) for m in rows])
+             [(wkb.loads(m["Route"], hex=True), {}) for m in rows])
     features(f"{OUT}/flightsStreamQuery2_origins.geojson", [(p, {}) for p in origins])
     job(OUT, "flightsStreamQuery2", extent3857(*EUROPE), MAPWIDTH, [
         {"path": "flightsStreamQuery2_routes.geojson", "kind": "line", "image": True,

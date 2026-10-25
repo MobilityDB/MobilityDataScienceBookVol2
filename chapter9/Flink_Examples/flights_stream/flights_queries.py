@@ -102,9 +102,9 @@ CREATE TABLE Holding (
 t_env.execute_sql("""
 CREATE TEMPORARY VIEW Instants AS
 SELECT ICAO24, TRIM(CallSign) AS CallSign, PosTs, Lon, Lat, Velocity, GeoAltitude,
-  CONCAT('Point(', CAST(Lon AS STRING), ' ', CAST(Lat AS STRING), ')@',
+  concat('Point(', CAST(Lon AS STRING), ' ', CAST(Lat AS STRING), ')@',
     DATE_FORMAT(PosTs, 'yyyy-MM-dd HH:mm:ss.SSS'), '+00') AS Inst,
-  CONCAT('@', DATE_FORMAT(PosTs, 'yyyy-MM-dd HH:mm:ss.SSS'), '+00') AS Ts
+  concat('@', DATE_FORMAT(PosTs, 'yyyy-MM-dd HH:mm:ss.SSS'), '+00') AS Ts
 FROM Positions
 """)
 
@@ -131,9 +131,9 @@ SELECT window_time AS RowTime, ICAO24,
   atTime(Trip, getTime(atSpan(Speed, floatspanFromText('[50, 400]')))) AS Flying
 FROM (
   SELECT window_start, window_end, window_time, ICAO24,
-    tgeompointSeq(instants(mergeAgg(tgeompointFromText(CONCAT('SRID=4326;', Inst)))))
+    tgeompointSeq(instants(mergeAgg(tgeompointFromText(concat('SRID=4326;', Inst)))))
       AS Trip,
-    tfloatSeq(instants(mergeAgg(tfloatFromText(CONCAT(CAST(Velocity AS STRING), Ts)))
+    tfloatSeq(instants(mergeAgg(tfloatFromText(concat(CAST(Velocity AS STRING), Ts)))
       FILTER (WHERE Velocity IS NOT NULL))) AS Speed
   FROM TABLE(TUMBLE(TABLE Instants, DESCRIPTOR(PosTs), INTERVAL '1' HOUR))
   WHERE Lon BETWEEN -35.58 AND 44.83 AND Lat BETWEEN 24.60 AND 84.73
@@ -149,7 +149,7 @@ SELECT window_start, window_end, ICAO24, numInstants(Trip),
   geoLength(geoTransform(Trip, 3035)), asHexEWKB(trajectory(Trip))
 FROM (
   SELECT window_start, window_end, ICAO24,
-    tgeompointSeq(instants(mergeAgg(tgeompointFromText(CONCAT('SRID=4326;', Inst)))))
+    tgeompointSeq(instants(mergeAgg(tgeompointFromText(concat('SRID=4326;', Inst)))))
       AS Trip
   FROM TABLE(TUMBLE(TABLE Instants, DESCRIPTOR(PosTs),
     INTERVAL '1' HOUR))
@@ -202,7 +202,7 @@ FROM (
   FROM (
     SELECT ICAO24, MAX(CallSign) AS CallSign, window_start, window_end,
       tgeogpointSeq(instants(mergeAgg(tgeogpointFromText(Inst)))) AS Trip,
-      tfloatSeq(instants(mergeAgg(tfloatFromText(CONCAT(CAST(GeoAltitude AS STRING), Ts)))
+      tfloatSeq(instants(mergeAgg(tfloatFromText(concat(CAST(GeoAltitude AS STRING), Ts)))
         FILTER (WHERE GeoAltitude IS NOT NULL))) AS Altitude
     FROM TABLE(SESSION(TABLE Instants PARTITION BY ICAO24,
       DESCRIPTOR(PosTs), INTERVAL '1' HOUR))

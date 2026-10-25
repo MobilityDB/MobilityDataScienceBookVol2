@@ -67,7 +67,7 @@ t_env.execute_sql("""
 CREATE TEMPORARY VIEW Trips AS
 SELECT window_start, window_end, window_time, CallSign,
   tgeogpointSeq(instants(mergeAgg(tgeogpointFromText(
-    CONCAT('Point(', CAST(Lon AS STRING), ' ', CAST(Lat AS STRING), ')@',
+    concat('Point(', CAST(Lon AS STRING), ' ', CAST(Lat AS STRING), ')@',
       DATE_FORMAT(PosTs, 'yyyy-MM-dd HH:mm:ss.SSS'), '+00'))))) AS Trip
 FROM TABLE(TUMBLE(TABLE Positions, DESCRIPTOR(PosTs), INTERVAL '30' SECOND))
 GROUP BY window_start, window_end, window_time, CallSign
@@ -83,7 +83,7 @@ FROM Trips
 # The number of aircraft with a trajectory at each instant of each window
 # ----------------------------------------------------
 # The second window adds its own window_start and window_end, which the view drops from Trips
-t_env.execute_sql("CREATE TEMPORARY VIEW TripTimes AS SELECT window_time, trip FROM Trips")
+t_env.execute_sql("CREATE TEMPORARY VIEW TripTimes AS SELECT window_time, Trip FROM Trips")
 
 t_env.sql_query("""
 SELECT window_start, window_end, asText(tCount(Trip)) AS Aircraft

@@ -59,7 +59,7 @@ MINUTE = 1 / 1440  # a minute in the days of the dates of matplotlib
 
 def dashboard1(session, out):
     rows = pd.DataFrame(json.load(open(f"{session}/d1.json")))
-    rows = project(rows.rename(columns={"lon": "Lon", "lat": "Lat", "geoaltitude": "GeoAltitude"}))
+    rows = project(rows)
     # The envelope of Brussels to which the query restricts the positions, as flights_maps.py
     extent = extent3857(4.20, 4.65, 50.72, 50.98)
     heat_image(rows, extent, f"{out}/flightsStreamDashboard1_heat.png")
@@ -75,7 +75,7 @@ def dashboard1(session, out):
            figs="figs/chap9")
     scaled(out, "flightsStreamDashboard1_right", VIRIDIS, altitude_ticks(2000, 500),
            "Altitude (m)", figs="figs/chap9")
-    return len(rows), rows["icao24"].nunique()
+    return len(rows), rows["ICAO24"].nunique()
 
 
 def dashboard2(session, out):
@@ -100,9 +100,9 @@ def dashboard3(session, out):
     hours["hour"] = pd.to_datetime(hours["window_start"])
     middle = mdates.date2num(hours["hour"]) + 30 * MINUTE
     for stem, series, draw in (
-            ("positions", (("cruisingpositions", "cruising positions"), ("positions", "positions")),
+            ("positions", (("CruisingPositions", "cruising positions"), ("Positions", "positions")),
              "bar"),
-            ("aircraft", (("aircraft", "aircraft"), ("cruisingaircraft", "cruising aircraft")),
+            ("aircraft", (("Aircraft", "aircraft"), ("CruisingAircraft", "cruising aircraft")),
              "line")):
         fig, ax = plt.subplots(figsize=(TEXTWIDTH, 1.7))
         # The bars of the larger series behind those of the smaller one, which stays visible
