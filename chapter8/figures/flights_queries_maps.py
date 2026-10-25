@@ -103,7 +103,7 @@ def inside(lon, lat, ext):
 
 def query1():
     rows = pd.read_csv(f"{ANSWERS}/q1_rows.csv")
-    features(f"{OUT}/flightsQuery1_trips.geojson", [(wkt.loads(w), {}) for w in rows.wkt])
+    features(f"{OUT}/flightsQuery1_trips.geojson", [(wkt.loads(w), {}) for w in rows.WKT])
     job(OUT, "flightsQuery1", extent3857(*EUROPE), MAPWIDTH, [
         {"path": "flightsQuery1_trips.geojson", "kind": "line", "image": True,
          "style": {"line_color": FLIGHTS_COLOR, "line_width": "0.12"}}],
@@ -113,8 +113,8 @@ def query1():
 
 def query2():
     rows = pd.read_csv(f"{ANSWERS}/q2_rows.csv")
-    dest = [wkt.loads(w) for w in rows.destination]
-    features(f"{OUT}/flightsQuery2_routes.geojson", [(wkt.loads(w), {}) for w in rows.wkt])
+    dest = [wkt.loads(w) for w in rows.Destination]
+    features(f"{OUT}/flightsQuery2_routes.geojson", [(wkt.loads(w), {}) for w in rows.WKT])
     features(f"{OUT}/flightsQuery2_destinations.geojson", [(p, {}) for p in dest])
     job(OUT, "flightsQuery2", extent3857(*EUROPE), MAPWIDTH, [
         {"path": "flightsQuery2_routes.geojson", "kind": "line", "image": True,
@@ -128,13 +128,13 @@ def query2():
 
 def query3():
     rows = pd.read_csv(f"{ANSWERS}/q3_rows.csv")
-    vmax = 10 ** math.ceil(math.log10(rows.km.max()))
-    vmin = 10 ** math.floor(math.log10(rows.km.min()))
+    vmax = 10 ** math.ceil(math.log10(rows.Km.max()))
+    vmin = 10 ** math.floor(math.log10(rows.Km.min()))
     shapes = []
     for _, c in rows.iterrows():
-        f = (math.log10(c.km) - math.log10(vmin)) / (math.log10(vmax) - math.log10(vmin))
+        f = (math.log10(c.Km) - math.log10(vmin)) / (math.log10(vmax) - math.log10(vmin))
         color = rgba([round(255 * v) for v in VIRIDIS(f)[:3]] + [210])
-        shapes.append((wkt.loads(c.wkt), {"color": color}))
+        shapes.append((wkt.loads(c.WKT), {"color": color}))
     features(f"{OUT}/flightsQuery3_countries.geojson", shapes)
     job(OUT, "flightsQuery3", extent3857(*EUROPE), MAPWIDTH, [
         {"path": "flightsQuery3_countries.geojson", "kind": "fill", "color_field": "color",
@@ -148,7 +148,7 @@ def query3():
 def query4():
     """flightsQuery4.pdf: the number of aircraft in the air over the day, the steps of the
     temporal integer of tCount, with the peak marked."""
-    text = pd.read_csv(f"{ANSWERS}/q4_series.csv").aircraft[0]
+    text = pd.read_csv(f"{ANSWERS}/q4_series.csv").Aircraft[0]
     pairs = re.findall(r"(\d+)@([0-9-]+ [0-9:.]+)\+00", text)
     d = pd.DataFrame({"Aircraft": [int(v) for v, _ in pairs],
                       "Time": pd.to_datetime([t for _, t in pairs], format="ISO8601")})
@@ -180,10 +180,10 @@ def circle(lon, lat, radius, n=180):
 
 def query5():
     rows = pd.read_csv(f"{ANSWERS}/q5_rows.csv")
-    rows = rows[rows.wkt.notna()]
+    rows = rows[rows.WKT.notna()]
     features(f"{OUT}/flightsQuery5_trips.geojson",
              [(wkt.loads(w), {"color": rgba([int(c) for c in FIX_COLORS[f].split(",")] + [110])})
-              for f, w in zip(rows.fix, rows.wkt)])
+              for f, w in zip(rows.Fix, rows.WKT)])
     features(f"{OUT}/flightsQuery5_circles.geojson",
              [(circle(lon, lat, 15000), {}) for lon, lat in FIXES.values()])
     features(f"{OUT}/flightsQuery5_fixes.geojson",

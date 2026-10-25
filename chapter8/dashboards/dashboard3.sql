@@ -37,9 +37,9 @@
 WITH Period(P) AS (
   SELECT tstzspanFromText('[2026-03-01 08:00:00+00, 2026-03-01 09:00:00+00)') ),
 FlightTimeSlice(ICAO24, CallSign, TripTimeSlice, GeoAltitude) AS (
-  SELECT icao24, callsign, atTime(flight, P), atTime(geoaltitude, P)
-  FROM flights, Period
-  WHERE atTime(flight, P) IS NOT NULL ),
+  SELECT ICAO24, CallSign, atTime(Flight, P), atTime(GeoAltitude, P)
+  FROM Flights, Period
+  WHERE atTime(Flight, P) IS NOT NULL ),
 Positions(ICAO24, CallSign, N, Pos) AS (
   SELECT ICAO24, CallSign, N, Pos
   FROM FlightTimeSlice
@@ -63,9 +63,9 @@ WITH TimeAltitude(Period, AltSpan) AS (
   SELECT tstzspanFromText('[2026-03-01 08:00:00+00, 2026-03-01 09:00:00+00)'),
     floatspanFromText('[3000, 8000)') ),
 FlightTimeSlice(ICAO24, CallSign, TripTimeSlice, AltTimeSlice) AS (
-  SELECT icao24, callsign, atTime(flight, Period), atTime(geoaltitude, Period)
-  FROM flights, TimeAltitude
-  WHERE atTime(flight, Period) IS NOT NULL ),
+  SELECT ICAO24, CallSign, atTime(Flight, Period), atTime(GeoAltitude, Period)
+  FROM Flights, TimeAltitude
+  WHERE atTime(Flight, Period) IS NOT NULL ),
 FlightTimeSliceCruising(ICAO24, CallSign, CruisingTrip, CruisingAltitude) AS (
   SELECT ICAO24, CallSign,
     atTime(TripTimeSlice, getTime(atSpan(AltTimeSlice, AltSpan))),

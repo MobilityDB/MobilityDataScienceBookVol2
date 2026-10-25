@@ -96,26 +96,27 @@ def ddl(name, stmts, rnd, check):
     t0 = time.time()
     for s in stmts:
         spark.sql(s).collect()
-        if s.upper().startswith("DROP TABLE IF EXISTS "):  # as cell 4 of the notebook
-            path = jvm.org.apache.hadoop.fs.Path("/spark-warehouse/" + s.split()[-1])
+        # as cell 4 of the notebook; the folder of a table is its name in lower case
+        if s.upper().startswith("DROP TABLE IF EXISTS "):
+            path = jvm.org.apache.hadoop.fs.Path("/spark-warehouse/" + s.split()[-1].lower())
             path.getFileSystem(conf).delete(path, True)
     secs = time.time() - t0
     log(name, rnd, secs, spark.sql(check).collect()[0][0])
 
 
 T = statements("dashboards_tables.sql")    # drop/create x 4, then SELECT * FROM closepair
-summary3 = ("SELECT COUNT(*) AS positions, COUNT(DISTINCT ICAO24) AS aircraft, "
-            "AVG(Altitude) AS altitude FROM ({}) q")
+summary3 = ("SELECT COUNT(*) AS Positions, COUNT(DISTINCT ICAO24) AS Aircraft, "
+            "AVG(Altitude) AS Altitude FROM ({}) q")
 for rnd in range(1, rounds + 1):
     for step in steps:
         if step == "flightseu":
-            ddl("flightseu", T[0:2], rnd, "SELECT count(*) FROM flightseu")
+            ddl("flightseu", T[0:2], rnd, "SELECT count(*) FROM FlightsEU")
         elif step == "tables":
-            ddl("flightseu", T[0:2], rnd, "SELECT count(*) FROM flightseu")
-            ddl("flightseu3d", T[2:4], rnd, "SELECT count(*) FROM flightseu3d")
-            ddl("airborne3d", T[4:6], rnd, "SELECT count(*) FROM airborne3d")
+            ddl("flightseu", T[0:2], rnd, "SELECT count(*) FROM FlightsEU")
+            ddl("flightseu3d", T[2:4], rnd, "SELECT count(*) FROM FlightsEU3D")
+            ddl("airborne3d", T[4:6], rnd, "SELECT count(*) FROM Airborne3D")
         elif step == "closepair":
-            ddl("closepair", T[6:8], rnd, "SELECT concat_ws(' ', *) FROM closepair")
+            ddl("closepair", T[6:8], rnd, "SELECT concat_ws(' ', *) FROM ClosePair")
         elif step == "d1":
             query("d1", statements("dashboard1.sql")[0], rnd)
         elif step == "d2":

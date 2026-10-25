@@ -32,20 +32,20 @@
 -- a semicolon; run_queries.py runs them.
 
 -- The countries whose territory intersects the area of use of EPSG:3035, in the projection
-CREATE OR REPLACE TEMPORARY VIEW countriesinput USING shapefile
+CREATE OR REPLACE TEMPORARY VIEW CountriesInput USING shapefile
   OPTIONS (path 'file:///opt/data/flights/countries');
-DROP TABLE IF EXISTS countries;
-CREATE TABLE countries USING DELTA AS
-SELECT trim(TRAILING chr(0) FROM NAME) AS name, ADM0_A3 AS code,
+DROP TABLE IF EXISTS Countries;
+CREATE TABLE Countries USING DELTA AS
+SELECT trim(TRAILING chr(0) FROM NAME) AS Name, ADM0_A3 AS Code,
   geometryFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(ST_Transform(
-    geometry, 'EPSG:4326', 'EPSG:3035'), 3035))) AS geom
-FROM countriesinput
+    geometry, 'EPSG:4326', 'EPSG:3035'), 3035))) AS Geom
+FROM CountriesInput
 WHERE ST_Intersects(geometry,
   ST_PolygonFromEnvelope(-35.58, 24.60, 44.83, 84.73));
 
 -- Query 1: the flights over Europe between 8 and 9 o'clock
-DROP TABLE IF EXISTS morningflights;
-CREATE TABLE morningflights USING DELTA AS
+DROP TABLE IF EXISTS MorningFlights;
+CREATE TABLE MorningFlights USING DELTA AS
 WITH Europe(Env) AS (
   SELECT geometryFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(ST_Transform(
     ST_Segmentize(ST_SetSRID(
@@ -53,69 +53,69 @@ WITH Europe(Env) AS (
     'EPSG:4326', 'EPSG:3035'), 3035))) ),
 TimePeriod(Period) AS (
   SELECT tstzspanFromText('[2026-03-01 08:00:00+00, 2026-03-01 09:00:00+00)') )
-SELECT icao24, callsign, atGeometry(atTime(flight, Period), Env) AS trip
-FROM flightseu, Europe, TimePeriod
-WHERE atGeometry(atTime(flight, Period), Env) IS NOT NULL;
+SELECT ICAO24, CallSign, atGeometry(atTime(Flight, Period), Env) AS Trip
+FROM FlightsEU, Europe, TimePeriod
+WHERE atGeometry(atTime(Flight, Period), Env) IS NOT NULL;
 
 -- Query 2: the flights leaving Brussels, their route and the position where they end
-DROP TABLE IF EXISTS brusselsdepartures;
-CREATE TABLE brusselsdepartures USING DELTA AS
+DROP TABLE IF EXISTS BrusselsDepartures;
+CREATE TABLE BrusselsDepartures USING DELTA AS
 WITH Brussels(Env) AS (
   SELECT geographyFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(
     ST_PolygonFromEnvelope(4.25, 50.75, 4.60, 50.95), 4326))) )
-SELECT icao24, callsign, trajectory(flight) AS route, endValue(flight) AS destination,
-  geoLength(flight) / 1000 AS km
-FROM flights, Brussels
-WHERE geoIntersects(startValue(flight), Env);
+SELECT ICAO24, CallSign, trajectory(Flight) AS Route, endValue(Flight) AS Destination,
+  geoLength(Flight) / 1000 AS Km
+FROM Flights, Brussels
+WHERE geoIntersects(startValue(Flight), Env);
 
 -- Query 3: the flights over each country and the distance they fly there
-DROP TABLE IF EXISTS countrytraffic;
-CREATE TABLE countrytraffic USING DELTA AS
-SELECT c.name, COUNT(*) AS flights,
-  SUM(geoLength(tgeogpoint(geoTransform(atGeometry(f.flight, c.geom),
-    4326)))) / 1000 AS km
-FROM flightseu f, countries c
-WHERE eIntersects(f.flight, c.geom)
-GROUP BY c.name;
+DROP TABLE IF EXISTS CountryTraffic;
+CREATE TABLE CountryTraffic USING DELTA AS
+SELECT c.Name, COUNT(*) AS Flights,
+  SUM(geoLength(tgeogpoint(geoTransform(atGeometry(f.Flight, c.Geom),
+    4326)))) / 1000 AS Km
+FROM FlightsEU f, Countries c
+WHERE eIntersects(f.Flight, c.Geom)
+GROUP BY c.Name;
 
 -- Query 4: the number of aircraft flying over Europe at each instant of the day, a flight flying
 -- while its velocity lies between 50 and 400 m/s
-DROP TABLE IF EXISTS airbornecount;
-CREATE TABLE airbornecount USING DELTA AS
+DROP TABLE IF EXISTS AirborneCount;
+CREATE TABLE AirborneCount USING DELTA AS
 WITH Europe(Env) AS (
   SELECT geometryFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(ST_Transform(
     ST_Segmentize(ST_SetSRID(
       ST_PolygonFromEnvelope(-35.58, 24.60, 44.83, 84.73), 4326), 1),
     'EPSG:4326', 'EPSG:3035'), 3035))) ),
 Flying(Trip) AS (
-  SELECT atGeometry(atTime(flight,
-    getTime(atSpan(velocity, floatspanFromText('[50, 400]')))), Env)
-  FROM flightseu, Europe
-  WHERE atSpan(velocity, floatspanFromText('[50, 400]')) IS NOT NULL )
-SELECT tCount(Trip) AS aircraft
+  SELECT atGeometry(atTime(Flight,
+    getTime(atSpan(Velocity, floatspanFromText('[50, 400]')))), Env)
+  FROM FlightsEU, Europe
+  WHERE atSpan(Velocity, floatspanFromText('[50, 400]')) IS NOT NULL )
+SELECT tCount(Trip) AS Aircraft
 FROM Flying
 WHERE Trip IS NOT NULL;
 
 -- Query 5: the part of each flight within 15 km of each holding fix of London Heathrow while it
 -- flies between 2,000 and 5,000 meters, the distance measured on the WGS 84 spheroid
-DROP TABLE IF EXISTS holding;
-CREATE TABLE holding USING DELTA AS
+DROP TABLE IF EXISTS Holding;
+CREATE TABLE Holding USING DELTA AS
 WITH Fixes(Fix, Geog) AS (
-  SELECT fix, geographyFromHexEWKB(ST_AsHEXEWKB(
-    ST_SetSRID(ST_Point(lon, lat), 4326)))
+  SELECT Fix, geographyFromHexEWKB(ST_AsHEXEWKB(
+    ST_SetSRID(ST_Point(Lon, Lat), 4326)))
   FROM VALUES ('Bovingdon', -0.5500, 51.7260), ('Lambourne', 0.1520, 51.6460),
     ('Ockham', -0.4470, 51.3050), ('Biggin Hill', 0.0350, 51.3310)
-    AS f(fix, lon, lat) ),
+    AS f(Fix, Lon, Lat) ),
 Band(ICAO24, CallSign, Trip) AS (
-  SELECT icao24, callsign,
-    atTime(flight, getTime(atSpan(geoaltitude, floatspanFromText('[2000, 5000]'))))
-  FROM flights
-  WHERE atSpan(geoaltitude, floatspanFromText('[2000, 5000]')) IS NOT NULL ),
+  SELECT ICAO24, CallSign,
+    atTime(Flight, getTime(atSpan(GeoAltitude, floatspanFromText('[2000, 5000]'))))
+  FROM Flights
+  WHERE atSpan(GeoAltitude, floatspanFromText('[2000, 5000]')) IS NOT NULL ),
 Near(Fix, ICAO24, CallSign, Trip) AS (
   SELECT f.Fix, b.ICAO24, b.CallSign,
     atTime(b.Trip, whenTrue(tDwithin(b.Trip, f.Geog, 15000.0))) AS Trip
   FROM Band b, Fixes f
   WHERE eDwithin(b.Trip, f.Geog, 15000.0) )
-SELECT Fix AS fix, ICAO24 AS icao24, CallSign AS callsign, Trip AS trip
+SELECT Fix AS Fix, ICAO24 AS ICAO24, CallSign AS CallSign, Trip AS Trip
 FROM Near
 WHERE Trip IS NOT NULL;

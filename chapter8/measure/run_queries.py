@@ -87,8 +87,9 @@ def ddl(name, stmts, rnd, check):
     t0 = time.time()
     for s in stmts:
         spark.sql(s).collect()
+        # the folder of a table is its name in lower case
         if s.upper().startswith("DROP TABLE IF EXISTS "):
-            path = jvm.org.apache.hadoop.fs.Path("/spark-warehouse/" + s.split()[-1])
+            path = jvm.org.apache.hadoop.fs.Path("/spark-warehouse/" + s.split()[-1].lower())
             path.getFileSystem(conf).delete(path, True)
     secs = time.time() - t0
     log(name, rnd, secs, spark.sql(check).collect()[0])
@@ -98,37 +99,37 @@ S = statements()   # view, drop/create countries, drop/create x 5 queries
 for rnd in range(1, rounds + 1):
     for step in steps:
         if step == "countries":
-            ddl("countries", S[0:3], rnd, "SELECT count(*) FROM countries")
+            ddl("countries", S[0:3], rnd, "SELECT count(*) FROM Countries")
         elif step == "q1":
-            ddl("q1", S[3:5], rnd, "SELECT count(*), count(DISTINCT icao24), "
-                "sum(geoLength(trip)) / 1000 FROM morningflights")
+            ddl("q1", S[3:5], rnd, "SELECT count(*), count(DISTINCT ICAO24), "
+                "sum(geoLength(Trip)) / 1000 FROM MorningFlights")
         elif step == "q2":
-            ddl("q2", S[5:7], rnd, "SELECT count(*), count(DISTINCT icao24), sum(km) "
-                "FROM brusselsdepartures")
+            ddl("q2", S[5:7], rnd, "SELECT count(*), count(DISTINCT ICAO24), sum(Km) "
+                "FROM BrusselsDepartures")
         elif step == "q3":
-            ddl("q3", S[7:9], rnd, "SELECT count(*), sum(flights), sum(km) "
-                "FROM countrytraffic")
+            ddl("q3", S[7:9], rnd, "SELECT count(*), sum(Flights), sum(Km) "
+                "FROM CountryTraffic")
         elif step == "q4":
-            ddl("q4", S[9:11], rnd, "SELECT numInstants(aircraft), maxValue(aircraft), "
-                "twAvg(aircraft) FROM airbornecount")
+            ddl("q4", S[9:11], rnd, "SELECT numInstants(Aircraft), maxValue(Aircraft), "
+                "twAvg(Aircraft) FROM AirborneCount")
         elif step == "q5":
-            ddl("q5", S[11:13], rnd, "SELECT count(*), count(DISTINCT icao24), "
-                "sum(geoLength(trip)) / 1000 FROM holding")
+            ddl("q5", S[11:13], rnd, "SELECT count(*), count(DISTINCT ICAO24), "
+                "sum(geoLength(Trip)) / 1000 FROM Holding")
         elif step == "export":
-            query("q1_rows", "SELECT icao24, callsign, geoLength(trip) AS length, "
-                  "ST_AsText(ST_GeomFromEWKB(unhex(asHexEWKB(trajectory(geoTransform(trip, 4326)))))) AS wkt FROM morningflights")
-            query("q2_rows", "SELECT icao24, callsign, km, ST_AsText(ST_GeomFromEWKB(unhex(asHexEWKB(route)))) AS wkt, "
-                  "ST_AsText(ST_GeomFromEWKB(unhex(asHexEWKB(destination)))) AS destination FROM brusselsdepartures")
-            query("q3_rows", "SELECT name, flights, km FROM countrytraffic ORDER BY name")
-            query("q4_rows", "SELECT numInstants(aircraft) AS instants, maxValue(aircraft) AS peak, "
-                  "startTimestamp(atValue(aircraft, maxValue(aircraft))) AS peaktime, "
-                  "twAvg(aircraft) AS average FROM airbornecount")
-            query("q4_hours", "SELECT h AS hour, valueAtTimestamp(aircraft, h) AS aircraft "
-                  "FROM airbornecount LATERAL VIEW explode(sequence(timestamp '2026-03-01 00:00:00', "
+            query("q1_rows", "SELECT ICAO24, CallSign, geoLength(Trip) AS Length, "
+                  "ST_AsText(ST_GeomFromEWKB(unhex(asHexEWKB(trajectory(geoTransform(Trip, 4326)))))) AS WKT FROM MorningFlights")
+            query("q2_rows", "SELECT ICAO24, CallSign, Km, ST_AsText(ST_GeomFromEWKB(unhex(asHexEWKB(Route)))) AS WKT, "
+                  "ST_AsText(ST_GeomFromEWKB(unhex(asHexEWKB(Destination)))) AS Destination FROM BrusselsDepartures")
+            query("q3_rows", "SELECT Name, Flights, Km FROM CountryTraffic ORDER BY Name")
+            query("q4_rows", "SELECT numInstants(Aircraft) AS Instants, maxValue(Aircraft) AS Peak, "
+                  "startTimestamp(atValue(Aircraft, maxValue(Aircraft))) AS PeakTime, "
+                  "twAvg(Aircraft) AS Average FROM AirborneCount")
+            query("q4_hours", "SELECT h AS Hour, valueAtTimestamp(Aircraft, h) AS Aircraft "
+                  "FROM AirborneCount LATERAL VIEW explode(sequence(timestamp '2026-03-01 00:00:00', "
                   "timestamp '2026-03-01 23:00:00', interval 1 hour)) AS h ORDER BY h")
-            query("q4_series", "SELECT asText(aircraft) AS aircraft FROM airbornecount")
-            query("q5_rows", "SELECT fix, icao24, callsign, CAST(duration(trip) AS STRING) AS holding, "
-                  "geoLength(trip) / 1000 AS km, "
-                  "ST_AsText(ST_GeomFromEWKB(unhex(asHexEWKB(trajectory(trip))))) AS wkt "
-                  "FROM holding ORDER BY fix, icao24, callsign")
+            query("q4_series", "SELECT asText(Aircraft) AS Aircraft FROM AirborneCount")
+            query("q5_rows", "SELECT Fix, ICAO24, CallSign, CAST(duration(Trip) AS STRING) AS Holding, "
+                  "geoLength(Trip) / 1000 AS Km, "
+                  "ST_AsText(ST_GeomFromEWKB(unhex(asHexEWKB(trajectory(Trip))))) AS WKT "
+                  "FROM Holding ORDER BY Fix, ICAO24, CallSign")
 spark.stop()

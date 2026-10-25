@@ -221,15 +221,15 @@ def dashboard2():
         st.info("The tables of this dashboard are built once from the flights tables; "
                 "the closest pair takes the longest.")
         if st.button("Build the tables of dashboard 2"):
-            with st.spinner("MobilitySpark builds flightseu, flightseu3d, airborne3d and "
-                            "closepair"):
+            with st.spinner("MobilitySpark builds FlightsEU, FlightsEU3D, Airborne3D and "
+                            "ClosePair"):
                 for statement in statements("dashboards_tables.sql"):
                     spark().sql(statement).collect()
             st.rerun()
         return
-    pair = spark().sql("SELECT * FROM closepair").toPandas().iloc[0]
-    st.caption(f"{pair['callsign_1']} ({pair['icao24_1']}) and {pair['callsign_2']} "
-               f"({pair['icao24_2']}) come within {pair['distance']:,.2f} m of each other "
+    pair = spark().sql("SELECT * FROM ClosePair").toPandas().iloc[0]
+    st.caption(f"{pair['CallSign_1']} ({pair['ICAO24_1']}) and {pair['CallSign_2']} "
+               f"({pair['ICAO24_2']}) come within {pair['Distance']:,.2f} m of each other "
                "in three dimensions, over Europe, while both fly")
     with st.spinner("MobilitySpark answers the panels"):
         distance, _ = panel("dashboard2.sql", 0)
@@ -239,31 +239,31 @@ def dashboard2():
     c1, c2, c3 = st.columns(3)
     with c1:
         st.caption("Distance between the two planes (km)")
-        st.line_chart(distance, x="time", y="distance", height=300)
+        st.line_chart(distance, x="Time", y="Distance", height=300)
     with c2:
         st.caption("Geometric altitude (m)")
-        altitude = pd.concat([altitude1.assign(Flight=pair["callsign_1"]),
-                              altitude2.assign(Flight=pair["callsign_2"])])
-        colors = alt.Scale(domain=[pair["callsign_1"], pair["callsign_2"]],
+        altitude = pd.concat([altitude1.assign(Flight=pair["CallSign_1"]),
+                              altitude2.assign(Flight=pair["CallSign_2"])])
+        colors = alt.Scale(domain=[pair["CallSign_1"], pair["CallSign_2"]],
                            range=["#{:02x}{:02x}{:02x}".format(*AIRCRAFT_COLORS[i])
                                   for i in (1, 2)])
         chart = alt.Chart(altitude).mark_line().encode(
-            x=alt.X("etts:T", title="time"), y=alt.Y("geoaltitude:Q", title="altitude"),
+            x=alt.X("EtTs:T", title="time"), y=alt.Y("GeoAltitude:Q", title="altitude"),
             color=alt.Color("Flight:N", scale=colors,
                             legend=alt.Legend(orient="bottom", title=None)))
         st.altair_chart(chart, height=300)
     with c3:
         st.caption("Position of the close flights")
-        names = {1: pair["callsign_1"], 2: pair["callsign_2"]}
-        positions = positions.assign(color=positions["aircraft"].map(AIRCRAFT_COLORS),
-                                     Flight=positions["aircraft"].map(names),
-                                     T=positions["posts"].astype(str))
-        points = pdk.Layer("ScatterplotLayer", data=positions, get_position=["lon", "lat"],
+        names = {1: pair["CallSign_1"], 2: pair["CallSign_2"]}
+        positions = positions.assign(color=positions["Aircraft"].map(AIRCRAFT_COLORS),
+                                     Flight=positions["Aircraft"].map(names),
+                                     T=positions["PosTs"].astype(str))
+        points = pdk.Layer("ScatterplotLayer", data=positions, get_position=["Lon", "Lat"],
                            get_fill_color="color", get_radius=400, radius_min_pixels=2,
                            pickable=True)
         # The square around the two tracks with a margin of 60 km, as #mapjob of
         # figures/flights_dashboard2_maps.py draws it
-        x, y = zip(*map(mercator, positions["lon"], positions["lat"]))
+        x, y = zip(*map(mercator, positions["Lon"], positions["Lat"]))
         cx, cy = (min(x) + max(x)) / 2, (min(y) + max(y)) / 2
         half = max(max(x) - min(x), max(y) - min(y)) / 2 + 60_000
         extent_map([points], (cx - half, cx + half, cy - half, cy + half), 300,

@@ -34,59 +34,59 @@
 
 -- The flights over Europe whose trajectory is a single line, projected to EPSG:3035. The
 -- envelope is the area of use of the projection, read as a geography.
-DROP TABLE IF EXISTS flightseu;
+DROP TABLE IF EXISTS FlightsEU;
 
-CREATE TABLE flightseu USING DELTA AS
+CREATE TABLE FlightsEU USING DELTA AS
 WITH Europe(Env) AS (
   SELECT geographyFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(
     ST_PolygonFromEnvelope(-35.58, 24.60, 44.83, 84.73), 4326))) )
-SELECT icao24, callsign, flightperiod, geoTransform(tgeompoint(flight), 3035) AS flight,
-  velocity, heading, vertrate, alert, geoaltitude
-FROM flights, Europe
+SELECT ICAO24, CallSign, FlightPeriod, geoTransform(tgeompoint(Flight), 3035) AS Flight,
+  Velocity, Heading, VertRate, Alert, GeoAltitude
+FROM Flights, Europe
 WHERE ST_GeometryType(ST_GeomFromEWKB(unhex(asHexEWKB(
-    trajectory(tgeompoint(flight)))))) = 'ST_LineString' AND
-  eIntersects(flight, Env);
+    trajectory(tgeompoint(Flight)))))) = 'ST_LineString' AND
+  eIntersects(Flight, Env);
 
 -- The flights over Europe in three dimensions, in the projection: the position reports of a
--- flight that flightspositions keeps, each at the time of the report, with its geometric altitude
-DROP TABLE IF EXISTS flightseu3d;
+-- flight that FlightsPositions keeps, each at the time of the report, with its geometric altitude
+DROP TABLE IF EXISTS FlightsEU3D;
 
-CREATE TABLE flightseu3d USING DELTA AS
+CREATE TABLE FlightsEU3D USING DELTA AS
 WITH Instants AS (
-  SELECT f.icao24, f.callsign, p.posts,
+  SELECT f.ICAO24, f.CallSign, p.PosTs,
     geoTransform(tgeompoint(geometryFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(
-      ST_PointZ(p.lon, p.lat, p.geoaltitude), 4326))), p.posts), 3035) AS inst
-  FROM flightseu f, flightspositions p
-  WHERE p.icao24 = f.icao24 AND spansetContains(f.flightperiod, p.posts) AND
-    p.geoaltitude IS NOT NULL )
-SELECT icao24, callsign,
-  tgeompointSeq(array_sort(collect_list(struct(posts, inst))).inst) AS trip
+      ST_PointZ(p.Lon, p.Lat, p.GeoAltitude), 4326))), p.PosTs), 3035) AS Inst
+  FROM FlightsEU f, FlightsPositions p
+  WHERE p.ICAO24 = f.ICAO24 AND spansetContains(f.FlightPeriod, p.PosTs) AND
+    p.GeoAltitude IS NOT NULL )
+SELECT ICAO24, CallSign,
+  tgeompointSeq(array_sort(collect_list(struct(PosTs, Inst))).Inst) AS Trip
 FROM Instants
-GROUP BY icao24, callsign;
+GROUP BY ICAO24, CallSign;
 
 -- The part of these flights over Europe while they fly, above 3,000 meters and at 100 meters
 -- per second or more, cut into pieces of ten minutes. Europe is the envelope in the projection,
 -- its edges split every degree.
-DROP TABLE IF EXISTS airborne3d;
+DROP TABLE IF EXISTS Airborne3D;
 
-CREATE TABLE airborne3d USING DELTA AS
+CREATE TABLE Airborne3D USING DELTA AS
 WITH Europe(Env) AS (
   SELECT geoTransform(segmentize(geometryFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(
     ST_PolygonFromEnvelope(-35.58, 24.60, 44.83, 84.73), 4326))), 1), 3035) ),
 Airborne AS (
-  SELECT t.icao24, t.callsign, atGeometry(atTime(t.trip, spansetIntersection(
-      getTime(atSpan(f.geoaltitude, floatspanFromText('[3000, 15000]'))),
-      getTime(atSpan(f.velocity, floatspanFromText('[100, 400]'))))), Env) AS trip
-  FROM flightseu3d t, flightseu f, Europe
-  WHERE t.icao24 = f.icao24 AND t.callsign = f.callsign AND
-    atSpan(f.geoaltitude, floatspanFromText('[3000, 15000]')) IS NOT NULL AND
-    atSpan(f.velocity, floatspanFromText('[100, 400]')) IS NOT NULL ),
+  SELECT t.ICAO24, t.CallSign, atGeometry(atTime(t.Trip, spansetIntersection(
+      getTime(atSpan(f.GeoAltitude, floatspanFromText('[3000, 15000]'))),
+      getTime(atSpan(f.Velocity, floatspanFromText('[100, 400]'))))), Env) AS Trip
+  FROM FlightsEU3D t, FlightsEU f, Europe
+  WHERE t.ICAO24 = f.ICAO24 AND t.CallSign = f.CallSign AND
+    atSpan(f.GeoAltitude, floatspanFromText('[3000, 15000]')) IS NOT NULL AND
+    atSpan(f.Velocity, floatspanFromText('[100, 400]')) IS NOT NULL ),
 Pieces AS (
-  SELECT icao24, callsign, inline(timeSplit(trip, INTERVAL '10' MINUTE,
-    TIMESTAMP '2026-03-01 00:00:00')) AS (tile, piece)
+  SELECT ICAO24, CallSign, inline(timeSplit(Trip, INTERVAL '10' MINUTE,
+    TIMESTAMP '2026-03-01 00:00:00')) AS (Tile, Piece)
   FROM Airborne
-  WHERE trip IS NOT NULL )
-SELECT icao24, callsign, tile, piece AS trip
+  WHERE Trip IS NOT NULL )
+SELECT ICAO24, CallSign, Tile, Piece AS Trip
 FROM Pieces;
 
 -- The two flights of the dashboard: the pair of aircraft that come the closest to each other in
@@ -94,16 +94,16 @@ FROM Pieces;
 -- nearest approach of two flights is the smallest one of their pieces of the same tile, and two
 -- pieces whose nearest approach is within one kilometer have boxes within one kilometer of each
 -- other: the pair is the closest of all whenever its distance is below one kilometer.
-DROP TABLE IF EXISTS closepair;
+DROP TABLE IF EXISTS ClosePair;
 
-CREATE TABLE closepair USING DELTA AS
-SELECT a1.icao24 AS icao24_1, a1.callsign AS callsign_1, a2.icao24 AS icao24_2,
-  a2.callsign AS callsign_2, nearestApproachDistance(a1.trip, a2.trip) AS distance
-FROM airborne3d a1, airborne3d a2
-WHERE a1.tile = a2.tile AND a1.icao24 > a2.icao24 AND
-  stboxOverlaps(a1.trip, expandSpace(a2.trip, 1000)) AND
-  nearestApproachDistance(a1.trip, a2.trip) IS NOT NULL
+CREATE TABLE ClosePair USING DELTA AS
+SELECT a1.ICAO24 AS ICAO24_1, a1.CallSign AS CallSign_1, a2.ICAO24 AS ICAO24_2,
+  a2.CallSign AS CallSign_2, nearestApproachDistance(a1.Trip, a2.Trip) AS Distance
+FROM Airborne3D a1, Airborne3D a2
+WHERE a1.Tile = a2.Tile AND a1.ICAO24 > a2.ICAO24 AND
+  stboxOverlaps(a1.Trip, expandSpace(a2.Trip, 1000)) AND
+  nearestApproachDistance(a1.Trip, a2.Trip) IS NOT NULL
 ORDER BY 5, 1, 2, 3, 4
 LIMIT 1;
 
-SELECT * FROM closepair
+SELECT * FROM ClosePair

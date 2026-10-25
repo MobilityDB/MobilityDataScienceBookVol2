@@ -37,10 +37,10 @@ AscSpan(Span) AS (
 TimePeriod(Period) AS (
   SELECT tstzspanFromText('[2026-03-01 00:00:00+00, 2026-03-01 23:59:00+00)') ),
 TargetFlight(ICAO24, CallSign, RestFlight, RestGeoAlt, RestVertRate) AS (
-  SELECT icao24, callsign, atGeometry(atTime(flight, Period), BrusselsEnv),
-    atTime(geoaltitude, Period), atTime(vertrate, Period)
-  FROM flights, TimePeriod, Brussels
-  WHERE atGeometry(atTime(flight, Period), BrusselsEnv) IS NOT NULL ),
+  SELECT ICAO24, CallSign, atGeometry(atTime(Flight, Period), BrusselsEnv),
+    atTime(GeoAltitude, Period), atTime(VertRate, Period)
+  FROM Flights, TimePeriod, Brussels
+  WHERE atGeometry(atTime(Flight, Period), BrusselsEnv) IS NOT NULL ),
 FlightAscent(ICAO24, CallSign, RestGeoAlt, AscTrip, RestVertRate) AS (
   SELECT ICAO24, CallSign,
     atTime(RestGeoAlt, getTime(atSpan(RestVertRate, Span))),
