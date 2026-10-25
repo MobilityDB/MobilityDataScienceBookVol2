@@ -37,8 +37,8 @@ CREATE OR REPLACE TEMPORARY VIEW CountriesInput USING shapefile
 DROP TABLE IF EXISTS Countries;
 CREATE TABLE Countries USING DELTA AS
 SELECT trim(TRAILING chr(0) FROM NAME) AS Name, ADM0_A3 AS Code,
-  geometryFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(ST_Transform(
-    geometry, 'EPSG:4326', 'EPSG:3035'), 3035))) AS Geom
+  geoTransform(geometryFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(geometry, 4326))),
+    3035) AS Geom
 FROM CountriesInput
 WHERE ST_Intersects(geometry,
   ST_PolygonFromEnvelope(-35.58, 24.60, 44.83, 84.73));
@@ -47,10 +47,8 @@ WHERE ST_Intersects(geometry,
 DROP TABLE IF EXISTS MorningFlights;
 CREATE TABLE MorningFlights USING DELTA AS
 WITH Europe(Env) AS (
-  SELECT geometryFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(ST_Transform(
-    ST_Segmentize(ST_SetSRID(
-      ST_PolygonFromEnvelope(-35.58, 24.60, 44.83, 84.73), 4326), 1),
-    'EPSG:4326', 'EPSG:3035'), 3035))) ),
+  SELECT geoTransform(segmentize(geometryFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(
+    ST_PolygonFromEnvelope(-35.58, 24.60, 44.83, 84.73), 4326))), 1), 3035) ),
 TimePeriod(Period) AS (
   SELECT tstzspanFromText('[2026-03-01 08:00:00+00, 2026-03-01 09:00:00+00)') )
 SELECT ICAO24, CallSign, atGeometry(atTime(Flight, Period), Env) AS Trip
@@ -83,10 +81,8 @@ GROUP BY c.Name;
 DROP TABLE IF EXISTS AirborneCount;
 CREATE TABLE AirborneCount USING DELTA AS
 WITH Europe(Env) AS (
-  SELECT geometryFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(ST_Transform(
-    ST_Segmentize(ST_SetSRID(
-      ST_PolygonFromEnvelope(-35.58, 24.60, 44.83, 84.73), 4326), 1),
-    'EPSG:4326', 'EPSG:3035'), 3035))) ),
+  SELECT geoTransform(segmentize(geometryFromHexEWKB(ST_AsHEXEWKB(ST_SetSRID(
+    ST_PolygonFromEnvelope(-35.58, 24.60, 44.83, 84.73), 4326))), 1), 3035) ),
 Flying(Trip) AS (
   SELECT atGeometry(atTime(Flight,
     getTime(atSpan(Velocity, floatspanFromText('[50, 400]')))), Env)
