@@ -45,6 +45,7 @@ itself, the style of the app of chapter 9.
 """
 import math
 import os
+import re
 import time
 
 import altair as alt
@@ -104,7 +105,8 @@ def spark():
 def statements(name):
     """The statements of a file of queries, without its comments."""
     with open(os.path.join(HERE, name)) as f:
-        lines = [ln for ln in f.read().splitlines() if not ln.lstrip().startswith("--")]
+        text = re.sub(r"/\*.*?\*/", "", f.read(), flags=re.S)
+    lines = [ln for ln in text.splitlines() if not ln.lstrip().startswith("--")]
     return [s.strip() for s in "\n".join(lines).split(";") if s.strip()]
 
 

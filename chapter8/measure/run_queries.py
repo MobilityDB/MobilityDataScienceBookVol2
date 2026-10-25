@@ -33,7 +33,7 @@ table countries, q1 to q5 the table of each query, printing its summary, and exp
 rows of the maps, as the last cell of the notebook does. Each answer is written to
 $OUT/<name>.csv (default: out/queries below the working directory) and each time to
 $OUT/times.tsv."""
-import csv, os, sys, time
+import csv, os, re, sys, time
 
 from pyspark.sql import SparkSession
 
@@ -59,7 +59,8 @@ for t in ("flights", "flightseu", "countries", "morningflights", "brusselsdepart
 
 def statements():
     with open(os.path.join(HERE, "flights_queries.sql")) as f:
-        lines = [ln for ln in f.read().splitlines() if not ln.lstrip().startswith("--")]
+        text = re.sub(r"/\*.*?\*/", "", f.read(), flags=re.S)
+    lines = [ln for ln in text.splitlines() if not ln.lstrip().startswith("--")]
     return [s.strip() for s in "\n".join(lines).split(";") if s.strip()]
 
 
