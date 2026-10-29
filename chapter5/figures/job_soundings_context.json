@@ -1,0 +1,32 @@
+{
+ "output": "soundings_context.png",
+ "crs": "EPSG:25832",
+ "extent": [701450, 6007240, 704450, 6010240],
+ "size": [1180, 1180],
+ "dpi": 300,
+ "land": "#efeae2",
+ "layers": [
+  {"type": "shortbread", "water": "#dfe9f2"},
+  {
+   "type": "vector",
+   "path": "soundings_near.gpkg",
+   "layer": "near",
+   "kind": "line",
+   "style": {"line_color": "#969696", "line_width": "0.25"}
+  },
+  {
+   "type": "vector",
+   "path": "soundings_area.gpkg",
+   "layer": "area",
+   "kind": "fill",
+   "style": {"color": "0,0,0,0", "outline_color": "#d7301f", "outline_width": "0.5"}
+  },
+  {
+   "type": "vector",
+   "path": "soundings_trips.gpkg",
+   "layer": "trips",
+   "kind": "line",
+   "style": {"line_color": "#252525", "line_width": "0.5"}
+  }
+ ]
+}

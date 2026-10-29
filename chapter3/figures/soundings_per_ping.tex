@@ -1,0 +1,21 @@
+% The soundings that each ping put into the square of 10 m where the two survey
+% lines cross, over the seconds since the first ping of the line that sounded
+% the square, read from the files soundings_per_ping_<day>.csv that
+% export_soundings.sh writes with the aggregate tnpoints.
+\definecolor{may}{HTML}{2166AC}
+\definecolor{october}{HTML}{D7301F}
+\begin{tikzpicture}[font=\captionstyle]
+\begin{axis}[width=0.85\textwidth, height=4.6cm, xmin=0, xmax=7.5, ymin=0,
+  xlabel={Seconds since the first ping that sounded the square},
+  ylabel={Soundings per ping}, tick label style={font=\captionstyle},
+  label style={font=\captionstyle}, legend style={font=\captionstyle, draw=none,
+  fill=white, fill opacity=0.9, text opacity=1, at={(0.98, 0.95)}, anchor=north east},
+  legend cell align=left]
+\addplot[only marks, mark=*, mark size=0.8pt, may]
+  table[x=s, y=n, col sep=comma] {figs/chap5/soundings_per_ping_20190514.csv};
+\addlegendentry{May 14}
+\addplot[only marks, mark=*, mark size=0.8pt, october]
+  table[x=s, y=n, col sep=comma] {figs/chap5/soundings_per_ping_20191022.csv};
+\addlegendentry{October 22}
+\end{axis}
+\end{tikzpicture}

@@ -1,0 +1,34 @@
+{
+ "output": "soundings_overview.png",
+ "crs": "EPSG:25832",
+ "extent": [702770, 6008510, 703070, 6009100],
+ "size": [600, 1180],
+ "dpi": 300,
+ "land": "#ffffff",
+ "layers": [
+  {
+   "type": "raster",
+   "path": "soundings_topo.tif",
+   "name": "topography",
+   "ramp": [[-7.0, "#08306b"], [-6.0, "#2171b5"], [-5.5, "#6baed6"],
+    [-5.0, "#c6dbef"], [-4.0, "#f7fbff"]]
+  },
+  {
+   "type": "vector",
+   "path": "soundings_trips.gpkg",
+   "layer": "trips",
+   "kind": "line",
+   "style": {"line_color": "#252525", "line_width": "0.4"}
+  },
+  {
+   "type": "vector",
+   "path": "soundings_square.gpkg",
+   "layer": "square",
+   "kind": "fill",
+   "style": {"color": "0,0,0,0", "outline_color": "#d7301f", "outline_width": "0.5"}
+  }
+ ],
+ "legend_ramp": [[-7.0, "#08306b"], [-6.0, "#2171b5"], [-5.5, "#6baed6"],
+  [-5.0, "#c6dbef"], [-4.0, "#f7fbff"]],
+ "legend_ticks": [-7, -6, -5, -4]
+}

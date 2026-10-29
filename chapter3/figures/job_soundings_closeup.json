@@ -1,0 +1,26 @@
+{
+ "output": "soundings_closeup.png",
+ "crs": "EPSG:25832",
+ "extent": [702993.5, 6008575.5, 702996.5, 6008578.5],
+ "size": [1180, 1180],
+ "dpi": 300,
+ "land": "#ffffff",
+ "layers": [
+  {
+   "type": "vector",
+   "path": "soundings_points.gpkg",
+   "layer": "points",
+   "kind": "marker",
+   "filter": "day = '20190514'",
+   "style": {"name": "circle", "color": "#2166ac", "outline_style": "no", "size": "0.5"}
+  },
+  {
+   "type": "vector",
+   "path": "soundings_points.gpkg",
+   "layer": "points",
+   "kind": "marker",
+   "filter": "day = '20191022'",
+   "style": {"name": "circle", "color": "#d7301f", "outline_style": "no", "size": "0.5"}
+  }
+ ]
+}

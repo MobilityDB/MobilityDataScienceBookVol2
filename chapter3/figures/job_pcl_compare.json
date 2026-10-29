@@ -1,0 +1,66 @@
+{
+ "crs": "EPSG:25832",
+ "extent": [
+  702950.8,
+  6008550.0,
+  703037.2,
+  6008604.0
+ ],
+ "size": [
+  1600,
+  1000
+ ],
+ "dpi": 300,
+ "land": "#aad3df",
+ "layers": [
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'swath'",
+   "kind": "fill",
+   "style": {
+    "color": "170,200,255,140",
+    "outline_color": "#0000ff",
+    "outline_width": "0.3"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'ta_buffer'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#0000ff",
+    "outline_width": "0.6",
+    "outline_style": "dash"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'ta_rigid'",
+   "kind": "fill",
+   "style": {
+    "color": "220,145,79,235",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.4"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'antenna'",
+   "kind": "line",
+   "style": {
+    "line_color": "#0000ff",
+    "line_width": "0.5",
+    "capstyle": "round"
+   }
+  }
+ ]
+}

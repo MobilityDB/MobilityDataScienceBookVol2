@@ -1,0 +1,114 @@
+{
+ "output": "excerpt_rigid.png",
+ "crs": "EPSG:25832",
+ "extent": [
+  702981.5,
+  6008564.2,
+  703007.5,
+  6008590.2
+ ],
+ "size": [
+  1000,
+  1000
+ ],
+ "dpi": 300,
+ "land": "#aad3df",
+ "layers": [
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'ta_rigid'",
+   "kind": "fill",
+   "style": {
+    "color": "170,200,255,140",
+    "outline_color": "#0000ff",
+    "outline_width": "0.3"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull0'",
+   "kind": "fill",
+   "style": {
+    "color": "246,220,174,235",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.25"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull1'",
+   "kind": "fill",
+   "style": {
+    "color": "238,196,140,235",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.25"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull2'",
+   "kind": "fill",
+   "style": {
+    "color": "229,170,108,235",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.25"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull3'",
+   "kind": "fill",
+   "style": {
+    "color": "220,145,79,235",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.25"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull4'",
+   "kind": "fill",
+   "style": {
+    "color": "208,120,54,235",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.25"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull5'",
+   "kind": "fill",
+   "style": {
+    "color": "194,95,30,235",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.25"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'antenna'",
+   "kind": "line",
+   "style": {
+    "line_color": "#0000ff",
+    "line_width": "0.5",
+    "capstyle": "round"
+   }
+  }
+ ]
+}

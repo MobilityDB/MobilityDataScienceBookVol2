@@ -39,7 +39,11 @@
 #   with year=2024), and storms_qgis_map.py draws each job storms_<map>.json;
 # - fig_dist_tcbuffer_point.py draws the turning point of the temporal distance
 #   between a temporal circular buffer and a point, at the circle MobilityDB
-#   answers.
+#   answers;
+# - make_figures_soundings.sh draws the figures of the temporal point clouds and
+#   of the use case on seabed surveys, from the tables of
+#   ../soundings/load_soundings.sql in the same database, and the scale bars of
+#   the maps of the moving regions, with scalebars.py.
 # The usual libpq variables (PGHOST, PGPORT, PGUSER) select the server. QGIS_PY
 # is the Python of QGIS, for instance python3 on a Linux installation of QGIS;
 # by default it is the QGIS 3.40 installation of Windows called from WSL, as in
@@ -98,3 +102,4 @@ read -r CX CY R LX LY < <(psql -d "$AIS_DB" -XAt -F ' ' -c "
   SELECT ST_X(point(c)), ST_Y(point(c)), radius(c), ST_X(l), ST_Y(l) FROM c")
 python3 "$HERE/fig_dist_tcbuffer_point.py" "$CX" "$CY" "$R" "$LX" "$LY" \
   "$OUT/dist_tcbuffer_point.pdf"
+AIS_DB="$AIS_DB" bash "$HERE/make_figures_soundings.sh"
