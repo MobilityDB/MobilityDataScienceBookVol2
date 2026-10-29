@@ -107,7 +107,6 @@ figures that are TikZ pictures written inside the text of a chapter are not list
 | 5.4 | The depth under a vessel between two reports | `depth_under_vessel` | `chapter5/figures/make_figures.sh`, `chapter5/figures/overlay_depth_under_vessel.py` |
 | 5.9 | An AIS track on the H3, QUADBIN, and S2 grids | `cellgrids` | `chapter5/figures/make_figures.sh`, `chapter5/figures/export_cellgrids.sql`, `chapter5/figures/cellgrids_panels.py`, `chapter5/figures/cellgrids_compose.tex` |
 | 5.10 | Vessel-hours per H3 cell | `traffic_h3` | `chapter5/figures/make_figures.sh` (job_traffic_h3.json), `chapter10/figures/extract_base.py` |
-| 5.11 | The area covered by the multibeam surveys off Rostock, the two survey lines of Sect. 3.7, and the trips of the vessels of the AIS day that came within one kilometer of the area, in EPSG:25832 | `soundings_context.png`, `soundings_context_overlay.tex` | `chapter5/figures/make_figures.sh`, `chapter5/figures/export_soundings_context.sh`, `chapter5/figures/overlay_soundings_context.py` |
 
 ### Chapter 6
 

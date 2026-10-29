@@ -77,7 +77,6 @@ ERA5 dataset accepted on its page).
 | Protected areas | [World Database on Protected Areas](https://www.protectedplanet.net), Denmark | UNEP-WCMC and IUCN, Protected Planet; no redistribution, no commercial use |
 | Waves, temperature, salinity | Copernicus Marine Service, `BALTICSEA_ANALYSISFORECAST_PHY_003_006`, `BALTICSEA_ANALYSISFORECAST_WAV_003_010`, `NWSHELF_ANALYSISFORECAST_PHY_004_013`, `NWSHELF_ANALYSISFORECAST_WAV_004_014` | "Generated using E.U. Copernicus Marine Service Information" |
 | Wind | ERA5 hourly data on single levels, 10 m wind, day 2026-01-20 | CC-BY-4.0 |
-| Multibeam soundings off Rostock, May 14 and October 22, 2019 | [PANGAEA 945743 and 945782](https://doi.org/10.1594/PANGAEA.946056), Schulze and Feldens (2022), through `../chapter3/soundings/fetch_soundings.sh` | CC-BY-4.0; not suitable for navigation |
 
 `build_aux_data.sh` builds `data/port.csv` and `data/natural_areas.csv.gz`,
 the files that `load_aux_tables.sql` and the loader of chapter 3 read. The
@@ -114,7 +113,7 @@ to that database:
     bash fetch_data.sh                 # all datasets into $DATA
     export PGDATABASE=ais              # the AIS database of the book
     bash load_all.sh                   # ports and protected areas, bathymetry,
-                                       # hourly fields, RaQuet tiles, soundings
+                                       # hourly fields, RaQuet tiles
     bash run_all.sh                    # every script, out/ compared with expected/
     OUT=/mnt/c/Temp/figs bash figures/make_figures.sh    # every map figure
 
@@ -127,11 +126,8 @@ Shelf products (the Baltic value where the Baltic model has one), reproject
 them once to a 1 km grid (5 km for the wind), and load them as tables
 `(ValidTime, Rast)` with one row per tile of each hourly step; and the
 conversion of the bathymetry to RaQuet tiles with `raquet-io` and their loading
-into the table `BathymetryRaquet` with `load_raquet.py`; and the loading of the
-multibeam soundings of chapter 3, `../chapter3/soundings/prep_soundings.sh` and
-`load_soundings.sql`, into the tables `Pings`, `Swaths`, `Tracks`, and
-`SurveyArea`, which the README of chapter 3 describes together with the
-software they need. Each part can be run alone, for instance
+into the table `BathymetryRaquet` with `load_raquet.py`. Each part can be run
+alone, for instance
 `bash load_all.sh fields`.
 
 `run_all.sh` writes the output of each script to `out/` and compares it with
@@ -151,7 +147,6 @@ script states, before each listing of the chapter, the answer the book prints.
 | Case Study: Underwater Noise and the Depth of the Water | `case_noise.sql` |
 | Case Study: Traffic over a Global Grid | `case_traffic.sql` |
 | Case Study: Fields in Cloud-Native Storage | `case_raquet.sql` |
-| Case Study: Seabed Surveys as Observed Fields | `case_seabed_field.sql`, on the tables of `../chapter3/soundings/load_soundings.sql` and on `Ships` and `Vessels` |
 | Exercises | `exercises.sql`, and `grids_by_hand.py` (Python alone) for the numbers of Exercise 5.3, worked by hand |
 
 The scripts run in this order, since later ones use tables of earlier ones:
@@ -200,4 +195,3 @@ in blue, protected areas in green.
 | The depth under a vessel between two reports | `export_depth_under_vessel.sh`, `job_depth_under_vessel.json`, and `overlay_depth_under_vessel.py`, which writes `depth_under_vessel_overlay.tex`, the image with its labels and legend in the style of the captions, which the book inputs |
 | An AIS track on the H3, QUADBIN, and S2 grids | `export_cellgrids.sql`, which writes the track of the pilot boat 219002732 leaving Frederikshavn from `Ships`, the protected area 17 of `NaturalAreas`, and the cells of the six panels; `cellgrids_panels.py`, which draws each panel; and `cellgrids_compose.tex`, which sets them in `cellgrids.pdf` |
 | Vessel-hours per H3 cell | `export_traffic_h3.sh`, `job_traffic_h3.json`, and `extract_base.py` of `chapter10/figures`, which merges the OSM Shortbread tiles of zoom 5 into the basemap `traffic_base.gpkg`, so that the map of Denmark stays near 1 MB and draws in under a second |
-| The surveyed area off Rostock and the vessels of the day | `export_soundings_context.sh`, which writes the area of the surveys, the trips of the survey vessel, and the trips of the vessels of the AIS day that came within 1 km of the area; `job_soundings_context.json`, which `render.sh` draws as `soundings_context.png`; and `overlay_soundings_context.py`, which writes `soundings_context_overlay.tex`, the image with its legend and scale bar |

@@ -129,3 +129,12 @@ SELECT Line, maxValue(tnpoints(atGeometry(Swath,
   ST_MakeEnvelope(702990, 6008572, 703000, 6008582, 25832)))) AS MaxPerPing
 FROM Swaths
 GROUP BY Line ORDER BY Line;
+
+\echo == Query: topography and amplitude of the soundings in the square, by survey
+\echo == (-5.266 | 0.051 | 5072, -5.061 | 0.059 | 3636)
+SELECT Line, round(AVG(getZ(p.Point)), 3) AS MeanZ,
+  round(STDDEV(getZ(p.Point)), 3) AS StdDevZ,
+  round(AVG(getDim(p.Point, 'Amplitude'))) AS MeanAmplitude
+FROM Swaths, points(atGeometry(Swath,
+  ST_MakeEnvelope(702990, 6008572, 703000, 6008582, 25832))) p
+GROUP BY Line ORDER BY Line;

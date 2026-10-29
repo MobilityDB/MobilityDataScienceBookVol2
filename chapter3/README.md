@@ -164,8 +164,7 @@ variables and by `AIS_DB` and `STORMS_DB` (default: `ais` and `storms`); `QGIS_P
 The scripts of the directory `soundings` load the two multibeam survey lines of
 the use case "Seabed Surveys" into the AIS database of the book, and run the
 listings of the section "Temporal Point Clouds", the queries of the use case,
-and Exercise 3.5. The subsection "Seabed Surveys as Observed Fields" of chapter
-5 reads the same tables (`../chapter5/case_seabed_field.sql`).
+and Exercise 3.5.
 
 #### Software
 
@@ -197,7 +196,7 @@ does not build with GDAL 3.8; `MBSYSTEM` names its installation (default:
     export DATA=$PWD/data PGDATABASE=ais
     bash fetch_soundings.sh          # the two raw files from PANGAEA
     bash prep_soundings.sh           # their listings with MB-System
-    psql -f load_soundings.sql       # pcid 1, Pings, Swaths, Tracks, SurveyArea
+    psql -f load_soundings.sql       # pcid 1, Pings, Swaths, Tracks
     bash run_all.sh                  # every script, out/ compared with expected/
 
 `prep_soundings.sh` writes, for each line, the CSV file of the soundings that
@@ -211,7 +210,6 @@ about a minute and a half, builds:
 | `Pings` | One patch of the schema 1 (X, Y, Z, Amplitude, Beam, in EPSG:25832) per ping, with the survey line `Line` and the time `T` of the ping: 4,851 pings and 2,390,742 soundings in May, 3,358 pings and 1,643,152 soundings in October |
 | `Swaths` | One temporal patch with discrete interpolation per survey line, whose instants are the pings of the line |
 | `Tracks` | The trip of the vessel along each line as a `tgeompoint`, one position per ping, a position repeated by consecutive pings kept once |
-| `SurveyArea` | The area that the surveys cover, as their record at PANGAEA states it |
 
 The positions are transformed once into EPSG:25832, when the data are loaded.
 `fetch_data.sh soundings` and `load_all.sh soundings` of chapter 5 run the same

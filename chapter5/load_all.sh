@@ -26,22 +26,19 @@
 # ../ais/build.sh builds with the AIS day (AISInput, AISClean, Vessels, Segments,
 # Ships), from the files fetched by fetch_data.sh, in the order of the README:
 # the ports and protected areas, the bathymetry, the hourly fields of the ocean
-# models and of ERA5, the bathymetry as RaQuet tiles, and the multibeam soundings
-# as point cloud patches. The database is the
+# models and of ERA5, and the bathymetry as RaQuet tiles. The database is the
 # one named by the PostgreSQL environment variables (PGDATABASE, PGHOST, PGPORT,
 # ...), and the files are read from $DATA (default: data/ below the working
 # directory).
 #
-#   bash load_all.sh [aux] [ddm] [fields] [raquet] [soundings]
+#   bash load_all.sh [aux] [ddm] [fields] [raquet]
 #
 # raquet needs the converter raquet-io 0.9.0 (pip install raquet-io==0.9.0) and
-# the Python packages psycopg2 and pyarrow; soundings runs the loading of the
-# multibeam soundings of chapter 3 (../chapter3/soundings/prep_soundings.sh,
-# which needs MB-System, and load_soundings.sql).
+# the Python packages psycopg2 and pyarrow.
 set -e
 export DATA=${DATA:-$PWD/data}
 HERE=$(cd "$(dirname "$0")" && pwd)
-PARTS=${*:-aux ddm fields raquet soundings}
+PARTS=${*:-aux ddm fields raquet}
 PSQL="psql -X -q -v ON_ERROR_STOP=1"
 cd "$HERE"
 
@@ -80,10 +77,6 @@ for part in $PARTS; do
     fi
     python3 load_raquet.py "$DATA/raquet/bathymetry.parquet" BathymetryRaquet \
       "dbname=${PGDATABASE:-$USER}${PGHOST:+ host=$PGHOST}${PGPORT:+ port=$PGPORT}${PGUSER:+ user=$PGUSER}"
-    ;;
-  soundings)
-    bash ../chapter3/soundings/prep_soundings.sh
-    $PSQL -f ../chapter3/soundings/load_soundings.sql
     ;;
   *) echo "unknown part: $part"; exit 1 ;;
   esac

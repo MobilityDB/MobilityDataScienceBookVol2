@@ -104,12 +104,6 @@ GROUP BY Line;
 
 DROP TABLE NavInput;
 
--- The area that the surveys cover, as the coverage of their record at PANGAEA
--- states it in longitude and latitude, about 800 m by 800 m
-DROP TABLE IF EXISTS SurveyArea;
-CREATE TABLE SurveyArea AS
-SELECT ST_Transform(ST_MakeEnvelope(12.104455, 54.182873, 12.116450, 54.190106, 4326),
-  25832) AS Geom;
 ANALYZE Pings;
 ANALYZE Swaths;
 ANALYZE Tracks;

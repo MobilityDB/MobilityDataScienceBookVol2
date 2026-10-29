@@ -37,7 +37,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 export DATA=${DATA:-$PWD/data}
 export OUT=${OUT:-$PWD/out}
 mkdir -p "$OUT"
-for f in bathymetry_laeso depth_under_vessel traffic_h3 seabed soundings_context; do
+for f in bathymetry_laeso depth_under_vessel traffic_h3 seabed; do
   bash "$HERE/export_$f.sh"
 done
 # The traffic map spans Denmark and its neighbours, so its basemap is one merged
@@ -71,9 +71,3 @@ python3 "$HERE/overlay_bathymetry_laeso.py" "$HERE/job_bathymetry_laeso.json" \
 python3 "$HERE/overlay_depth_under_vessel.py" "$HERE/job_depth_under_vessel.json" \
   "$OUT/vessel_reports.gpkg" figs/chap5/depth_under_vessel '0.85\textwidth' \
   "$OUT/depth_under_vessel_overlay.tex"
-# The surveyed area off Rostock and the vessels of the day is the image
-# soundings_context.png that render.sh draws, under the legend and the scale bar
-# of soundings_context_overlay.tex.
-bash "$HERE/render.sh" "$HERE/job_soundings_context.json"
-python3 "$HERE/overlay_soundings_context.py" "$HERE/job_soundings_context.json" \
-  figs/chap5/soundings_context '0.75\textwidth' "$OUT/soundings_context_overlay.tex"
