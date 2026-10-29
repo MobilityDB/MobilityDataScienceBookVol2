@@ -24,7 +24,7 @@
  *****************************************************************************/
 
 -- The plan of chapter 7's figure index_plan: the listings of the R-tree example over the table
--- TestGeo, and EXPLAIN of its query, as the DuckDB v1.5.5 shell prints it.
+-- TestGeo, and EXPLAIN of its query, as the DuckDB v1.5.6 shell prints it.
 LOAD '${MOBILITYDUCK_EXTENSION}';
 CREATE TABLE TestGeo("times" timestamptz, "box" stbox);
 CREATE INDEX rtree_stbox ON TestGeo USING TRTREE(box);

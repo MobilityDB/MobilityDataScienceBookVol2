@@ -25,11 +25,11 @@
 
 -- The listings of Sect. "DuckDB" of chapter 7, in their order, over the AIS reports of
 -- 2026-01-20; the '/.../AIS' directory of the chapter is ${AIS_DIR}.
--- Run with the DuckDB v1.5.5 shell through envsubst, as the README says; the spatial extension is the
--- one of core_nightly, as the chapter installs it.
+-- Run with the DuckDB v1.5.6 shell through envsubst, as the README says; the spatial extension is the
+-- one the DuckDB repository distributes, as the chapter installs it.
 .timer on
 .mode markdown
-INSTALL spatial FROM core_nightly;
+INSTALL spatial;
 LOAD spatial;
 .print == extensions
 SELECT extension_name, loaded, installed

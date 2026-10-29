@@ -30,7 +30,7 @@
 -- latitude transformed to EPSG:3857, each instant before the sequence is assembled, since the
 -- sequence drops the instants that are collinear in EPSG:3857; the municipalities are in
 -- EPSG:3857.
-INSTALL spatial FROM core_nightly;
+INSTALL spatial;
 LOAD spatial;
 LOAD '${MOBILITYDUCK_EXTENSION}';
 SET TimeZone = 'UTC';

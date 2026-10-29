@@ -24,7 +24,7 @@
  *****************************************************************************/
 
 -- The numbers chapter 7 prints about Queries 8 to 10 of Sect. "Querying DuckDB", over
--- ${CH7_DB_DIR}/ais.duckdb with the DuckDB v1.5.5 shell, as bench.py runs them.
+-- ${CH7_DB_DIR}/ais.duckdb with the DuckDB v1.5.6 shell, as bench.py runs them.
 LOAD spatial;
 SET geometry_always_xy = true;
 .print == q8 target

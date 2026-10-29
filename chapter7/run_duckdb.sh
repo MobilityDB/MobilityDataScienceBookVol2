@@ -27,7 +27,7 @@
 #
 #   ./run_duckdb.sh <database> <script.sql>
 #
-# DuckDB must be the version of the README (v1.5.5); the extension is not signed, so the shell
+# DuckDB must be the version of the README (v1.5.6); the extension is not signed, so the shell
 # starts with -unsigned.
 set -euo pipefail
 : "${DUCKDB:=duckdb}"

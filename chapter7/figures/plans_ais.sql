@@ -24,7 +24,7 @@
  *****************************************************************************/
 
 -- The plans of chapter 7's figures queryduckdbproc_a (Query 2), queryduckdbproc_b (Query 3) and
--- queryprocplan8 (Query 8), over ${CH7_DB_DIR}/ais.duckdb, as the DuckDB v1.5.5 shell prints them.
+-- queryprocplan8 (Query 8), over ${CH7_DB_DIR}/ais.duckdb, as the DuckDB v1.5.6 shell prints them.
 LOAD spatial;
 SET geometry_always_xy = true;
 .output ${CH7_PLAN_DIR}/plan_q2.txt

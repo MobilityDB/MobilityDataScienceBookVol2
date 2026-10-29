@@ -26,7 +26,7 @@
 -- The Hanoi tables of chapter 7 in DuckDB with MobilityDuck, read from the PostgreSQL database
 -- hanoi, ${PG_HANOI} (loaded by load/hanoi_pg.sql) with postgres_scan, as the chapter's
 -- listing of the table Ships reads its rows.
-INSTALL spatial FROM core_nightly;
+INSTALL spatial;
 INSTALL postgres;
 LOAD spatial;
 LOAD '${MOBILITYDUCK_EXTENSION}';

@@ -25,7 +25,7 @@
 
 -- The listing "Table Creation, Population, and Indexing" of chapter 7, with {conn_str} the
 -- PostgreSQL database ais, ${PG_AIS} and the extension the one of the MobilityDuck CI.
-INSTALL spatial FROM core_nightly;
+INSTALL spatial;
 INSTALL postgres;
 INSTALL '${MOBILITYDUCK_EXTENSION}';
 LOAD spatial;

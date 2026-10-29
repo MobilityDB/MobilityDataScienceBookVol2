@@ -23,7 +23,7 @@
 #
 
 # Draw the plan figures of chapter 7 (the PDF files of figs/chap7 of the book) from the plans
-# that DuckDB v1.5.5 prints, with the environment of the README of this chapter.
+# that DuckDB v1.5.6 prints, with the environment of the README of this chapter.
 #
 #   CH7_PLAN_DIR=<output directory> ./make_plans.sh
 #

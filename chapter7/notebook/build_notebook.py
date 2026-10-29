@@ -61,7 +61,7 @@ cells = [md('# MobilityDuck and DuckDB on the AIS data of the book (Chapter 7)\n
             '- `PG_AIS`: the connection string of the AIS database built by `ais/build.sh` '
             '(for example `dbname=ais`);\n'
             '- `MOBILITYDUCK_EXTENSION`: the path of `mobilityduck.duckdb_extension`.\n\n'
-            'The notebook runs DuckDB v1.5.5, as the README of this chapter explains.'),
+            'The notebook runs DuckDB v1.5.6, as the README of this chapter explains.'),
          code('import os\n\nimport duckdb\nimport pandas as pd\n\n'
               "AIS_DIR = os.environ['AIS_DIR']\n"
               "PG_AIS = os.environ['PG_AIS']\n"
@@ -73,7 +73,7 @@ cells = [md('# MobilityDuck and DuckDB on the AIS data of the book (Chapter 7)\n
               '    if os.path.exists(f):\n'
               '        os.remove(f)\n'
               "con = duckdb.connect('ais_ch7.duckdb', config={'allow_unsigned_extensions': 'true'})\n"
-              "con.execute('INSTALL spatial FROM core_nightly')\n"
+              "con.execute('INSTALL spatial')\n"
               "con.execute('LOAD spatial')\n\n\n"
               'def run(sql, rows=20):\n'
               '    """Run the statements of a listing and show the first rows of the answer of the\n'

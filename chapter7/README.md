@@ -10,12 +10,12 @@ examples and exercises in the book.
 
 ### DuckDB and MobilityDuck
 
-The notebooks `mobilityDuckAIS.ipynb` and `hanoi-book.ipynb` run on DuckDB v1.5.5,
+The notebooks `mobilityDuckAIS.ipynb` and `hanoi-book.ipynb` run on DuckDB v1.5.6,
 the version against which the continuous integration of
 [MobilityDuck](https://github.com/MobilityDB/MobilityDuck) builds and tests the extension.
 The extension loads only into the DuckDB version of its build.
 
-1. Install the DuckDB Python client of that version: `pip install duckdb==1.5.5`.
+1. Install the DuckDB Python client of that version: `pip install duckdb==1.5.6`.
 2. Obtain the extension `mobilityduck.duckdb_extension` for your platform, either from the
    artifacts of the latest successful run of the
    [Main Extension Distribution Pipeline](https://github.com/MobilityDB/MobilityDuck/actions/workflows/MainDistributionPipeline.yml)
@@ -33,12 +33,10 @@ The extension loads only into the DuckDB version of its build.
        python notebook/run_notebook.py mobilityDuckAIS.ipynb mobilityDuckAIS.ipynb
 3. The extension is not signed by DuckDB, so the notebooks open DuckDB with
    `allow_unsigned_extensions` (in the DuckDB shell, start it with `duckdb -unsigned`).
-4. The notebooks install the spatial extension from the `core_nightly` repository
-   (`INSTALL spatial FROM core_nightly`). The optimizer of the spatial extension that
-   DuckDB v1.5.5 distributes rewrites the `&&` operator as a spatial join even when its
-   operands are not geometries, so that queries such as the join of trips and time bins of
-   the Hanoi notebook fail with it; the spatial extension of `core_nightly` keeps that
-   rewrite to geometries.
+4. The notebooks install the spatial extension the DuckDB repository distributes
+   (`INSTALL spatial`). For DuckDB v1.5.6 its optimizer rewrites the `&&` operator as a spatial
+   join only when its operands are geometries, so queries such as the join of trips and time
+   bins of the Hanoi notebook keep MobilityDuck's operator.
 
 ### Reproducing the values, timings and figures of the chapter
 
@@ -55,12 +53,12 @@ tied to one machine:
 | `CH7_DB_DIR` | Directory of the DuckDB databases `ais.duckdb`, `ships.duckdb` and `hanoi.duckdb` |
 | `MOBILITYDUCK_EXTENSION` | Path of `mobilityduck.duckdb_extension`, obtained as the previous section says |
 | `CH7_PLAN_DIR` | Output directory of the plan figures |
-| `DUCKDB` | The DuckDB v1.5.5 shell (default: `duckdb` on the `PATH`) |
+| `DUCKDB` | The DuckDB v1.5.6 shell (default: `duckdb` on the `PATH`) |
 
 `run_duckdb.sh <database> <script.sql>` runs a script of this directory in the DuckDB shell,
 replacing these variables, and only these, by their values with `envsubst` (on macOS, of the
 Homebrew package `gettext`). The Python scripts need the
-packages `duckdb==1.5.5`, `psycopg` and `matplotlib`. The timestamps printed by the AIS listings
+packages `duckdb==1.5.6`, `psycopg` and `matplotlib`. The timestamps printed by the AIS listings
 are those of a session in Central European Time, as the chapter prints them.
 
 #### Loading the data
