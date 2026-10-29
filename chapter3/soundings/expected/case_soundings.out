@@ -1,0 +1,64 @@
+SET
+SET
+== Listing: the survey lines as temporal patches and as trips
+== (4851 | 2390742 | 00:04:54.548153 | 541, 3358 | 1643152 | 00:02:29.037577 | 290)
+             line              | pings | soundings |    duration     | meters 
+-------------------------------+-------+-----------+-----------------+--------
+ 20190514_124053_kh1905_400khz |  4851 |   2390742 | 00:04:54.548153 |    541
+ 20191022_085450_kh1910_400khz |  3358 |   1643152 | 00:02:29.037577 |    290
+
+== Text: about 490 soundings per ping, about 16 pings per second in May and 23 in October
+             line              | soundingsperping | pingspersecond 
+-------------------------------+------------------+----------------
+ 20190514_124053_kh1905_400khz |              493 |           16.5
+ 20191022_085450_kh1910_400khz |              489 |           22.5
+
+== Text: the azimuth of the October line lies between 5.12 and 5.58 radians
+ minazimuth | maxazimuth 
+------------+------------
+       5.12 |       5.58
+
+== Query: which part of the seabed did the vessel cover along the October line,
+== and which part did its pings sound (1643152 | 2217 | 810 | 12931)
+ soundings | buffer | vessel | swatharea 
+-----------+--------+--------+-----------
+   1643152 |   2217 |    810 |     12931
+
+== Listing: the same areas over the ten seconds from 08:54:50 to 08:55:00 (190 | 69 | 797)
+ buffer | vessel | swatharea 
+--------+--------+-----------
+    190 |     69 |       797
+
+== Query: when was the square sounded, by how many pings and soundings, pgPointCloud
+== (103 | 25812, 173 | 37002)
+             line              | pings | soundings |           firstping           |           lastping            
+-------------------------------+-------+-----------+-------------------------------+-------------------------------
+ 20190514_124053_kh1905_400khz |   103 |     25812 | 2019-05-14 10:45:28.856962+00 | 2019-05-14 10:45:34.710022+00
+ 20191022_085450_kh1910_400khz |   173 |     37002 | 2019-10-22 08:54:50.826786+00 | 2019-10-22 08:54:58.048633+00
+
+== Query: when was the square sounded, by how many pings and soundings, MobilityDB
+== (103 | 25812, 173 | 37002)
+             line              | pings | soundings |                             period                             
+-------------------------------+-------+-----------+----------------------------------------------------------------
+ 20190514_124053_kh1905_400khz |   103 |     25812 | [2019-05-14 10:45:28.856962+00, 2019-05-14 10:45:34.710022+00]
+ 20191022_085450_kh1910_400khz |   173 |     37002 | [2019-10-22 08:54:50.826786+00, 2019-10-22 08:54:58.048633+00]
+
+== Text: the pings whose box meets the square, kept whole (162 | 80264, 590 | 289867)
+             line              | pings | soundings 
+-------------------------------+-------+-----------
+ 20190514_124053_kh1905_400khz |   162 |     80264
+ 20191022_085450_kh1910_400khz |   590 |    289867
+
+== Query: speed of the vessel while it sounded the square, and spacing of its pings
+== (3.72 | 11.2 | 0.11, 3.77 | 14 | 0.081)
+             line              | knots | meters | metersperping 
+-------------------------------+-------+--------+---------------
+ 20190514_124053_kh1905_400khz |  3.72 |   11.2 |          0.11
+ 20191022_085450_kh1910_400khz |  3.77 |     14 |         0.081
+
+== Query: the most soundings a ping of each line put into the square (294, 349)
+             line              | maxperping 
+-------------------------------+------------
+ 20190514_124053_kh1905_400khz |        294
+ 20191022_085450_kh1910_400khz |        349
+
