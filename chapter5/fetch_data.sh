@@ -26,9 +26,10 @@
 # below the working directory), with no account needed. The AIS day, the depth
 # model, the ports, and the protected areas come from their publishers; the
 # subsets of the Copernicus Marine Service and of ERA5 come from datasets/ of
-# this repository, as their licences allow.
+# this repository, as their licences allow. The multibeam soundings come from
+# PANGAEA, through ../chapter3/soundings/fetch_soundings.sh.
 #
-#   bash fetch_data.sh [ais] [ddm] [aux] [cmems] [era5]
+#   bash fetch_data.sh [ais] [ddm] [aux] [cmems] [era5] [soundings]
 #
 # Without arguments, all of them are fetched. FROM_PUBLISHER=1 downloads cmems
 # and era5 again from their publishers instead: cmems then needs the Copernicus
@@ -41,7 +42,7 @@
 set -e
 DATA=${DATA:-$PWD/data}
 HERE=$(cd "$(dirname "$0")" && pwd)
-PARTS=${*:-ais ddm aux cmems era5}
+PARTS=${*:-ais ddm aux cmems era5 soundings}
 mkdir -p "$DATA"
 
 fetch() { # url file
@@ -123,6 +124,11 @@ for part in $PARTS; do
       elif [ -z "$FROM_PUBLISHER" ]; then cp "$HERE/datasets/era5/$f" "$DATA/era5/$f"
       else python3 "$HERE/fetch_era5.py" "$d" "$DATA/era5/$f"; fi
     done
+    ;;
+  soundings)
+    # The two multibeam survey lines of the use case on seabed surveys of
+    # chapter 3, which the subsection on seabed surveys as observed fields reads
+    DATA="$DATA" bash "$HERE/../chapter3/soundings/fetch_soundings.sh"
     ;;
   *) echo "unknown part: $part"; exit 1 ;;
   esac

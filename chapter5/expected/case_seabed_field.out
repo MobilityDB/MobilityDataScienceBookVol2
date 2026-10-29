@@ -1,0 +1,27 @@
+SET
+SET
+== Query: the vessels of the AIS day that came within 1 km of the surveyed area (32)
+ vessels 
+---------
+      32
+
+   mmsi    | shiptype  | length | mindist |    within1km    
+-----------+-----------+--------+---------+-----------------
+ 211138490 | Cargo     |     28 |     201 | 00:39:41.720966
+ 211180420 | Undefined |        |     467 | 00:11:13.664974
+ 211168190 | Passenger |     29 |     732 | 00:32:21.49455
+ 211787790 | Pilot     |     15 |     735 | 08:35:32.357742
+ 275541000 | Undefined |     92 |     745 | 00:07:23.39827
+
+== Text: 27 of the 32 vessels came at 700 to 850 m of the surveyed area
+ at700to850 | vessels 
+------------+---------
+         27 |      32
+
+== Query: topography and amplitude of the soundings in the square, by survey
+== (-5.266 | 0.051 | 5072, -5.061 | 0.059 | 3636)
+             line              | meanz  | stddevz | meanamplitude 
+-------------------------------+--------+---------+---------------
+ 20190514_124053_kh1905_400khz | -5.266 |   0.051 |          5072
+ 20191022_085450_kh1910_400khz | -5.061 |   0.059 |          3636
+

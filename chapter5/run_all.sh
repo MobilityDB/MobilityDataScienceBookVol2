@@ -36,7 +36,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 cd "$HERE"
 SCRIPTS=${*:-raster_tutorial map_algebra depth_under_vessel fields_along_trips \
   grids_and_cells case_clearance case_sea_state case_noise case_traffic \
-  case_raquet exercises}
+  case_raquet case_seabed_field exercises}
 mkdir -p out
 status=0
 if [ "$(psql -X -At -c "SELECT count(*) FROM information_schema.columns
