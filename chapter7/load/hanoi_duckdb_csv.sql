@@ -36,7 +36,8 @@ LOAD '${MOBILITYDUCK_EXTENSION}';
 SET TimeZone = 'UTC';
 CREATE OR REPLACE TABLE Trips AS
 SELECT TripId, VehicleId,
-  tgeompointSeq(array_agg(transform(tgeompoint(ST_Point(PosX, PosY), t, 4326), 3857)
+  tgeompointSeq(array_agg(transform(tgeompoint(ST_SetCRS(ST_Point(PosX, PosY), 'EPSG:4326'), t),
+    3857)
     ORDER BY t)) AS Trip
 FROM read_csv('${HANOI_DIR}/tripsinput.csv', header = true, columns = {'TripId': 'INTEGER',
   'VehicleId': 'INTEGER', 'PosX': 'DOUBLE', 'PosY': 'DOUBLE', 't': 'TIMESTAMPTZ'})
