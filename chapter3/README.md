@@ -1,18 +1,21 @@
 ## Mobility Data Science: From Edge to Cloud Processing
 ### Alejandro Vaisman, Esteban Zimányi, with contributions by Leticia Gómez
 
-### Chapter 3: Temporal Geometries and Temporal Circular Buffers 
+### Chapter 3: Temporal Geometries, Circular Buffers, and Point Clouds
 
 This is the companion website of the book published by Springer.
 It contains the datasets used in the book alongside with the scripts
 allowing you to input these datasets in the various tools and reproduce the
 examples and exercises in the book.
 
-The chapter has two use cases: the wind fields of the Atlantic storms of 2024
-as temporal geometries, on the best tracks of the National Hurricane Center of
-NOAA, and the underwater noise of vessels as temporal circular buffers, on
-January 20, 2026, from the AIS database of the book. The scripts run against
-**PostgreSQL 18, PostGIS 3.6 and MobilityDB 1.4**.
+The chapter has three use cases: the wind fields of the Atlantic storms of
+2024 as temporal geometries, on the best tracks of the National Hurricane
+Center of NOAA, the underwater noise of vessels as temporal circular buffers,
+on January 20, 2026, from the AIS database of the book, and two multibeam
+surveys of the seabed off Rostock as temporal point clouds. The scripts run
+against **PostgreSQL 18, PostGIS 3.6 and MobilityDB 1.4**; the point clouds
+also need pgPointCloud and a MobilityDB that includes the pull request
+MobilityDB/MobilityDB#3245 (see below).
 
 ### The Wind Fields of the Atlantic Storms
 
@@ -155,3 +158,99 @@ distance between a temporal circular buffer and a point, at the circle
 MobilityDB answers. The databases are named by the PostgreSQL environment
 variables and by `AIS_DB` and `STORMS_DB` (default: `ais` and `storms`); `QGIS_PY` names the Python of QGIS, which is by default the QGIS
 3.40 installation of Windows called from WSL.
+
+### Temporal Point Clouds and the Seabed Surveys
+
+The scripts of the directory `soundings` load the two multibeam survey lines of
+the use case "Seabed Surveys" into the AIS database of the book, and run the
+listings of the section "Temporal Point Clouds", the queries of the use case,
+and Exercise 3.5. The subsection "Seabed Surveys as Observed Fields" of chapter
+5 reads the same tables (`../chapter5/case_seabed_field.sql`).
+
+#### Software
+
+Besides PostgreSQL 18 and PostGIS 3.6, the scripts need the extension
+`pointcloud` ([pgPointcloud](https://github.com/pgpointcloud/pointcloud) 1.2),
+and a MobilityDB built with its point clouds (`-DALL=ON`) from a master branch
+that includes the function `swath(tpcpatch)` and the pull request
+[MobilityDB/MobilityDB#3245](https://github.com/MobilityDB/MobilityDB/pull/3245),
+which writes a schema inserted into the tables `pointcloud_schemas` and
+`pointcloud_dimensions` of MobilityDB into the catalog `pointcloud_formats` of
+pgPointCloud. `load_soundings.sql` states the schema in the tables of MobilityDB
+only, and the function `pcpatch` of pgPointCloud, with which it builds the
+patches, reads `pointcloud_formats`: without #3245 it fails with
+`no entry in "public.pointcloud_formats" for pcid = 1`. The listings of the raw
+files are written by `mblist` and `mbnavlist` of
+[MB-System](https://github.com/dwcaress/MB-System) 5.8.2, whose master branch
+does not build with GDAL 3.8; `MBSYSTEM` names its installation (default:
+`$BOOK_ENV/mbsystem`).
+
+#### Dataset
+
+| Data | Source | Terms |
+|---|---|---|
+| Two survey lines at 400 kHz, `20190514_124053_kh1905_400khz.s7k` (2.1 GB) and `20191022_085450_kh1910_400khz.s7k` (1.1 GB) | Schulze, I., Feldens, P.: Multibeam echosounder data used for Seasonal Change of Multifrequency Backscatter in three Baltic Sea Habitats, [PANGAEA 945743 and 945782](https://doi.org/10.1594/PANGAEA.946056) | CC-BY-4.0; not suitable for navigation |
+
+#### Pipeline
+
+    cd soundings
+    export DATA=$PWD/data PGDATABASE=ais
+    bash fetch_soundings.sh          # the two raw files from PANGAEA
+    bash prep_soundings.sh           # their listings with MB-System
+    psql -f load_soundings.sql       # pcid 1, Pings, Swaths, Tracks, SurveyArea
+    bash run_all.sh                  # every script, out/ compared with expected/
+
+`prep_soundings.sh` writes, for each line, the CSV file of the soundings that
+`mblist` does not flag (the time of the ping, the ping number, the longitude,
+the latitude, the topography, the amplitude, and the beam) and the file `.nav`
+of the position of the vessel at each ping. `load_soundings.sql`, which takes
+about a minute and a half, builds:
+
+| Table | Content |
+|---|---|
+| `Pings` | One patch of the schema 1 (X, Y, Z, Amplitude, Beam, in EPSG:25832) per ping, with the survey line `Line` and the time `T` of the ping: 4,851 pings and 2,390,742 soundings in May, 3,358 pings and 1,643,152 soundings in October |
+| `Swaths` | One temporal patch with discrete interpolation per survey line, whose instants are the pings of the line |
+| `Tracks` | The trip of the vessel along each line as a `tgeompoint`, one position per ping, a position repeated by consecutive pings kept once |
+| `SurveyArea` | The area that the surveys cover, as their record at PANGAEA states it |
+
+The positions are transformed once into EPSG:25832, when the data are loaded.
+`fetch_data.sh soundings` and `load_all.sh soundings` of chapter 5 run the same
+scripts.
+
+#### Queries
+
+`run_all.sh` runs the scripts below on the database named by the PostgreSQL
+environment variables, writes the output of each one to `out/`, and compares it
+with `expected/`, the output of the run that gives the answers of the book on
+MobilityDB master with #3245. Each script states, before each listing, the
+answer the book prints.
+
+| Section of the chapter | Script |
+|---|---|
+| Temporal Point Clouds: a point and a temporal patch of the schema 1 | `point_clouds.sql` |
+| Use Case: Seabed Surveys: the survey lines, the swath against the traversed areas of the vessel over the whole October line and over ten seconds, and the queries on the square of 10 meters where the lines cross, with the numbers the text quotes | `case_soundings.sql` |
+| Exercise 3.5 | `exercises.sql` |
+
+#### Figures
+
+`figures/make_figures_soundings.sh`, which `figures/make_figures.sh` runs last,
+draws the figures of the point clouds and of the use case into `$OUT` from the
+tables of `load_soundings.sql` in `AIS_DB`:
+
+| Script | Layers | Figure |
+|---|---|---|
+| `export_survey_vessel.sh`, `job_pcl_swath.json`, `job_pcl_line.json` | The pings of the October line, as their footprints and their soundings, and the hull of the vessel at the same instants, every two seconds over the ten seconds from 08:54:50 to 08:55:00 (a) and at seven pings spread over the whole line (b), the trajectory of the antenna, and the swath of the pings, with the frame of (a) in (b) | `pointcloud_swath.pdf`, `pointcloud_line.pdf` |
+| `export_survey_vessel.sh`, `job_pcl_compare.json`, `overlay_pcl.py` | The trajectory of the antenna, the traversed areas of the vessel as a temporal circular buffer and as a temporal rigid geometry, and the swath, over the ten seconds, with the legend of the four temporal types | `pointcloud_compare.pdf`, `pointcloud_overlay.tex` |
+| `export_survey_vessel.sh`, `job_excerpt_rigid.json`, `job_excerpt_buffer.json`, `overlay_excerpt.py` | The traversed areas of the rigid geometry (a) and of the circular buffer (b) over the ten seconds, with their values every two seconds and the trajectory of the antenna | `excerpt_rigid.png`, `excerpt_buffer.png`, `excerpt_overlay.tex` |
+| `export_soundings.sh`, `job_soundings_overview.json`, `job_soundings_closeup.json`, `overlay_soundings.py` | The mean topography of the soundings of the two lines in cells of one meter, the trips of the vessel, and the square where the lines cross (a); the soundings within 1.5 meters of the center of the square (b) | `soundings_overview.png`, `soundings_closeup.png`, `soundings_overlay.tex` |
+| `export_soundings.sh`, `soundings_per_ping.tex` | The soundings that each ping put into the square, from the aggregate `tnpoints`, plotted with pgfplots | `soundings_per_ping_20190514.csv`, `soundings_per_ping_20191022.csv` |
+| `scalebars.py` | The scale bars of the maps of the moving regions: the noise region, the hull, and the point cloud over ten seconds and over the whole line, and the four temporal types | `ais_noise_region_scaled.tex`, `ais_hull_turn_scaled.tex`, `pointcloud_swath_scaled.tex`, `pointcloud_line_scaled.tex`, `pointcloud_compare_scaled.tex` |
+
+`export_survey_vessel.sh` places the vessel as the queries of
+`case_soundings.sql` do, computes the swath with the function `swath` of
+MobilityDB, and takes the extent of the frame from `job_pcl_swath.json`.
+`hybrid_pdf.py` draws the three jobs `job_pcl_*.json` as vector PDFs, and
+`render.sh` of chapter 5 the four other jobs as the images their `output`
+names. The overlays write the LaTeX that the book inputs, with the labels, the
+legends, and the scale bars in the style of the captions; `overlay_excerpt.py`
+reads the areas of its two captions from the database.

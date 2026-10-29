@@ -70,10 +70,12 @@ for chap, rs in rows.items():
     other = [r for r in rs if r not in script and r not in drawing]
     named = set(re.findall(r'`([^`]+\.(?:py|sh|sql|ipynb|java|R))`', ' '.join(r[3] for r in rs)))
     missing = sorted(n for n in named if n not in tree)
+    # A figure of one chapter may include files of the directory of another,
+    # named with that directory (chap5/...), so every row of FIGURES.md counts
     files = set()
-    for r in rs:
+    for r in (r for rs2 in rows.values() for r in rs2):
         for f in re.findall(r'`([^`]+)`', r[2]):
-            files.add(os.path.splitext(f)[0])
+            files.add(os.path.splitext(os.path.basename(f))[0])
     d = os.path.join(BOOK, 'figs', f'chap{chap}') if chap.isdigit() else None
     unlisted = []
     if d and os.path.isdir(d):
