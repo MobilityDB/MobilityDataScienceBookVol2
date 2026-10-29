@@ -33,8 +33,11 @@
 -- transformed ONCE, here, from longitude and latitude to EPSG:25832. MobilityDB
 -- writes the schema into the catalog pointcloud_formats of pgPointCloud, which
 -- the function pcpatch of pgPointCloud reads (MobilityDB/MobilityDB#3245).
+-- CREATE EXTENSION installs MobilityDB with PostGIS and pgPointCloud.
 --
---   psql -d ais -f load_soundings.sql
+--   createdb soundings
+--   psql -d soundings -f load_soundings.sql
+CREATE EXTENSION IF NOT EXISTS mobilitydb CASCADE;
 DELETE FROM pointcloud_dimensions WHERE pcid = 1;
 DELETE FROM pointcloud_schemas WHERE pcid = 1;
 INSERT INTO pointcloud_schemas (pcid, srid, compression, description)

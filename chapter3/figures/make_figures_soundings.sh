@@ -24,7 +24,8 @@
 
 # Draw the figures of the temporal point clouds and of the use case on seabed
 # surveys into $OUT (default: out/ below the working directory), from the
-# tables that ../soundings/load_soundings.sql adds to AIS_DB (default: ais):
+# tables that ../soundings/load_soundings.sql loads into SOUNDINGS_DB (default:
+# soundings):
 # - export_survey_vessel.sh writes the layers of the survey vessel on its
 #   October line, from which hybrid_pdf.py draws the vector PDFs of the point
 #   cloud of ten seconds (job_pcl_swath.json, pointcloud_swath.pdf) and of the
@@ -48,7 +49,7 @@ set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
 CH5="$HERE/../../chapter5/figures"
 export OUT=${OUT:-$PWD/out}
-export PGDATABASE=${AIS_DB:-ais}
+export PGDATABASE=${SOUNDINGS_DB:-soundings}
 mkdir -p "$OUT"
 bash "$HERE/export_survey_vessel.sh"
 bash "$HERE/export_soundings.sh"

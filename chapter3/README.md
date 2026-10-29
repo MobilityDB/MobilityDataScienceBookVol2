@@ -156,13 +156,14 @@ with the Python named by `PIKEPDF_PY` (with `pikepdf` and `shapely`). The script
 draws with `fig_dist_tcbuffer_point.py` the turning point of the temporal
 distance between a temporal circular buffer and a point, at the circle
 MobilityDB answers. The databases are named by the PostgreSQL environment
-variables and by `AIS_DB` and `STORMS_DB` (default: `ais` and `storms`); `QGIS_PY` names the Python of QGIS, which is by default the QGIS
+variables and by `AIS_DB`, `STORMS_DB` and `SOUNDINGS_DB` (default: `ais`, `storms` and
+`soundings`); `QGIS_PY` names the Python of QGIS, which is by default the QGIS
 3.40 installation of Windows called from WSL.
 
 ### Temporal Point Clouds and the Seabed Surveys
 
 The scripts of the directory `soundings` load the two multibeam survey lines of
-the use case "Seabed Surveys" into the AIS database of the book, and run the
+the use case "Seabed Surveys" into a database of their own, `soundings`, and run the
 listings of the section "Temporal Point Clouds", the queries of the use case,
 and Exercise 3.5.
 
@@ -193,7 +194,8 @@ does not build with GDAL 3.8; `MBSYSTEM` names its installation (default:
 #### Pipeline
 
     cd soundings
-    export DATA=$PWD/data PGDATABASE=ais
+    export DATA=$PWD/data PGDATABASE=soundings
+    createdb soundings
     bash fetch_soundings.sh          # the two raw files from PANGAEA
     bash prep_soundings.sh           # their listings with MB-System
     psql -f load_soundings.sql       # pcid 1, Pings, Swaths, Tracks
@@ -233,7 +235,7 @@ answer the book prints.
 
 `figures/make_figures_soundings.sh`, which `figures/make_figures.sh` runs last,
 draws the figures of the point clouds and of the use case into `$OUT` from the
-tables of `load_soundings.sql` in `AIS_DB`:
+tables of `load_soundings.sql` in `SOUNDINGS_DB` (default: `soundings`):
 
 | Script | Layers | Figure |
 |---|---|---|

@@ -27,7 +27,7 @@
 -- seabed surveys, which load_soundings.sql builds. The \echo before each query
 -- states the answer the book prints, as in case_soundings.sql.
 --
---   psql -d ais -f exercises.sql
+--   psql -d soundings -f exercises.sql
 SET TimeZone = 'UTC';
 SET client_min_messages = warning;
 \pset footer off

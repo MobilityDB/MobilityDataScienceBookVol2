@@ -32,7 +32,7 @@
 -- Every table is in EPSG:25832, so no query transforms a geometry. The \echo
 -- before each listing states the answer the book prints.
 --
---   psql -d ais -f case_soundings.sql
+--   psql -d soundings -f case_soundings.sql
 SET TimeZone = 'UTC';
 SET client_min_messages = warning;
 \pset footer off
