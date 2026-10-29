@@ -1,13 +1,13 @@
-pointid,Place
-8,"The points are located in Hai Ba Trung district, near Hoan Kiem lake."
-33,"POINT (11731985.057261674 2435241.012344321) is in Hoan Kiem district of Hanoi, Vietnam. Closest point of interest: Hoan Kiem Lake."
-39,"{ ""district"": ""Hoan Kiem"", ""description"": ""Ngoc Son Temple"" }"
-45,Bach Mai Hospital
-51,Hanoi's Old Quarter: Closest point of interest - Hoan Kiem Lake
-56,"The district in Hanoi, Vietnam where the point is located is Ba Dinh. Closest point of interest: Ho Chi Minh Mausoleum."
-78,"POINT (11794126.02378738 2394281.040772447) is located in Hoan Kiem district, Hanoi, Vietnam; closest point of interest: One Pillar Pagoda."
-80,"District: Ba Dinh, Closest point of interest: Ho Chi Minh Mausoleum"
-85,POINT (11783387.945330376 2391170.201268918)
-90,Ha Noi's Hoan Kiem District: Closest point of interest is Ngoc Son Temple
-94,default
-96,"The point is located in Hoan Kiem district, Hanoi, Vietnam. Closest point of interest: Ngoc Son Temple."
+PointId,Place
+8,"The closest point of interest in Ba Dinh District, Hanoi, Vietnam is the Ho Chi Minh Mausoleum."
+33,"Point transformed to SRID=4326: POINT (13444385.057261674 2465241.012344321) is located in Hoan Kiem district, Hanoi, Vietnam. Nearest point of interest: Lenin Park."
+39,"District 10, Hanoi - nearest point of interest: Hoang Gia Hotel"
+45,"The points are located in Hoan Kiem district, Hanoi, Vietnam."
+51,District: Hoan Kiem; Description: Ngoc Son Temple
+56,"District: Hoan Kiem, Description: Ngoc Son Temple"
+78,"The closest point of interest in Ba Dinh district, Hanoi, Vietnam is Ho Chi Minh Mausoleum."
+80,"The closest point of interest in Ba Dinh District, Hanoi, Vietnam is a famous landmark."
+85,"The point is located in Hoan Kiem District, Hanoi, Vietnam, near Hoan Kiem Lake."
+90,Hanoi Old Quarter; Closest point of interest: St. Joseph's Cathedral
+94,"{ ""district"": ""Ba Đình"", ""description"": ""Ho Chi Minh Mausoleum"" }"
+96,"Point (11721045.011852525 2431316.0138598727) is located in Hoan Kiem district, Hanoi, Vietnam; closest point of interest: Ngoc Son Temple"

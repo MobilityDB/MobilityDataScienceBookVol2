@@ -1,4 +1,4 @@
-Id,vehicletype,categoryDesc
-1,bus,"Vehicles in the Sachsenring category: Characteristics of Sachsenring vehicles - They are high-performance sports cars, designed for speed and agility. They often have sleek designs, advanced aerodynamics, and powerful engines, making them ideal for track days and competitive racing."
-2,passenger,"Category: Vehicle, Type: Mercedes-Benz, Characteristics: Luxury Car"
-3,truck,Multicar: type A - Category: Vehicles - Characteristics: Modern
+Id,VehicleType,categoryDesc
+1,bus,"Road Vehicle: The vehicles categorized as 'Road Vehicle' typically possess attributes such as stability, reliability, and efficiency. Their capabilities are best utilized on paved roads, prioritizing speed, comfort, and safety."
+2,passenger,"Category: Vehicles - Luxury/High-End: The 'Multicar' category is known for featuring luxurious and high-end vehicles with iconic designs, exceptional performance capabilities, and premium features. As a manufacturer specializing in exceptional vehicles, this category offers various models that prioritize luxury, comfort, and refinement, catering to customers seeking exclusive driving experiences."
+3,truck,"Volkswagen Characteristics: Volkswagen is generally recognized as a popular mass-market brand known for its reliability, affordability, and wide range of models. The vehicles in this category typically have modern designs, fuel-efficient engines, and innovative features."

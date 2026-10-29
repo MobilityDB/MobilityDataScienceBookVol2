@@ -150,9 +150,11 @@ captions.
 
 #### Flock
 
-The five Flock pipelines run on DuckDB v1.5.5 with Flock from the community repository and two
+The five Flock pipelines run on DuckDB v1.5.6 with Flock from the community repository and two
 models served by Ollama 0.24.0: `llama3` (Llama 3 8B) and `gpt-oss:20b`, here on an NVIDIA
-GeForce RTX 3060 Laptop GPU. From `flock/`,
+GeForce RTX 3060 Laptop GPU. A later Ollama refuses the `llama3` embeddings of pipeline 5, and
+the Ollama registry refuses `gpt-oss:20b` to a 0.24.0 client, so a newer client downloads that
+model once and 0.24.0 serves it (`flock/results/run.log`). From `flock/`,
 `../run_duckdb.sh "$CH7_DB_DIR/hanoi.duckdb" export_tables.sql` writes the three tables they
 read as Parquet files, and `duckdb flock.duckdb -c ".read flock_pipelines.sql"` runs them. The answers of a language model
 vary from one run to the next, so `flock/results/` holds the results that the tables of the

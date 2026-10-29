@@ -1,11 +1,11 @@
-pointid,Geom,PlaceDesc
-8,POINT (11784854.100947766 2365608.084502561),"POINT (20.83 105.93), Hai Ba Trung, Hanoi – historic Cao Thang Tower"
-33,POINT (11731985.057261674 2435241.012344321),"Ba Dinh, Hoan Kiem Lake – historic city center."
-39,POINT (11779808.211069088 2422136.256841611),"POINT (11779808.211069088 2422136.256841611) -> 21.3°N, 105.9°E: Hai Bà Trưng district, Hanoi. Closest POI: Ho Chi Minh Mausoleum"
-51,POINT (11767859.789184537 2424171.701651083),"Gia Lâm – Hanoi Railway Station, major transport hub."
-56,POINT (11759864.723168222 2412104.8546169125),"Point (21.14° N, 105.84° E) lies in Ba Đình, Hanoi. Closest point of interest: historic government buildings."
-78,POINT (11794126.02378738 2394281.040772447),"Ba Đình – Historic mausoleum, national symbol"
-80,POINT (11781671.743872764 2361827.8918789104),"Lat 20.45, Lon 105.90 – Gia Lam district, Hanoi. Closest POI: Ho Chi Minh Mausoleum – historic memorial."
-85,POINT (11783387.945330376 2391170.201268918),"Point (11783387.9453, 2391170.2013) → 20.95° N, 105.86° E, located in Hanoi's Đống Đa district; closest POI: Ho Chi Minh Mausoleum."
-90,POINT (11803795.023250649 2429396.7718316033),"Latitude: 21.2° N, Longitude: 106.1° E. District: Ba Đình (Hanoi). POI: Ho Chi Minh Mausoleum – historic landmark."
-94,POINT (11785236.182836017 2389399.3340303455),"Gia Lâm, Hanoi: Scenic lake park"
+PointId,Geom,PlaceDesc
+8,POINT (11784854.100947766 2365608.084502561),"POINT (11784854.100947766 2365608.084502561) → Lat ≈ 20.2°, Lon ≈ 105.9° (Hanoi district: Cầu Giấy). POI: Hanoi Citadel, historic site."
+33,POINT (11731985.057261674 2435241.012344321),"Latitude: 20.80°, Longitude: 105.50° – Ba Vi, Hanoi: Ba Vi National Park"
+39,POINT (11779808.211069088 2422136.256841611),"Bắc Từ Liêm district, Historic train station"
+51,POINT (11767859.789184537 2424171.701651083),"Cầu Giấy district, modern shopping mall"
+56,POINT (11759864.723168222 2412104.8546169125),Hoang Mai; Old Hanoi railway station
+78,POINT (11794126.02378738 2394281.040772447),"Hanoi, Ba Đình District, near Hoàn Kiếm Lake – historic center."
+80,POINT (11781671.743872764 2361827.8918789104),"Latitude: 20.73°, Longitude: 105.93°. District: Gia Lam (Hanoi). Closest POI: Near Gia Lam district, close to Vietnam Military Academy."
+85,POINT (11783387.945330376 2391170.201268918),"Hoan Kiem; nearest POI: Hoan Kiem Lake, historic city center"
+90,POINT (11803795.023250649 2429396.7718316033),"District 10, Hanoi – Historic lake, iconic city center."
+94,POINT (11785236.182836017 2389399.3340303455),District 5 – Hanoi's historic old town center

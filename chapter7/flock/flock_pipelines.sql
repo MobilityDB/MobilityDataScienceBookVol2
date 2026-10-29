@@ -23,7 +23,7 @@
  *
  *****************************************************************************/
 
--- The five Flock examples of chapter 7 (Queries pipeline1 to pipeline5), on DuckDB v1.5.5 with
+-- The five Flock examples of chapter 7 (Queries pipeline1 to pipeline5), on DuckDB v1.5.6 with
 -- Flock from the community repository and two Ollama models: llama3 and gpt-oss:20b.
 -- Run from this directory, after export_tables.sql has written the three Parquet files:
 --

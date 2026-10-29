@@ -1,101 +1,76 @@
--- Setting: Ollama 0.24.0 (ollama serve with OLLAMA_CONTEXT_LENGTH=8192); results/flock_pipelines_run.sql = the kit's
--- script with "max_batch_size": 1 in both CREATE MODEL statements and "think": "low" for gpt-oss.
--- Why Ollama 0.24.0: from 0.30.0 Ollama runs models through llama-server and starts it with --embedding
--- only for models whose metadata has pooling_type, so 0.40.4 refuses llama3 embeddings ('This server does
--- not support embeddings', pipeline5 of run_ollama0.40.4.log); 0.24.0 returns llama3's 4096-dimension embedding.
--- Earlier attempts, kept with their logs:
---  run_batch32.log (Ollama 0.40.4, the kit as is, 4096-token default context): pipeline1 'Failed to parse
---    streaming response' after 271.7 s. At the default reasoning gpt-oss:20b thinks 3955 tokens on one pipeline1
---    row and fills the 4096-token context before answering (233 s); with "think": "low" it answers in 354 tokens (36 s).
---  run_batch1.log (0.40.4, "max_batch_size": 1, default reasoning): pipeline1 'Empty streaming response (HTTP 0)'
---    at 600 s: Flock sends a chunk's requests at once with a fixed 600 s curl timeout, Ollama serves them in turn.
---  run_batch32_thinklow.log + attempt_batch32_thinklow/ (0.40.4, "max_batch_size": 32, "think": "low", 8192
---    context): llama3 answers a batch for its first rows only (pipeline2: 13 of 15 'None'; pipeline3: half the
---    places are the input point); pipeline4 'Failed to parse streaming response'.
---  run_ollama0.40.4.log + attempt_ollama0.40.4/ (0.40.4, this setting): pipelines 1-4 complete, pipeline5 refused.
-Run Time (s): real 0.001 user 0.000571 sys 0.000190
-Run Time (s): real 0.047 user 0.187647 sys 0.057136
+-- Setting: DuckDB v1.5.6 (069cc9f9b5) with spatial 04270fe and Flock b719767d from the community
+-- repository; Ollama 0.24.0 (ollama serve with OLLAMA_CONTEXT_LENGTH=8192) serving llama3
+-- (368f4f3f44d0) and gpt-oss:20b (a0b38d0b19f7) on an NVIDIA GeForce RTX 3060 Laptop GPU;
+-- flock_pipelines.sql of this directory ("max_batch_size": 1 in both CREATE MODEL statements,
+-- "think": "low" for gpt-oss), over the Parquet files that export_tables.sql writes from the
+-- Hanoi database of load/hanoi_duckdb_csv.sql.
+-- Why Ollama 0.24.0: from 0.30.0 Ollama runs models through llama-server and starts it with
+-- --embedding only for models whose metadata has pooling_type, so it refuses the llama3
+-- embeddings of pipeline5 ('This server does not support embeddings'); 0.24.0 returns llama3's
+-- 4096-dimension embedding. The Ollama registry refuses gpt-oss:20b to a 0.24.0 client ("requires
+-- a newer version of Ollama"), so a newer client downloads it once; 0.24.0 serves it.
+Run Time (s): real 0.002 user 0.000366 sys 0.000488
+Run Time (s): real 0.058 user 0.201427 sys 0.069349
 ┌─────────┐
 │ Success │
 │ boolean │
 ├─────────┤
 │ true    │
 └─────────┘
-Run Time (s): real 0.001 user 0.000511 sys 0.000156
-Run Time (s): real 0.260 user 0.005300 sys 0.000616
-Run Time (s): real 0.236 user 0.003053 sys 0.004258
-Run Time (s): real 0.305 user 0.002507 sys 0.000796
+Run Time (s): real 0.003 user 0.000000 sys 0.001682
+Run Time (s): real 0.010 user 0.002043 sys 0.001053
+Run Time (s): real 0.016 user 0.001673 sys 0.007246
+Run Time (s): real 0.008 user 0.002777 sys 0.001244
 ┌────────────────────────────┐
 │           status           │
 │          varchar           │
 ├────────────────────────────┤
 │ Model created successfully │
 └────────────────────────────┘
-Run Time (s): real 0.007 user 0.004432 sys 0.000000
+Run Time (s): real 0.012 user 0.000890 sys 0.005489
 ┌────────────────────────────┐
 │           status           │
 │          varchar           │
 ├────────────────────────────┤
 │ Model created successfully │
 └────────────────────────────┘
-Run Time (s): real 0.006 user 0.004517 sys 0.000688
+Run Time (s): real 0.011 user 0.002740 sys 0.003021
 ┌─────────────────────────────┐
 │           status            │
 │           varchar           │
 ├─────────────────────────────┤
 │ Prompt created successfully │
 └─────────────────────────────┘
-Run Time (s): real 0.006 user 0.000829 sys 0.003580
-Run Time (s): real 531.693 user 531.785911 sys 0.311987
-Run Time (s): real 0.034 user 0.015722 sys 0.004002
-Run Time (s): real 0.027 user 0.027768 sys 0.000003
+Run Time (s): real 0.008 user 0.002311 sys 0.002805
+Run Time (s): real 591.224 user 0.259539 sys 0.275718
+Run Time (s): real 0.055 user 0.030064 sys 0.010889
+Run Time (s): real 0.031 user 0.025502 sys 0.008198
 ┌─────────────────────────────┐
 │           status            │
 │           varchar           │
 ├─────────────────────────────┤
 │ Prompt created successfully │
 └─────────────────────────────┘
-Run Time (s): real 0.067 user 0.036179 sys 0.012005
-Run Time (s): real 51.559 user 51.598113 sys 0.036020
-Run Time (s): real 0.005 user 0.005930 sys 0.000001
-Run Time (s): real 0.005 user 0.004551 sys 0.000004
+Run Time (s): real 0.092 user 0.024371 sys 0.029073
+Run Time (s): real 90.816 user 90.794851 sys 0.088768
+Run Time (s): real 0.004 user 0.003782 sys 0.000000
+Run Time (s): real 0.003 user 0.004134 sys 0.000000
 ┌─────────────────────────────┐
 │           status            │
 │           varchar           │
 ├─────────────────────────────┤
 │ Prompt created successfully │
 └─────────────────────────────┘
-Run Time (s): real 0.012 user 0.011453 sys 0.000002
-Run Time (s): real 21.740 user 21.765474 sys 0.027989
-Run Time (s): real 0.008 user 0.007843 sys 0.000000
-Run Time (s): real 132.105 user 131.316914 sys 0.815940
-Run Time (s): real 0.035 user 0.018058 sys 0.011989
-Run Time (s): real 0.035 user 0.015424 sys 0.011998
-Invalid Error: Model not found
-Run Time (s): real 58.104 user 58.162208 sys 0.068020
--- Pipeline4 above stopped with 'Model not found' (Flock's lookup in its model table returned no row,
--- src/model_manager/model.cpp:209); pipelines 4 and 5 are rerun below on the same flock.duckdb with
--- results/flock_pipelines_run_4_5.sql, which lists the stored models first.
-Run Time (s): real 0.049 user 0.324939 sys 0.060726
-┌─────────┐
-│ Success │
-│ boolean │
-├─────────┤
-│ true    │
-└─────────┘
-Run Time (s): real 0.002 user 0.001095 sys 0.000292
-┌───────────────────┬─────────────┐
-│    model_name     │    model    │
-│      varchar      │   varchar   │
-├───────────────────┼─────────────┤
-│ flockmodel-llama  │ llama3      │
-│ flockmodel-gptoss │ gpt-oss:20b │
-└───────────────────┴─────────────┘
-Run Time (s): real 0.001 user 0.000557 sys 0.000149
-Run Time (s): real 498.149 user 498.517980 sys 0.433537
-Run Time (s): real 0.005 user 0.003948 sys 0.000004
-Run Time (s): real 0.003 user 0.000000 sys 0.003462
-Run Time (s): real 0.369 user 0.019379 sys 0.000504
+Run Time (s): real 0.014 user 0.008301 sys 0.003999
+Run Time (s): real 25.286 user 25.259684 sys 0.043941
+Run Time (s): real 0.005 user 0.005861 sys 0.000010
+Run Time (s): real 121.627 user 0.052136 sys 0.067969
+Run Time (s): real 0.012 user 0.006930 sys 0.003991
+Run Time (s): real 0.002 user 0.000000 sys 0.003568
+Run Time (s): real 946.473 user 923.091733 sys 1.697677
+Run Time (s): real 0.027 user 0.004323 sys 0.011975
+Run Time (s): real 0.006 user 0.007987 sys 0.000000
+Run Time (s): real 0.679 user 0.030633 sys 0.031944
 ┌───────┬───────────┐
 │  Id   │ dimension │
 │ int64 │   int64   │
@@ -104,7 +79,7 @@ Run Time (s): real 0.369 user 0.019379 sys 0.000504
 │     2 │      4096 │
 │     3 │      4096 │
 └───────┴───────────┘
-Run Time (s): real 0.001 user 0.001660 sys 0.000002
-Run Time (s): real 0.010 user 0.007634 sys 0.000000
-Run Time (s): real 0.006 user 0.005996 sys 0.000002
-Run Time (s): real 0.005 user 0.004507 sys 0.000000
+Run Time (s): real 0.007 user 0.004149 sys 0.000000
+Run Time (s): real 0.016 user 0.010663 sys 0.000000
+Run Time (s): real 0.005 user 0.003862 sys 0.003991
+Run Time (s): real 0.005 user 0.002407 sys 0.003991
