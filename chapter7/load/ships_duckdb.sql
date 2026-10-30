@@ -37,7 +37,8 @@ CREATE OR REPLACE TABLE ships (MMSI integer, Trip tgeompoint, SOG tfloat,
 
 INSERT INTO ships
 SELECT MMSI, Trip, SOG, COG
-FROM postgres_scan('${PG_AIS}', 'public', 'ships');
+FROM postgres_scan('${PG_AIS}', 'public', 'ships')
+ORDER BY MMSI;
 
 SET threads=1;
 SET memory_limit='7000MB';
