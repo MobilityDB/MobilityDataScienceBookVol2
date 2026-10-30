@@ -21,7 +21,6 @@
 # PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #
 
-# SPDX-License-Identifier: PostgreSQL
 """Map the Vietnamese letters of the T5 encoding of Latin Modern to their codes.
 
 The tables of chapter 7 write a Vietnamese letter absent from the T1 encoding as

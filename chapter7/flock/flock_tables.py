@@ -21,7 +21,6 @@
 # PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #
 
-# SPDX-License-Identifier: PostgreSQL
 """Write the rows of the Flock result tables of chapter 7 from the files of results/.
 
 The rows are those of the tables tab:example1res to tab:example5res of chapter 7,
