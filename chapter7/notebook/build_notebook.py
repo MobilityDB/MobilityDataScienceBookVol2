@@ -66,14 +66,22 @@ def preamble(variables, database, extra=''):
                 "con.execute('INSTALL spatial')\n"
                 "con.execute('LOAD spatial')\n" + extra + '\n\n'
                 'def run(sql, rows=20):\n'
-                '    """Run the statements of a listing and show the first rows of the answer of the\n'
-                '    last one; only these rows are fetched, so that an answer of millions of rows, such\n'
+                '    """Run the statements of a listing one by one and show the first rows of the\n'
+                '    answer of the last query among them, the one whose answer the chapter prints: a\n'
+                '    SELECT or an EXPLAIN, or a statement answering other columns than the lone status,\n'
+                '    Count or Success, of an INSERT, an UPDATE, a LOAD or a CREATE INDEX (a PIVOT is a\n'
+                '    CREATE that answers its table). Only these rows are fetched, so that an answer of\n'
+                '    millions of rows, such\n'
                 '    as that of SELECT * EXCLUDE (SOG) FROM AISInput, stays in DuckDB."""\n'
                 + REPLACE +
-                '    rel = con.execute(sql)\n'
-                '    if not rel.description:\n'
-                '        return None\n'
-                '    return pd.DataFrame(rel.fetchmany(rows), columns=[d[0] for d in rel.description])')
+                '    shown = None\n'
+                '    for st in con.extract_statements(sql):\n'
+                '        rel = con.execute(st)\n'
+                '        cols = [d[0] for d in rel.description] if rel.description else []\n'
+                '        if cols and (st.type in (duckdb.StatementType.SELECT, duckdb.StatementType.EXPLAIN)\n'
+                "                     or cols not in (['Count'], ['Success'])):\n"
+                '            shown = pd.DataFrame(rel.fetchmany(rows), columns=cols)\n'
+                '    return shown')
 
 
 if dataset == 'ais':
