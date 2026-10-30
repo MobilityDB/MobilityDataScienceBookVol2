@@ -21,9 +21,8 @@
 # PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #
 
-"""Figures of the DuckDB section of Chapter 7 (AIS, January 20, 2026), drawn with the Folium code
-of the companion notebook chapter7/mobilityDuckAIS.ipynb (cells of Queries 6.6, 6.8, 6.9 and
-6.10) over the OpenFreeMap vector basemap, from the CSV files written by duck_figdata.sql.
+"""Figures of the DuckDB section of Chapter 7 (AIS, January 20, 2026), drawn with Folium over the
+OpenFreeMap vector basemap, from the CSV files written by duck_figdata.sql.
 Each map has a fixed extent and pixel size."""
 import math
 import sys

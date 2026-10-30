@@ -17,24 +17,27 @@ The extension loads only into the DuckDB version of its build.
 
 1. Install the DuckDB Python client of that version: `pip install duckdb==1.5.6`. To run the
    notebooks from the command line, as `notebook/run_notebook.py` does, install their kernel and
-   runner too: `pip install nbclient ipykernel`. The Hanoi notebook also imports the packages of
-   its maps and charts: `pip install contextily seaborn`.
+   runner too: `pip install nbclient ipykernel`.
 2. Obtain the extension `mobilityduck.duckdb_extension` for your platform, either from the
    artifacts of the latest successful run of the
    [Main Extension Distribution Pipeline](https://github.com/MobilityDB/MobilityDuck/actions/workflows/MainDistributionPipeline.yml)
-   on the `main` branch, or by building MobilityDuck as its README explains. Both notebooks read
-   its path from `MOBILITYDUCK_EXTENSION`, and `hanoi-book.ipynb` reads the Hanoi database of
-   PostgreSQL from `PG_HANOI`, the variables of the section on reproducing the chapter below.
-   `mobilityDuckAIS.ipynb` holds every listing of the chapter that reads the AIS data, in the
-   order of the chapter, and reads from the environment `MOBILITYDUCK_EXTENSION`, `AIS_DIR` and
-   `PG_AIS`, the variables of the section on reproducing the chapter below.
-   The folder `notebook` writes it from the chapter and runs it: `ais_listings.py` reads the
-   listings of `chapter7.tex` that read the AIS tables, `build_notebook.py` makes one cell of
-   each, and `run_notebook.py` executes the notebook in place, with the variables above set:
+   on the `main` branch, or by building MobilityDuck as its README explains. Both notebooks are
+   written from the chapter and read from the environment the variables of the section on
+   reproducing the chapter below: `mobilityDuckAIS.ipynb` holds every listing of the chapter that
+   reads the AIS data and reads `MOBILITYDUCK_EXTENSION`, `AIS_DIR` and `PG_AIS`;
+   `hanoi-book.ipynb` holds every SQL listing of the section "BerlinMOD Hanoi", after a first cell
+   that reads the Hanoi tables from PostgreSQL with `load/hanoi_duckdb.sql`, and reads
+   `MOBILITYDUCK_EXTENSION` and `PG_HANOI`. Both are in the order of the chapter.
+   The folder `notebook` writes them from the chapter and runs them: `listings.py` reads the
+   listings of `chapter7.tex` that a notebook runs, `build_notebook.py` makes one cell of each,
+   and `run_notebook.py` executes the notebook in place, with the variables above set:
 
-       python3 notebook/ais_listings.py chapter7.tex ais_listings.json
-       python3 notebook/build_notebook.py ais_listings.json mobilityDuckAIS.ipynb
+       python3 notebook/listings.py chapter7.tex ais ais_listings.json
+       python3 notebook/build_notebook.py ais ais_listings.json mobilityDuckAIS.ipynb
        python notebook/run_notebook.py mobilityDuckAIS.ipynb mobilityDuckAIS.ipynb
+       python3 notebook/listings.py chapter7.tex hanoi hanoi_listings.json
+       python3 notebook/build_notebook.py hanoi hanoi_listings.json hanoi-book.ipynb
+       python notebook/run_notebook.py hanoi-book.ipynb hanoi-book.ipynb
 3. The extension is not signed by DuckDB, so the notebooks open DuckDB with
    `allow_unsigned_extensions` (in the DuckDB shell, start it with `duckdb -unsigned`).
 4. The notebooks install the spatial extension the DuckDB repository distributes
@@ -129,7 +132,7 @@ parts that the figures show (`queryduckdbproc_a`, `queryduckdbproc_b`, `querypro
 
 #### Map figures
 
-The maps of the chapter are drawn with the Folium code of the notebooks, over the OpenMapTiles
+The maps of the chapter are drawn with Folium, over the OpenMapTiles
 vector tiles of OpenFreeMap drawn by Leaflet.VectorGrid (`figures/vtiles.py`, styles in
 `figures/omtstyle.py`), printed to vector PDF by headless Chromium (`figures/vgprint.py`;
 `figures/vghybrid.py` embeds a dense marker or trip layer as one lossless image of the pixels of

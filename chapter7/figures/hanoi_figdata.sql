@@ -23,8 +23,8 @@
  *
  *****************************************************************************/
 
--- Data of the maps of the BerlinMOD-Hanoi section of Chapter 7, in the DuckDB database of the
--- companion notebook hanoi-book.ipynb, from the listings of the chapter: the DuckDB twin of
+-- Data of the maps of the BerlinMOD-Hanoi section of Chapter 7, in the Hanoi database of DuckDB
+-- that load/hanoi_duckdb.sql builds, from the listings of the chapter: the DuckDB twin of
 -- hanoi_figdata_pg.sql, with the same columns, orders and simplifications. The geometries are
 -- in longitude and latitude for Folium (the clipped trajectories of tripdistricts stay in
 -- EPSG:3857). The trajectories drawn at city scale are simplified with a tolerance of 1 m

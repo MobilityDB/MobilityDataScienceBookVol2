@@ -23,26 +23,39 @@
 #
 
 # SPDX-License-Identifier: PostgreSQL
-"""Print the SQL listings of chapter7.tex that read the AIS tables (AISInput, Ships), with the
-line of each listing and the statement of the query it belongs to, in the order of the chapter.
+"""Print the SQL listings of chapter7.tex that a notebook of this chapter runs, with the line of
+each listing and the statement of the query it belongs to, in the order of the chapter:
+- ais: every listing that reads the AIS tables (AISInput, Ships), for mobilityDuckAIS.ipynb;
+- hanoi: every SQL listing of the subsection "BerlinMOD Hanoi" (sec:berlinmodhanoi), for
+  hanoi-book.ipynb.
 
-Usage: python3 ais_listings.py <chapter7.tex> <out.json>
+Usage: python3 listings.py <chapter7.tex> ais|hanoi <out.json>
 """
 import json
 import re
 import sys
 
 src = open(sys.argv[1], encoding='utf-8').read()
+dataset = sys.argv[2]
+if dataset == 'hanoi':
+    lo = src.index('\\label{sec:berlinmodhanoi}')
+    nxt = re.compile(r'\\(sub)*section\{').search(src, lo)
+    hi = nxt.start() if nxt else len(src)
+elif dataset != 'ais':
+    sys.exit('dataset: ais or hanoi')
 out = []
 for m in re.finditer(r'\\begin\{lstlisting\}(\[[^\]]*\])?\n(.*?)\\end\{lstlisting\}', src, re.S):
     body = m.group(2)
-    if not re.search(r'\b(AISInput|ships|Ships)\b', body):
+    if dataset == 'ais':
+        if not re.search(r'\b(AISInput|ships|Ships)\b', body):
+            continue
+    elif not (lo <= m.start() < hi and 'language=mySQL' in (m.group(1) or '')):
         continue
     line = src.count('\n', 0, m.start()) + 1
     before = src[max(0, m.start() - 1500):m.start()]
     q = re.findall(r'\\begin\{query\}.*?\\textit\{(.*?)\}', before, re.S)
     out.append({'line': line, 'query': q[-1].strip() if q else '', 'sql': body})
-json.dump(out, open(sys.argv[2], 'w'), indent=1)
+json.dump(out, open(sys.argv[3], 'w'), indent=1)
 for o in out:
     first = o['sql'].strip().splitlines()[0][:70]
     print(o['line'], '|', o['query'][:60], '|', first)

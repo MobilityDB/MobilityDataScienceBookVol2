@@ -21,9 +21,8 @@
 # PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #
 
-"""Figures of the BerlinMOD-Hanoi section of Chapter 7, drawn with the Folium code of the
-companion notebook chapter7/hanoi-book.ipynb (cells of Figs. tripsHanoi to tripsinstants) over the
-SVG vector basemap of `#VectorTiles` printed in the chapter (vtiles.py),
+"""Figures of the BerlinMOD-Hanoi section of Chapter 7 (Figs. tripsHanoi to tripsinstants), drawn
+with Folium over the SVG vector basemap of `#VectorTiles` printed in the chapter (vtiles.py),
 printed by `#print_map` of vgprint.py as `#shot` of fig_md.py does, from the CSV files written
 by hanoi_figdata.sql (DuckDB) or hanoi_figdata_pg.sql (MobilityDB), whose geometries are in
 longitude and latitude. Every map PDF is all vectors and carries no text; a legend the caption

@@ -21,9 +21,8 @@
 # PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #
 
-"""Figures of the MobilityDuck AIS section of Chapter 7 (January 20, 2026), drawn with the Folium code
-of the companion notebook chapter7/mobilityDuckAIS.ipynb (cells of Queries 6.18 to 6.23) over the
-OpenFreeMap vector basemap, from the CSV files written by md_figdata.sql, whose geometries are
+"""Figures of the MobilityDuck AIS section of Chapter 7 (January 20, 2026), drawn with Folium over
+the OpenFreeMap vector basemap, from the CSV files written by md_figdata.sql, whose geometries are
 already in longitude and latitude. Each map has a fixed pixel size;
 its extent fits the results."""
 import sys
