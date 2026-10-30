@@ -15,12 +15,16 @@ the version against which the continuous integration of
 [MobilityDuck](https://github.com/MobilityDB/MobilityDuck) builds and tests the extension.
 The extension loads only into the DuckDB version of its build.
 
-1. Install the DuckDB Python client of that version: `pip install duckdb==1.5.6`.
+1. Install the DuckDB Python client of that version: `pip install duckdb==1.5.6`. To run the
+   notebooks from the command line, as `notebook/run_notebook.py` does, install their kernel and
+   runner too: `pip install nbclient ipykernel`. The Hanoi notebook also imports the packages of
+   its maps and charts: `pip install contextily seaborn`.
 2. Obtain the extension `mobilityduck.duckdb_extension` for your platform, either from the
    artifacts of the latest successful run of the
    [Main Extension Distribution Pipeline](https://github.com/MobilityDB/MobilityDuck/actions/workflows/MainDistributionPipeline.yml)
-   on the `main` branch, or by building MobilityDuck as its README explains. Set
-   `MOBILITYDUCK_EXTENSION` in the first cells of `hanoi-book.ipynb` to its path.
+   on the `main` branch, or by building MobilityDuck as its README explains. Both notebooks read
+   its path from `MOBILITYDUCK_EXTENSION`, and `hanoi-book.ipynb` reads the Hanoi database of
+   PostgreSQL from `PG_HANOI`, the variables of the section on reproducing the chapter below.
    `mobilityDuckAIS.ipynb` holds every listing of the chapter that reads the AIS data, in the
    order of the chapter, and reads from the environment `MOBILITYDUCK_EXTENSION`, `AIS_DIR` and
    `PG_AIS`, the variables of the section on reproducing the chapter below.
