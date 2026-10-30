@@ -89,3 +89,12 @@ and `check_duckdb.sh` prints, for both pipelines, the same fingerprints:
 
     clean 9374915 75bbc838f5ad9529d2fc78f62489fd19
     segments 20515 99cca523a7b98ddcbbba4b63f0af82c0
+
+`ships_fingerprint.sql` gives the fingerprint of `Ships`, the table of trips that the chapters
+query. The trips depend on the MobilityDB that builds them, since MobilityDB keeps an instant of a
+trip exactly when it is not redundant; with MobilityDB master `96f10bdac8` it prints
+
+    psql -d ais -At -f ships_fingerprint.sql
+    ships|2701|8989892|14703|f4d6925b33d48cae2b88c50189b282d6
+
+that is, 2,701 vessels, 8,989,892 instants and 14,703 sequences.
