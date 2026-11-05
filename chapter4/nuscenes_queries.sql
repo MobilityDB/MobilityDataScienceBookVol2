@@ -65,41 +65,19 @@ WHERE s.Name LIKE '%0916';
 -- Surrounding Traffic as Rigid Geometries
 -------------------------------------------------------------------------------
 
--- Body-to-body clearance. MobilityDB 1.4 refuses distance between two rigid
--- geometries in 3D ("Distance computation in 3D is not currently supported"),
--- so the bodies are projected to the ground plane first: a 2D pose is exactly
--- the yaw, which is what a clearance on the road surface asks for anyway.
-DROP TABLE IF EXISTS EgoBody2D CASCADE;
-CREATE TABLE EgoBody2D(SceneId, Body) AS
-SELECT SceneId, trgeometry(ST_MakeEnvelope(-2.35, -0.9, 2.35, 0.9),
-  tposeSeq(array_agg(tpose(pose(ST_Point(ST_X(point(P)), ST_Y(point(P))),
-    yaw(P)), T) ORDER BY T)))
-FROM ( SELECT SceneId, getTimestamp(i) AS T, getValue(i) AS P
-       FROM EgoTrip, unnest(instants(Trip)) AS i ) x
-GROUP BY SceneId;
-
-DROP TABLE IF EXISTS ObjectTrip2D CASCADE;
-CREATE TABLE ObjectTrip2D(SceneId, InstanceId, Category, Trip) AS
-SELECT SceneId, InstanceId, Category,
-  trgeometry(ST_MakeEnvelope(-Len/2, -Wid/2, Len/2, Wid/2),
-    tposeSeq(array_agg(tpose(pose(ST_Point(ST_X(point(P)), ST_Y(point(P))),
-      yaw(P)), T) ORDER BY T)))
-FROM ( SELECT o.SceneId, o.InstanceId, o.Category,
-         ST_XMax(o.Trip::geometry) - ST_XMin(o.Trip::geometry) AS Len,
-         ST_YMax(o.Trip::geometry) - ST_YMin(o.Trip::geometry) AS Wid,
-         getTimestamp(i) AS T, getValue(i) AS P
-       FROM ObjectTrip o, unnest(instants(tpose(o.Trip))) AS i ) x
-GROUP BY SceneId, InstanceId, Category, Len, Wid;
-
-SELECT o.InstanceId, o.Category,
-  nearestApproachInstant(e.Body, o.Trip) AS AtInstant,
-  e.Body |=| o.Trip AS Clearance
-FROM EgoBody2D e JOIN ObjectTrip2D o USING (SceneId)
-WHERE e.Body |=| o.Trip < 1.0
+-- Body-to-body clearance, on the ground. The distance between two temporal
+-- rigid geometries is computed in two dimensions, so force2D projects each body
+-- first: it keeps the x, the y and the yaw of each instant and drops the Z of
+-- the reference geometry, which is what a clearance on the road asks for.
+SELECT s.Name, o.Category, force2D(e.Body) |=| force2D(o.Trip) AS Clearance
+FROM EgoBody e JOIN ObjectTrip o USING (SceneId) JOIN Scene s USING (SceneId)
+WHERE force2D(e.Body) |=| force2D(o.Trip) < 1.0
 ORDER BY Clearance;
--- vehicle.car                 0.00
--- vehicle.truck               0.50
--- movable_object.trafficcone  0.63
+-- scene-0757  vehicle.car                 0
+-- scene-0757  vehicle.truck               0.5044813710061257
+-- scene-0061  movable_object.trafficcone  0.6329377627347728
+-- scene-1094  vehicle.car                 0.6996497138100491
+-- ...
 
 SELECT InstanceId, Category,
   ST_Area(traversedArea(Trip, true)) AS Swept,
