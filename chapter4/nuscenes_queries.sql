@@ -73,10 +73,10 @@ SELECT s.Name, o.Category, force2D(e.Body) |=| force2D(o.Trip) AS Clearance
 FROM EgoBody e JOIN ObjectTrip o USING (SceneId) JOIN Scene s USING (SceneId)
 WHERE force2D(e.Body) |=| force2D(o.Trip) < 1.0
 ORDER BY Clearance;
--- scene-0757  vehicle.car                 0
--- scene-0757  vehicle.truck               0.5044813710061257
--- scene-0061  movable_object.trafficcone  0.6329377627347728
--- scene-1094  vehicle.car                 0.6996497138100491
+-- scene-0061  movable_object.trafficcone  0.7198346541940253
+-- scene-0757  vehicle.truck               0.7227603591356611
+-- scene-1100  vehicle.car                 0.7259178622020451
+-- scene-1094  vehicle.car                 0.7346497138100466
 -- ...
 
 SELECT InstanceId, Category,

@@ -63,8 +63,6 @@ def local_xform(origin):
 
 nus = connect('nuscenes')
 cur = nus.cursor()
-# The ego frame of nuScenes has its origin at the rear axle
-EGO = "trgeometry(ST_Force3D(ST_MakeEnvelope(-0.7, -0.87, 3.4, 0.87)), e.Trip)"
 GROUPS = [
     ('vehicle', "o.Category LIKE 'vehicle.%%' AND o.Category NOT LIKE 'vehicle.bicycle%%'"
      " AND o.Category NOT LIKE 'vehicle.motorcycle%%'", '255,140,0,170', '120,60,0,255'),
@@ -91,8 +89,8 @@ G = "ST_AsGeoJSON(ST_Force2D({}), 6)"
 layers, fcs = [], []
 ego_path = collection(cur, f"SELECT {G.format('trajectory(tgeompoint(e.Trip))')} "
                       "FROM EgoTrip e WHERE e.SceneId = %s", (sid,), xf)
-ego_body = collection(cur, f"SELECT {G.format(f'valueAtTimestamp({EGO}, %s)')} "
-                      "FROM EgoTrip e WHERE e.SceneId = %s", (tmid, sid), xf)
+ego_body = collection(cur, f"SELECT {G.format('valueAtTimestamp(e.Body, %s)')} "
+                      "FROM EgoBody e WHERE e.SceneId = %s", (tmid, sid), xf)
 paths = collection(cur, f"""SELECT {G.format('trajectory(tgeompoint(o.Trip))')}
   FROM ObjectTrip o WHERE o.SceneId = %s AND length(tgeompoint(o.Trip)) > 2""",
   (sid,), xf)
@@ -130,7 +128,7 @@ for gname, cond, fill, stroke in GROUPS:
 # hundredth of a square meter)
 ego_swept = collection(cur, f"""SELECT {G.format(
   'ST_Union(ST_CurveToLine(traversedArea(atTime(e.Trip, sp), true), 64))')}
-  FROM (SELECT {EGO} AS Trip FROM EgoTrip e WHERE e.SceneId = %s) e,
+  FROM (SELECT Body AS Trip FROM EgoBody WHERE SceneId = %s) e,
   unnest(splitEachNSpans(e.Trip, 64)) sp""", (sid,), xf)
 layers.append({'type': 'polygon', 'file': save('swept_ego', ego_swept),
                'fill': '0,120,0,110', 'stroke': '0,60,0,255', 'width': 0.25})
@@ -171,7 +169,9 @@ def seg_hits_box(p, q, b):
                b[1] <= p[1] + (q[1] - p[1]) * t / 32 <= b[3] for t in range(33))
 
 fig, ax = plt.subplots(figsize=(4.8, 3.0))
-BODY = (-0.7, -0.87, 3.4, 0.87)
+cur.execute("""SELECT ST_XMin(g), ST_YMin(g), ST_XMax(g), ST_YMax(g)
+  FROM (SELECT Body::geometry AS g FROM EgoBody WHERE SceneId = %s) b""", (sid,))
+BODY = cur.fetchone()
 ax.add_patch(plt.Rectangle(BODY[:2], BODY[2] - BODY[0], BODY[3] - BODY[1], fill=True,
                            fc='#eeeeee', ec='black', lw=0.8))
 ax.set_aspect('equal'); ax.set_xlim(-2.8, 5.6); ax.set_ylim(-2.4, 2.4)

@@ -206,10 +206,17 @@ GROUP BY SceneId;
 --   ERROR: Dimension of geometry and pose must correspond
 -- The footprint lies in the plane z = 0 of the body frame, so the vehicle
 -- floor tilts with the platform, which is what the orientation describes.
+--
+-- The rectangle is the outline of the Renault Zoe that recorded the dataset, in
+-- the body frame, whose origin is the center of the rear axle: the wheelbase of
+-- 2.588 m plus the front overhang of 0.839 m ahead of the origin, the rear
+-- overhang of 0.657 m behind it, and half the width of 1.73 m to each side. The
+-- mounts of calibrated_sensor agree: RADAR_FRONT is at x = 3.412 and the two back
+-- radars at x = -0.562.
 DROP TABLE IF EXISTS EgoBody CASCADE;
 CREATE TABLE EgoBody(SceneId, Body) AS
 SELECT SceneId,
-  trgeometry(ST_Force3D(ST_MakeEnvelope(-2.35, -0.9, 2.35, 0.9)), Trip)
+  trgeometry(ST_Force3D(ST_MakeEnvelope(-0.657, -0.865, 3.427, 0.865)), Trip)
 FROM EgoTrip;
 
 -- Every annotated object as a temporal rigid geometry. The footprint is
