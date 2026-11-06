@@ -60,7 +60,7 @@ FROM TripCells WHERE TripId IN (SELECT TripId FROM SelectedTrip)
 -- 12 | {35,34,44} | {399.44,424.71,469.26} ...
 
 -- Continuous version
-WITH Trip(TripId, Pm25) AS ( SELECT TripId, mergeAgg(Pm25)
+WITH Trip(TripId, Pm25) AS ( SELECT TripId, merge(Pm25)
   FROM TripTiles GROUP BY TripId ),
 SelectedTrip(TripId) AS ( SELECT TripId FROM Trip
   WHERE trend(Pm25) %> 0 )
@@ -134,8 +134,8 @@ WHERE e.TripId = p.TripId AND e.EpisodeId IN (p.IncrEpisode,
 
 -- Continuous version
 WITH Trip(TripId, Cells, Pm25, Weather) AS (
-  SELECT TripId, mergeAgg(tint(CellId, AtTime)), mergeAgg(Pm25),
-    mergeAgg(Weather) FROM TripTiles GROUP BY TripId ),
+  SELECT TripId, merge(tint(CellId, AtTime)), merge(Pm25),
+    merge(Weather) FROM TripTiles GROUP BY TripId ),
 Restricted(TripId, Cells, Pm25) AS (
   SELECT TripId, Cells, atTime(Pm25,
     whenTrue(Pm25 #> 125) * whenTrue(tfloat(Weather,
@@ -287,7 +287,7 @@ WHERE TripId IN (SELECT TripId FROM SelectedTrip)
 
 -- Continuous version
 WITH Trip(TripId, Pm25, Weather) AS (
-  SELECT TripId, mergeAgg(Pm25), mergeAgg(Weather) FROM TripTiles
+  SELECT TripId, merge(Pm25), merge(Weather) FROM TripTiles
   GROUP BY TripId ),
 TripTemp(TripId, Pm25) AS ( SELECT TripId, Pm25 FROM Trip
   WHERE tfloat(Weather, 'Temperature', 'step') %> 25 ),
