@@ -84,26 +84,25 @@ RUN curl -fL -o $SPARK_HOME/jars/delta-spark_${SCALA_VERSION}-${DELTA_VERSION}.j
 
 
 # =========================================================
-# THE COMMITS OF MEOS AND OF THE BINDING
+# MEOS AND THE BINDING
 #
-# MobilityDB f44ab0710c is the master commit whose MEOS projects a geometry (geoTransform) and
-# densifies it (segmentize) with the code PostgreSQL runs, which the countries and the envelope of
-# Europe use, splits a trip into time bins (timeSplit) with the code PostgreSQL runs, which the
-# closest pair of aircraft of the second dashboard uses, and computes tDwithin of temporal
-# geography points on the spheroid, which the query of the holding fixes of London Heathrow uses;
-# JMEOS, MEOS-API and MobilitySpark are the commits from which the binding that answered the
-# queries of the chapter was generated.
+# MobilityDB, JMEOS, MEOS-API and MobilitySpark are taken from their default branches: MEOS
+# projects a geometry (geoTransform) and densifies it (segmentize) with the code PostgreSQL runs,
+# which the countries and the envelope of Europe use, splits a trip into time bins (timeSplit)
+# with the code PostgreSQL runs, which the closest pair of aircraft of the second dashboard uses,
+# and computes tDwithin of temporal geography points on the spheroid, which the query of the
+# holding fixes of London Heathrow uses.
 # =========================================================
-ARG MOBILITYDB_COMMIT=f44ab0710c5d4880d1aa1fb6df0fcfb8c663b80d
-ARG JMEOS_COMMIT=f76fabf32713f00333d6cca0256dd674102c1cd3
-ARG MEOS_API_COMMIT=1008ba165030af2d785cbf31fec428f151f5b934
-ARG MOBILITYSPARK_COMMIT=7af92fef3822b62e508dee3feacac6c8b29d78d8
+ARG MOBILITYDB_REF=master
+ARG JMEOS_REF=main
+ARG MEOS_API_REF=master
+ARG MOBILITYSPARK_REF=main
 RUN set -e; fetch() { mkdir -p "$3" && cd "$3" && git init -q && \
       git fetch -q --depth 1 "https://github.com/MobilityDB/$1.git" "$2" && git checkout -q FETCH_HEAD; }; \
-    fetch MobilityDB ${MOBILITYDB_COMMIT} /usr/local/src/MobilityDB; \
-    fetch JMEOS ${JMEOS_COMMIT} /opt/JMEOS; \
-    fetch MEOS-API ${MEOS_API_COMMIT} /opt/MEOS-API; \
-    fetch MobilitySpark ${MOBILITYSPARK_COMMIT} /opt/MobilitySpark
+    fetch MobilityDB ${MOBILITYDB_REF} /usr/local/src/MobilityDB; \
+    fetch JMEOS ${JMEOS_REF} /opt/JMEOS; \
+    fetch MEOS-API ${MEOS_API_REF} /opt/MEOS-API; \
+    fetch MobilitySpark ${MOBILITYSPARK_REF} /opt/MobilitySpark
 
 # =========================================================
 # MEOS
