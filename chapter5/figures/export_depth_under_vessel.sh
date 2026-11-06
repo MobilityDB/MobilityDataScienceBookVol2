@@ -38,7 +38,7 @@ ogr2ogr -f GPKG -a_srs EPSG:25832 -nlt POINT vessel_reports.gpkg "$PG" -nln repo
   "SELECT to_char(T, 'HH24:MI:SS') AS label, Geom AS geom FROM AISClean
    WHERE MMSI = 273277840 AND T BETWEEN '2026-01-20 01:27:30' AND '2026-01-20 01:29:10'"
 ogr2ogr -f GPKG -a_srs EPSG:25832 -nlt LINESTRING vessel_shallow.gpkg "$PG" -nln shallow -overwrite -sql \
-  "WITH D AS (SELECT s.Trip, mergeAgg(rasterValue(s.Trip, b.Rast)) AS Depth
+  "WITH D AS (SELECT s.Trip, merge(rasterValue(s.Trip, b.Rast)) AS Depth
      FROM Ships s, Bathymetry b
      WHERE s.MMSI = 273277840 AND ST_Intersects(b.Rast, trajectory(s.Trip))
      GROUP BY s.Trip)

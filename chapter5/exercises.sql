@@ -33,7 +33,7 @@ SET client_min_messages = warning;
 
 \echo == 1. time during which vessel 273277840 sailed over water between 20 and 30 m deep
 WITH VesselDepth AS (
-  SELECT mergeAgg(rasterValue(s.Trip, b.Rast)) AS Depth
+  SELECT merge(rasterValue(s.Trip, b.Rast)) AS Depth
   FROM Ships s, Bathymetry b
   WHERE s.MMSI = 273277840 AND ST_Intersects(b.Rast, trajectory(s.Trip)) )
 SELECT duration(whenTrue((Depth #>= 20) & (Depth #< 30))) AS Duration
@@ -47,7 +47,7 @@ ORDER BY maxValue(w.WaveHeight) DESC NULLS LAST
 LIMIT 3;
 
 \echo == 3. time-weighted average surface temperature met by the first 200 vessels
-SELECT s.MMSI, round(twAvg(mergeAgg(rasterValue(atTime(s.Trip, t.ValidTime), t.Rast)
+SELECT s.MMSI, round(twAvg(merge(rasterValue(atTime(s.Trip, t.ValidTime), t.Rast)
     ORDER BY t.ValidTime)), 2) AS AvgTemp
 FROM Ships200 s, SurfaceTemperature t
 WHERE s.Trip && t.ValidTime AND ST_Intersects(t.Rast, trajectory(s.Trip))

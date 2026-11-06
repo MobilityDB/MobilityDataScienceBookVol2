@@ -40,7 +40,7 @@ INSERT 0 1
 
 == Listing: the bathymetry and the wave height are not aligned
 SET
-psql:map_algebra.sql:85: NOTICE:  The rasters have different scales on the X axis
+psql:map_algebra.sql:110: NOTICE:  The rasters have different scales on the X axis
  st_samealignment 
 ------------------
  f
@@ -76,7 +76,7 @@ SELECT 1
 == Query: slope and ruggedness of the seabed in the reef area
  meanslope | maxslope | meantri | maxtri 
 -----------+----------+---------+--------
-      0.50 |     5.29 |    0.36 |   3.53
+       0.5 |     5.29 |    0.36 |   3.53
 
 == Query: banks and hollows of the reef area, window of 150 m and of 1 km
  class |  km2  
@@ -103,16 +103,16 @@ SELECT 51
 == Listing: zonal operation with the zones of a raster
  zone | pixels | meandepth 
 ------+--------+-----------
-    1 |      4 |      8.00
-    2 |      6 |     11.50
+    1 |      4 |         8
+    2 |      6 |      11.5
     3 |      6 |     15.67
 
 == Listing: zonal operation with the regions of the zones
  zone | meandepth 
 ------+-----------
-    1 |      8.00
-    2 |     11.00
-    2 |     11.60
+    1 |         8
+    2 |        11
+    2 |      11.6
     3 |     15.67
 
 == Query: depth statistics of the protected areas around Laeso
@@ -140,7 +140,7 @@ SELECT 51
 == Query: stretches of the path of the vessel over water less than 20 m deep
  stretches | meters 
 -----------+--------
-        13 | 3287.0
+        13 |   3287
 
 == Listing: a line with measures loses them in the intersection
                    piece                   | depth 

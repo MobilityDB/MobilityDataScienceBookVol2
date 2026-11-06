@@ -45,7 +45,7 @@ ORDER BY lower(ValidTime);
 -- 2592 | 465 | 106 | 29 | 2.71
 DROP TABLE IF EXISTS SeaState;
 CREATE TABLE SeaState AS
-SELECT s.MMSI, mergeAgg(rasterValue(atTime(s.Trip, w.ValidTime), w.Rast)
+SELECT s.MMSI, merge(rasterValue(atTime(s.Trip, w.ValidTime), w.Rast)
   ORDER BY w.ValidTime) AS WaveHeight
 FROM Ships s, WaveHeight w
 WHERE s.Trip && w.ValidTime AND ST_Intersects(w.Rast, trajectory(s.Trip))
@@ -121,7 +121,7 @@ SELECT COUNT(*) AS Vessels,
   COUNT(*) FILTER (WHERE maxValue(Hs) >= 1.5) AS Over15,
   COUNT(*) FILTER (WHERE maxValue(Hs) >= 2) AS Over2
 FROM (
-  SELECT s.MMSI, mergeAgg(rasterValue(s.Trip, w.Rast)) AS Hs
+  SELECT s.MMSI, merge(rasterValue(s.Trip, w.Rast)) AS Hs
   FROM Ships s, WaveMax w
   WHERE ST_Intersects(w.Rast, trajectory(s.Trip))
   GROUP BY s.MMSI ) t;

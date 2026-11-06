@@ -75,7 +75,7 @@ FROM BathymetryRaquet,
 SELECT numSpans(whenTrue(Depth #< 20)) AS Periods,
   duration(whenTrue(Depth #< 20)) AS Under20
 FROM (
-  SELECT mergeAgg(rasterTileValue(atTime(s.TripLonLat, q.Period), q.Tile)
+  SELECT merge(rasterTileValue(atTime(s.TripLonLat, q.Period), q.Tile)
       ORDER BY q.Period) AS Depth
   FROM Ships s, BathymetrySeries q, unnest(tquadbin(s.TripLonLat, 11)) c
   WHERE s.MMSI = 273277840 AND q.Quadbin = c.value AND q.Period && c.time

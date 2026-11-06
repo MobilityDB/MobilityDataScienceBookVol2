@@ -77,7 +77,7 @@ FROM Depth;
 
 \echo == Listing: a tiled raster read along every trip (number of vessels read)
 SELECT COUNT(*) AS Vessels FROM (
-  SELECT s.MMSI, mergeAgg(rasterValue(s.Trip, b.Rast))
+  SELECT s.MMSI, merge(rasterValue(s.Trip, b.Rast))
   FROM Ships s, Bathymetry b
   WHERE ST_Intersects(b.Rast, trajectory(s.Trip))
   GROUP BY s.MMSI ) t;
@@ -103,7 +103,7 @@ SELECT tstzspan '[2025-01-01 09:00, 2025-01-01 10:00)', ST_SetValues(
 CREATE TABLE Trips(Trip tgeompoint);
 INSERT INTO Trips VALUES (tgeompoint '[SRID=25832;Point(600020 6400150)@2025-01-01 08:40,
   SRID=25832;Point(600380 6400150)@2025-01-01 09:16]');
-SELECT asText(mergeAgg(rasterValue(atTime(t.Trip, s.ValidTime), s.Rast)
+SELECT asText(merge(rasterValue(atTime(t.Trip, s.ValidTime), s.Rast)
   ORDER BY s.ValidTime))
 FROM Trips t, Salinity s
 WHERE t.Trip && s.ValidTime;

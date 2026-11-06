@@ -44,7 +44,7 @@ GROUP BY MMSI
 HAVING MAX(Draught) >= 10;
 CREATE TABLE Clearance AS
 SELECT s.MMSI, d.Draught,
-  mergeAgg(rasterValue(s.Trip, b.Rast)) - d.Draught AS Clearance
+  merge(rasterValue(s.Trip, b.Rast)) - d.Draught AS Clearance
 FROM Ships s JOIN Draughts d USING (MMSI), Bathymetry b
 WHERE ST_Intersects(b.Rast, trajectory(s.Trip))
 GROUP BY s.MMSI, d.Draught;
@@ -82,7 +82,7 @@ SELECT s.MMSI, d.Draught,
 FROM Ships s JOIN Draughts d USING (MMSI), PortAreas p;
 CREATE TABLE ClearanceUnderway AS
 SELECT u.MMSI, u.Draught,
-  mergeAgg(rasterValue(u.Trip, b.Rast)) - u.Draught AS Clearance
+  merge(rasterValue(u.Trip, b.Rast)) - u.Draught AS Clearance
 FROM Underway u, Bathymetry b
 WHERE ST_Intersects(b.Rast, trajectory(u.Trip))
 GROUP BY u.MMSI, u.Draught;
@@ -112,7 +112,7 @@ WITH u AS (
     minusGeometry(atTime(s.Trip, whenTrue(speed(s.Trip) #> 3 * 1852 / 3600.0)), p.Geom) AS Trip
   FROM Ships s JOIN Draughts d USING (MMSI), PortAreas p ),
 c AS (
-  SELECT u.MMSI, u.Draught, mergeAgg(rasterValue(u.Trip, b.Rast)) - u.Draught AS Clearance
+  SELECT u.MMSI, u.Draught, merge(rasterValue(u.Trip, b.Rast)) - u.Draught AS Clearance
   FROM u, Bathymetry b
   WHERE u.Trip IS NOT NULL AND ST_Intersects(b.Rast, trajectory(u.Trip))
   GROUP BY u.MMSI, u.Draught )
@@ -129,7 +129,7 @@ ORDER BY 3;
 \echo == Query: when was there water less than 20 m deep within 100 m of the vessel
 -- 12 | 00:25:58.197711
 WITH VesselDepth AS (
-  SELECT mergeAgg(rasterValue(s.Trip, b.Rast)) AS Depth
+  SELECT merge(rasterValue(s.Trip, b.Rast)) AS Depth
   FROM Ships s, BathymetryMin100 b
   WHERE s.MMSI = 273277840 AND ST_Intersects(b.Rast, trajectory(s.Trip)) )
 SELECT numSpans(whenTrue(Depth #< 20)) AS Periods,
@@ -137,7 +137,7 @@ SELECT numSpans(whenTrue(Depth #< 20)) AS Periods,
 FROM VesselDepth;
 \echo == the periods, to compare with those under the reported positions
 WITH VesselDepth AS (
-  SELECT mergeAgg(rasterValue(s.Trip, b.Rast)) AS Depth
+  SELECT merge(rasterValue(s.Trip, b.Rast)) AS Depth
   FROM Ships s, BathymetryMin100 b
   WHERE s.MMSI = 273277840 AND ST_Intersects(b.Rast, trajectory(s.Trip)) )
 SELECT unnest(spans(whenTrue(Depth #< 20))) AS Period

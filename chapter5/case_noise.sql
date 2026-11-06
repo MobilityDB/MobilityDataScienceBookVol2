@@ -90,7 +90,7 @@ $$;
 DROP TABLE IF EXISTS NoiseOne;
 CREATE TABLE NoiseOne AS
 WITH Depth AS (
-  SELECT s.MMSI, mergeAgg(rasterValue(s.Trip, b.Rast)) AS Depth
+  SELECT s.MMSI, merge(rasterValue(s.Trip, b.Rast)) AS Depth
   FROM ShipNoise s, Bathymetry b
   WHERE s.MMSI = 220334000 AND ST_Intersects(b.Rast, trajectory(s.Trip))
   GROUP BY s.MMSI )
@@ -108,7 +108,7 @@ WHERE n.Id = 22;
 \echo == Listing: the ambient noise level of the fishing vessel with the wind
 -- 2.6 | 5.4 | 80.1 | 80.3 | 360.3
 WITH Wind AS (
-  SELECT mergeAgg(rasterValue(atTime(s.Trip, w.ValidTime), w.Rast)
+  SELECT merge(rasterValue(atTime(s.Trip, w.ValidTime), w.Rast)
     ORDER BY w.ValidTime) AS Wind
   FROM ShipNoise s, WindSpeed w
   WHERE s.MMSI = 220334000 AND s.Trip && w.ValidTime AND
@@ -126,7 +126,7 @@ FROM AmbientNoise l, NoiseOne o;
 \echo == Listing: the depth, the wind, and the three moving regions of the noise of every vessel
 DROP TABLE IF EXISTS ShipDepth;
 CREATE TABLE ShipDepth AS
-SELECT s.MMSI, mergeAgg(rasterValue(s.Trip, b.Rast)) AS Depth
+SELECT s.MMSI, merge(rasterValue(s.Trip, b.Rast)) AS Depth
 FROM ShipNoise s, Bathymetry b
 WHERE ST_Intersects(b.Rast, trajectory(s.Trip))
 GROUP BY s.MMSI;
@@ -134,7 +134,7 @@ GROUP BY s.MMSI;
 DROP TABLE IF EXISTS WindNoise;
 CREATE TABLE WindNoise AS
 WITH Wind AS (
-  SELECT s.MMSI, mergeAgg(rasterValue(atTime(s.Trip, w.ValidTime), w.Rast)
+  SELECT s.MMSI, merge(rasterValue(atTime(s.Trip, w.ValidTime), w.Rast)
     ORDER BY w.ValidTime) AS Wind
   FROM ShipNoise s, WindSpeed w
   WHERE s.Trip && w.ValidTime AND ST_Intersects(w.Rast, trajectory(s.Trip))

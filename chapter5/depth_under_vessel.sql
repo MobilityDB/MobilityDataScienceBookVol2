@@ -71,7 +71,7 @@ ORDER BY FirstReport;
     [2026-01-20 01:28:19.520816, 2026-01-20 01:28:46.708854), ...,
     [2026-01-20 08:48:43.108411, 2026-01-20 08:49:16.5474)} | 00:10:21.567055 */
 WITH VesselDepth AS (
-  SELECT s.MMSI, mergeAgg(rasterValue(s.Trip, b.Rast)) AS Depth
+  SELECT s.MMSI, merge(rasterValue(s.Trip, b.Rast)) AS Depth
   FROM Ships s, Bathymetry b
   WHERE s.MMSI = 273277840 AND ST_Intersects(b.Rast, trajectory(s.Trip))
   GROUP BY s.MMSI )
@@ -81,7 +81,7 @@ FROM VesselDepth;
 
 \echo == length of the trip restricted to the thirteen periods (3287.0 m)
 WITH VesselDepth AS (
-  SELECT s.Trip, mergeAgg(rasterValue(s.Trip, b.Rast)) AS Depth
+  SELECT s.Trip, merge(rasterValue(s.Trip, b.Rast)) AS Depth
   FROM Ships s, Bathymetry b
   WHERE s.MMSI = 273277840 AND ST_Intersects(b.Rast, trajectory(s.Trip))
   GROUP BY s.Trip )
