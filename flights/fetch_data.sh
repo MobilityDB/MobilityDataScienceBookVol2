@@ -42,8 +42,9 @@ fetch() { # url file
     echo "fetching: $2"; curl -fL --retry 3 -o "$2.part" "$1" && mv "$2.part" "$2"; fi
 }
 
-for key in $(curl -fsL "$BUCKET?list-type=2&prefix=$PREFIX" | grep -oE "<Key>[^<]*\.parquet" |
-    sed 's/<Key>//'); do
+KEYS=$(curl -fsL "$BUCKET?list-type=2&prefix=$PREFIX" | grep -oE "<Key>[^<]*\.parquet" |
+  sed 's/<Key>//')
+for key in $KEYS; do
   file="$DATA/flights/parquet/${key#"$PREFIX"}"
   mkdir -p "$(dirname "$file")"
   fetch "$BUCKET/$key" "$file"
@@ -55,3 +56,11 @@ mkdir -p "$DATA/flights/countries"
 fetch https://naciscdn.org/naturalearth/50m/cultural/ne_50m_admin_0_countries.zip \
   "$DATA/flights/countries/ne_50m_admin_0_countries.zip"
 unzip -o -q -d "$DATA/flights/countries" "$DATA/flights/countries/ne_50m_admin_0_countries.zip"
+
+# The public samples of OpenSky may serve no file of the day: fetch_trino.py reads the same day
+# from the historical database of OpenSky with an account of its own
+if [ -z "$KEYS" ]; then
+  echo "fetch_data.sh: the samples of OpenSky serve no state vector of the day; run" \
+    "fetch_trino.py with an OpenSky account (README.md)" >&2
+  exit 1
+fi

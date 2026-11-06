@@ -36,8 +36,24 @@ downloads the 24 Parquet files of the day, one per hour (13 GB), into
 `data/flights/parquet/hour=<Unix time of the hour>/`. The files hold one state vector per aircraft
 and per second; the notebook keeps those at every tenth second, the time step of the public samples
 of OpenSky, 69,442,890 of the 695,706,186 state vectors of the day. The notebook reads the files
-from `/opt/data/flights/parquet`. On the cluster of the chapter it takes about 15 minutes, and
-prints:
+from `/opt/data/flights/parquet`.
+
+The day comes from the public samples of OpenSky, the "Complete One Day Trino Tables Snapshot
+(March 2026)" of its [scientific datasets](https://opensky-network.org/data/scientific). Where the
+samples serve no file of the day, `fetch_data.sh` says so and stops, and
+
+    pip install pyopensky
+    python3 fetch_trino.py
+
+writes the same files from the table `state_vectors_data4` of the
+[historical database of OpenSky](https://opensky-network.org/data/trino), with the account set in
+the settings of pyopensky (`~/.config/pyopensky/settings.conf`, see the top of `fetch_trino.py`).
+OpenSky grants the account for non-profit research and education. Its
+[terms](https://opensky-network.org/about/terms-of-use) do not allow the data to be passed on, so
+each reader downloads them with their own account, and a publication that uses them cites the
+OpenSky Network as the terms state.
+
+On the cluster of the chapter the notebook takes about 15 minutes, and prints:
 
 | Item | Count |
 |---|--:|
