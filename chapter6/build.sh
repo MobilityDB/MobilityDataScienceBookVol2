@@ -40,8 +40,15 @@ export PGDATABASE=${PGDATABASE:-semantic}
 psql -q -c "CREATE EXTENSION IF NOT EXISTS mobilitydb CASCADE" \
   -c "CREATE EXTENSION IF NOT EXISTS hstore"
 osm2pgsql ${PGHOST:+-H "$PGHOST"} ${PGPORT:+-P "$PGPORT"} ${PGUSER:+-U "$PGUSER"} \
-  -d "$PGDATABASE" --create --slim -G --hstore --bbox 76.83,28.40,77.35,28.89 \
+  -d "$PGDATABASE" --create -G --hstore --bbox 76.83,28.40,77.35,28.89 \
   "$DATA/india-210101.osm.pbf"
+# Each step of delhi_load builds its tables in a statement of its own, so that no statement
+# holds the whole load
+STEPS=()
+for s in DelhiInput Weather TripPoints Trips Grid TripCells TripVisits TripTiles Districts \
+    PointDistricts TripDistricts; do
+  STEPS+=(-c "SELECT delhi_load('$s')")
+done
 psql -q -v ON_ERROR_STOP=1 -c "SET delhi.datadir = '$DATA/'" -f "$HERE/delhi_load.sql" \
-  -c "SELECT delhi_load()"
+  "${STEPS[@]}"
 psql -q -v ON_ERROR_STOP=1 -f "$HERE/paris_tours.sql"

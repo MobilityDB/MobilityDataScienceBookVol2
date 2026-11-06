@@ -71,7 +71,7 @@
 -------------------------------------------------------------------------------
 
 DROP FUNCTION IF EXISTS delhi_load;
-CREATE FUNCTION delhi_load()
+CREATE FUNCTION delhi_load(step text DEFAULT NULL)
 RETURNS void
 LANGUAGE plpgsql
 AS $$
@@ -92,6 +92,7 @@ BEGIN
 
 -------------------------------------------------------------------------------
 
+  IF step IS NULL OR step = 'DelhiInput' THEN
   RAISE NOTICE 'Creating the table DelhiInput';
 
   DROP TABLE IF EXISTS DelhiInput;
@@ -123,6 +124,9 @@ BEGIN
 
 -------------------------------------------------------------------------------
 
+  END IF;
+
+  IF step IS NULL OR step = 'Weather' THEN
   RAISE NOTICE 'Creating tables WeatherInput and WeatherHourly';
 
   /* Compute the center point of the extent of the dataset 
@@ -172,6 +176,9 @@ BEGIN
 
 -------------------------------------------------------------------------------
 
+  END IF;
+
+  IF step IS NULL OR step = 'TripPoints' THEN
   RAISE NOTICE 'Creating the table TripPoints';
 
   DROP TABLE IF EXISTS TripPoints;
@@ -203,6 +210,9 @@ BEGIN
 
 ------------------------------------------------------------------------------
 
+  END IF;
+
+  IF step IS NULL OR step = 'Trips' THEN
   RAISE NOTICE 'Creating the table Trips';
 
   DROP TABLE IF EXISTS Trips;
@@ -227,6 +237,9 @@ BEGIN
 
 ------------------------------------------------------------------------------
 
+  END IF;
+
+  IF step IS NULL OR step = 'Grid' THEN
   RAISE NOTICE 'Creating the table Grid';
 
   DROP TABLE IF EXISTS Grid;
@@ -246,6 +259,9 @@ BEGIN
 
 -------------------------------------------------------------------------------
 
+  END IF;
+
+  IF step IS NULL OR step = 'TripCells' THEN
   RAISE NOTICE 'Creating the table TripCells';
 
   DROP TABLE IF EXISTS TripCells;
@@ -294,6 +310,9 @@ BEGIN
 
 -------------------------------------------------------------------------------
 
+  END IF;
+
+  IF step IS NULL OR step = 'TripVisits' THEN
   RAISE NOTICE 'Creating the table TripVisits';
 
   -- Model A: the same segmentation as TripCells, with no value aggregated. The
@@ -329,6 +348,9 @@ BEGIN
 
 -------------------------------------------------------------------------------
 
+  END IF;
+
+  IF step IS NULL OR step = 'TripTiles' THEN
   RAISE NOTICE 'Creating the table TripTiles';
 
   -- TEMPORAL VERSION
@@ -401,6 +423,9 @@ select TripId, numInstants(Cells) from TripTempCell order by numInstants(Cells) 
 
 -------------------------------------------------------------------------------
 
+  END IF;
+
+  IF step IS NULL OR step = 'Districts' THEN
   RAISE NOTICE 'Creating the table Districts';
 
   DROP TABLE IF EXISTS Districts;
@@ -444,6 +469,9 @@ select TripId, numInstants(Cells) from TripTempCell order by numInstants(Cells) 
 
 -------------------------------------------------------------------------------
 
+  END IF;
+
+  IF step IS NULL OR step = 'PointDistricts' THEN
   RAISE NOTICE 'Creating tables PointDistricts and PointDistrictSeq';
 
   DROP TABLE IF EXISTS PointDistricts;
@@ -510,6 +538,9 @@ select TripId, numInstants(Cells) from TripTempCell order by numInstants(Cells) 
 
 -------------------------------------------------------------------------------
 
+  END IF;
+
+  IF step IS NULL OR step = 'TripDistricts' THEN
   RAISE NOTICE 'Creating tables TripDistricts and TripDistrictsSeq';
 
   -- TEMPORAL VERSION
@@ -601,6 +632,7 @@ select TripId, numInstants(Cells) from TripTempCell order by numInstants(Cells) 
 
 ------------------------------------------------------------------------------------------------
 
+  END IF;
 END $$;
 
 ------------------------------------------------------------------------------------------------

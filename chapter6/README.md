@@ -48,7 +48,7 @@ extract gives other districts and other answers to the district queries.
 |---|---|
 | `fetch_data.sh` | Downloads the observations and the OpenStreetMap extract into `$DATA` |
 | `build.sh` | Imports the OpenStreetMap data restricted to the bounding box of Delhi, and runs `delhi_load.sql` and `paris_tours.sql` |
-| `delhi_load.sql` | Function `delhi_load()`, which builds the tables of the Delhi use case: `DelhiInput`, `WeatherInput`, `WeatherHourly`, `TripPoints`, `Trips`, `Grid`, `TripCells`, `TripVisits`, `TripTiles`, `TripCellsSeq`, `TripTilesSeq`, `Districts`, `PointDistricts`, `PointDistrictSeq`, `TripDistricts`, and `TripDistrictsSeq` |
+| `delhi_load.sql` | Function `delhi_load(step)`, which builds the step it names, or every step without one (`build.sh` runs each step in a statement of its own), of the tables of the Delhi use case: `DelhiInput`, `WeatherInput`, `WeatherHourly`, `TripPoints`, `Trips`, `Grid`, `TripCells`, `TripVisits`, `TripTiles`, `TripCellsSeq`, `TripTilesSeq`, `Districts`, `PointDistricts`, `PointDistrictSeq`, `TripDistricts`, and `TripDistrictsSeq` |
 | `paris_tours.sql` | The tables of the Paris tours: `PoI`, `Tour`, the view `TourPoI`, and `TempTour` |
 | `paris_queries.sql` | The queries over the Paris tours, each preceded by its pattern |
 | `delhi_queries.sql` | The queries over the Delhi trips, each preceded by its statement and its pattern |
