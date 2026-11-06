@@ -73,8 +73,8 @@ To build the database of the whole month, for chapter 10:
 Digits into `data/`. The Danish Maritime Authority does not allow its data to be redistributed,
 so the repository holds none of them. `build.sh` loads the archives into `AISInput` and runs
 `ais_clean.sql`, `ais_segments.sql` and `ais_ships.sql`. On a laptop, the cleaning of one day
-takes about 10 minutes, the segmentation about 40 minutes, since PostgreSQL recomputes the
-average of each 600-second window, and the trajectories about 3 minutes. For January 20, 2026,
+takes about 10 minutes, the segmentation about 7 minutes, and the trajectories about 3 minutes.
+For January 20, 2026,
 the database holds:
 
 | Item | Count |

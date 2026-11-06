@@ -51,9 +51,15 @@ SELECT MMSI, Piece, T, Ts,
       * 3600 / 1852,
     SOG) AS V
 FROM (
+  -- The averages are taken over numeric, which PostgreSQL slides from row to row, and the
+  -- latest and earliest instants of a window are its last and first rows, since the window is
+  -- ordered by time: an average or a maximum over float8 is recomputed over the whole window
+  -- at every row
   SELECT *,
-    AVG(X) OVER Fw AS Xf, AVG(Y) OVER Fw AS Yf, AVG(Ts) OVER Fw AS Tf, MAX(Ts) OVER Fw AS TfMax,
-    AVG(X) OVER Bw AS Xb, AVG(Y) OVER Bw AS Yb, AVG(Ts) OVER Bw AS Tb, MIN(Ts) OVER Bw AS TbMin
+    (AVG(X::numeric) OVER Fw)::float8 AS Xf, (AVG(Y::numeric) OVER Fw)::float8 AS Yf,
+    (AVG(Ts::numeric) OVER Fw)::float8 AS Tf, last_value(Ts) OVER Fw AS TfMax,
+    (AVG(X::numeric) OVER Bw)::float8 AS Xb, (AVG(Y::numeric) OVER Bw)::float8 AS Yb,
+    (AVG(Ts::numeric) OVER Bw)::float8 AS Tb, first_value(Ts) OVER Bw AS TbMin
   FROM (
     SELECT MMSI, Piece, T, EXTRACT(EPOCH FROM T)::float8 AS Ts, ST_X(Geom) AS X, ST_Y(Geom) AS Y,
       SOG
