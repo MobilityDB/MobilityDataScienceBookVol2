@@ -35,7 +35,6 @@
 set -e
 DATA=${DATA:-$PWD/data}
 HERE=$(cd "$(dirname "$0")" && pwd)
-. "$HERE/lakehouse.env"
 mkdir -p "$DATA/ais"
 
 fetch() { # url file
@@ -52,7 +51,7 @@ for d in $DAYS; do
   fetch "http://aisdata.ais.dk/aisdk-$d.zip" "$DATA/ais/aisdk-$d.zip"
 done
 
-R="https://raw.githubusercontent.com/MobilityDB/MobilityLakehouse/$LAKEHOUSE_COMMIT/benchmark/planar"
+R="https://raw.githubusercontent.com/MobilityDB/MobilityLakehouse/main/benchmark/planar"
 for f in itu_mid.csv itu_mid.LICENSE itu_mid.NOTICE; do
   fetch "$R/$f" "$DATA/$f"
 done

@@ -11,7 +11,7 @@ chapter uses the whole month.
 
 The cleaning rules are those of the MobilityLakehouse pipeline
 (https://github.com/MobilityDB/MobilityLakehouse, `benchmark/planar/10_stage.sql`,
-`20_clean.sql` and `25_segments.sql`, at the commit of `lakehouse.env`), written here for
+`20_clean.sql` and `25_segments.sql`, on its main branch), written here for
 PostgreSQL and MobilityDB. `check_duckdb.sh` runs that pipeline in DuckDB with MobilityDuck over
 the same archives and checks that both keep the same reports and the same segments.
 

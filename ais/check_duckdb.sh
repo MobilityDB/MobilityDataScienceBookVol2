@@ -24,7 +24,7 @@
 
 # Check that the AIS database built by build.sh keeps the same reports and segments as the
 # MobilityLakehouse pipeline, which runs the same rules in DuckDB with MobilityDuck. The script
-# fetches the MobilityLakehouse repository at the commit of lakehouse.env, converts the archives
+# fetches the main branch of the MobilityLakehouse repository, converts the archives
 # of the period into its raw zone, runs its cleaning and segmentation (run_clean.sh, stages 1 and
 # 2), and compares the fingerprints of both results: the number of clean reports and of segments,
 # and the MD5 of their keys (fingerprint.sql and fingerprint_duckdb.sql).
@@ -35,7 +35,6 @@
 set -e
 DATA=${DATA:-$PWD/data}
 HERE=$(cd "$(dirname "$0")" && pwd)
-. "$HERE/lakehouse.env"
 export PGDATABASE=${PGDATABASE:-ais}
 : "${DUCKDB_ENGINE:?set DUCKDB_ENGINE to a DuckDB shell carrying MobilityDuck}"
 export DUCKDB_ENGINE
@@ -51,7 +50,7 @@ if [ ! -d "$LH" ]; then
   git clone -q https://github.com/MobilityDB/MobilityLakehouse "$LH"
 fi
 git -C "$LH" fetch -q origin
-git -C "$LH" checkout -q "$LAKEHOUSE_COMMIT"
+git -C "$LH" checkout -q origin/main
 
 ROOT=$DATA/lakehouse
 mkdir -p "$ROOT"
