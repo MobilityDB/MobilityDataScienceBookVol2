@@ -25,25 +25,17 @@ EPSG:25832, or kept in longitude and latitude in the columns whose name ends in
   and the extensions `h3` ([h3-pg](https://github.com/zachasme/h3-pg)) and
   `pointcloud` ([pgPointcloud](https://github.com/pgpointcloud/pointcloud)),
   which the MobilityDB extension requires.
-- MobilityDB 1.4 at commit 4306c5092b of its master branch, built with all its
+- MobilityDB 1.4 from its master branch, built with all its
   families against the H3 library 4:
 
       git clone https://github.com/MobilityDB/MobilityDB && cd MobilityDB
-      git checkout 4306c5092b
       cmake -S . -B build -DALL=ON -DCMAKE_BUILD_TYPE=Release
       cmake --build build && sudo cmake --install build
 
-  `expected/` holds the results of this commit. The temporal cells, the reading
-  of rasters and RaQuet tiles, and the moving regions of the noise case study
-  depend on the MobilityDB version: another commit may move an instant or a
-  count. The noise case study needs, on top of this commit, the normalization
-  of the time of a sequence set and the difference of two span sets of the
-  master branch:
-
-      git cherry-pick 15e1d2812e f79133c583
-
-  The seabed surveys need the point clouds of a later master branch, as the
-  README of chapter 3 states.
+  `expected/` holds the results of the master branch. The temporal cells, the
+  reading of rasters and RaQuet tiles, and the moving regions of the noise case
+  study depend on the MobilityDB version: a later master may move an instant or
+  a count.
 - GDAL 3.8 with its Python bindings, and the PostGIS loader `raster2pgsql`.
 - Python 3 with the packages `copernicusmarine` 2.4.1, `cdsapi`, `psycopg2`,
   `pyarrow`, `Pillow`, and `raquet-io` 0.9.0:
