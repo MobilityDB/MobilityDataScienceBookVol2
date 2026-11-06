@@ -46,7 +46,10 @@ EPSG:25832, or kept in longitude and latitude in the columns whose name ends in
   README of chapter 3 states.
 - GDAL 3.8 with its Python bindings, and the PostGIS loader `raster2pgsql`.
 - Python 3 with the packages `copernicusmarine` 2.4.1, `cdsapi`, `psycopg2`,
-  `pyarrow`, `Pillow`, and `raquet-io` 0.9.0.
+  `pyarrow`, `Pillow`, and `raquet-io` 0.9.0:
+
+      pip install copernicusmarine==2.4.1 cdsapi psycopg2-binary pyarrow Pillow raquet-io==0.9.0
+
 - QGIS 3.40 for the figures, and the Python package `shapely` for the basemap of
   the traffic map.
 

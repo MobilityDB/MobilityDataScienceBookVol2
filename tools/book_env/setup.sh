@@ -87,6 +87,14 @@ mapfile -t BOOK < <(reqs book)
 venv "$BOOK_ENV/venv" "GDAL==$(gdal-config --version)" "${BOOK[@]}" \
   -r "$REPO/chapter11/figures/requirements.txt" -r "$REPO/chapter11/training/requirements.txt" \
   -r "$REPO/chapter11/usecase/requirements.txt"
+# pip builds the bindings of GDAL in an environment of their own, which holds no NumPy, so they
+# come without osgeo.gdal_array, which load_raquet.py of chapter 5 reads; built again over the
+# NumPy of the venv, they carry it
+"$BOOK_ENV/venv/bin/python" -c "from osgeo import gdal_array" 2>/dev/null || {
+  "$BOOK_ENV/venv/bin/pip" install -q setuptools wheel
+  "$BOOK_ENV/venv/bin/pip" install -q --no-build-isolation --no-cache-dir --force-reinstall \
+    --no-deps "GDAL==$(gdal-config --version)"
+}
 
 echo "== venv-flink: the packages of chapter 9"
 mapfile -t FLINK < <(reqs flink)
