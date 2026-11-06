@@ -16,10 +16,9 @@ Authority to the twelve physical layouts, the queries, and the tables of their r
 by the scripts of the `benchmark/planar/` directory of the
 [MobilityLakehouse](https://github.com/MobilityDB/MobilityLakehouse) repository, whose
 `benchmark/README.md` states how to download the data and run them. The figures below are drawn from such a run.
-The chapter follows MobilityLakehouse at commit `65f99a9fd8bd26ec4933e0fa0293c956cd8ae732`:
+The chapter follows the main branch of MobilityLakehouse:
 
     git clone https://github.com/MobilityDB/MobilityLakehouse.git
-    git -C MobilityLakehouse checkout 65f99a9fd8bd26ec4933e0fa0293c956cd8ae732
     MobilityLakehouse/benchmark/ingest/fetch_dma.sh 2026-01-01 2026-01-31
     MobilityLakehouse/benchmark/reproduce.sh 2026-01-01 2026-01-31
 
