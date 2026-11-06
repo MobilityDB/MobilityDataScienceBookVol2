@@ -50,7 +50,14 @@ DejaVu Sans at 6.67 points, the size whose x-height is that of the captions.
    - `trips.csv`, the first 700 trips of the BerlinMOD-Brussels database of scale factor 0.01
      ([MobilityDB-BerlinMOD](https://github.com/MobilityDB/MobilityDB-BerlinMOD)), written by
      the `COPY ... TO STDOUT` statement of the section Advanced PyMEOS Functionality, saved by
-     the client (`psql -d <database> -f trips.sql > trips.csv`);
+     the client (`psql -d <database> -f trips.sql > trips.csv`). The database is generated as
+     the README of MobilityDB-BerlinMOD states, with `berlinmod_generate(scaleFactor := 0.01)`,
+     over the road network of the extract of Brussels of OpenStreetMap that the book uses,
+     [brussels.osm.zip](https://docs.mobilitydb.com/pub/brussels.osm.zip) (61.8 MB; its
+     `brussels.osm` is the file the generator expects). The generator fixes the seed of its
+     random numbers, so that this extract gives the trips of the book; an extract downloaded on
+     another day gives others. The extract is © OpenStreetMap contributors, under the
+     [Open Database License](https://www.openstreetmap.org/copyright);
    - `brussels_communes.csv` and `brussels_region.csv`, from `TheBook/src/main/resources` of
      `project-jmeos.zip`.
 3. MovingPandas, on `../2021-01-30_all.csv`: `delhi_check.py` prints every output of
