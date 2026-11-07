@@ -287,7 +287,7 @@ count_stream = count_aggregator.aggregation()
 head('stream == bulk', (str(extent_stream) == str(extent_bulk), str(count_stream) == str(tcount_bulk)))
 
 # Tiling
-tiled_trips = trips["trip"].apply(lambda tr: tr.tile(5e3, remove_empty=True))
+tiled_trips = trips["trip"].apply(lambda tr: tr.space_split(5e3))
 speeds = trips["trip"].apply(lambda tr: tr.speed())
 tiled_speeds = speeds.apply(lambda sp: sp.value_time_split(10, "1 day", 0, "2020-06-01"))
 pd.set_option('display.width', 200)
@@ -300,7 +300,7 @@ with open(f'{OUT}/pymeosbmod10.txt', 'w') as f:
     f.write('\n'.join(tt) + '\n\n' + '\n'.join(ts) + '\n')
 # The ground of the tiles of Fig. 2.39 for the map of Fig. 2.38, and for the speed charts of both the
 # values up to the top of the speed tiles of 10 m/s that hold data
-grid = extent_bulk.tile(5e3)
+grid = extent_bulk.space_tiles(5e3)
 BOUNDS['pymeosbmod11_a'] = (min(t.xmin() for t in grid), min(t.ymin() for t in grid),
                             max(t.xmax() for t in grid), max(t.ymax() for t in grid))
 SPEED_TOP = 10 * math.ceil(max(sp.max_value() for sp in speeds) / 10)
@@ -315,7 +315,7 @@ axes[1].set_ylim(-0.03 * SPEED_TOP, SPEED_TOP)
 save_panels(fig, axes, ['pymeosbmod11_a', 'pymeosbmod11_b'])
 del tiled_trips, tiled_speeds
 
-extent_tiles = extent_bulk.tile(5e3)
+extent_tiles = extent_bulk.space_tiles(5e3)
 speed_extent = TemporalNumberExtentAggregator.aggregate(speeds)
 speed_tiles = speed_extent.tile(10, "1 day", 0.0, "2020-06-01")
 head('speed_extent', speed_extent)

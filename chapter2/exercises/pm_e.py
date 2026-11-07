@@ -38,7 +38,7 @@ print(aggregator.aggregation())
 tcount = TemporalPeriodCountAggregator.aggregate(trips)
 print(tcount)
 print(tcount.max_value(), tcount.at(2).duration())
-for tile in extent.tile(5):
+for tile in extent.space_tiles(5):
     inter = [i for i in (tr.at(tile) for tr in trips) if i is not None]
     if inter:
         print(tile.xmin(), tile.ymin(), len(inter),

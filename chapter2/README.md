@@ -39,9 +39,21 @@ DejaVu Sans at 6.67 points, the size whose x-height is that of the captions.
 
 1. Install the Python packages (the figures of the book are drawn with these versions) and the
    Chromium of Playwright:
-   `pip install movingpandas==0.23.0 pymeos==1.2.1 pymeos_cffi==1.2.0 geopandas==1.2.0 pandas==2.3.3 shapely==2.2.0 matplotlib==3.11.2 folium==0.20.0 branca==0.8.2 mapclassify==2.11.0 stonesoup==1.9.1 scikit-learn==1.9.1 distinctipy==1.3.4 pyarrow==26.0.0 psycopg==3.3.6 pillow==12.3.0 pikepdf==10.16.0 playwright==1.63.0`
+   `pip install movingpandas==0.23.0 geopandas==1.2.0 pandas==2.3.3 shapely==2.2.0 matplotlib==3.11.2 folium==0.20.0 branca==0.8.2 mapclassify==2.11.0 stonesoup==1.9.1 scikit-learn==1.9.1 distinctipy==1.3.4 pyarrow==26.0.0 psycopg==3.3.6 pillow==12.3.0 pikepdf==10.16.0 playwright==1.63.0`
    and `playwright install chromium`. Set `CHROME` to use another Chromium executable.
    `print_panels.py` sets its text with `pdflatex` and the `lmodern` package.
+   PyMEOS follows MEOS 1.4, which no release of PyMEOS carries yet, so PyMEOS-CFFI and PyMEOS
+   are installed from their master branches, in the same Python environment and with `ruff`
+   installed:
+
+       git clone https://github.com/MobilityDB/PyMEOS-CFFI
+       PyMEOS-CFFI/tools/refresh-from-master.sh
+       pip install git+https://github.com/MobilityDB/PyMEOS
+
+   `refresh-from-master.sh` builds the MEOS library of the master branch of MobilityDB into
+   `PyMEOS-CFFI/.meos-chain/prefix` and installs `pymeos_cffi` against it. The scripts of the
+   chapter then run with that library first in the search path:
+   `export LD_LIBRARY_PATH=$PWD/PyMEOS-CFFI/.meos-chain/prefix/lib:$LD_LIBRARY_PATH`.
 2. Put the input data in `figures/data`, or in the folder given by the variable `CH2_DATA`:
    - `aisclean-2026-01-20.csv`, the reports of the table `AISClean` of the AIS database of the
      book (directory `ais` of this repository), written by `figures/export_aisclean.sh` with the
@@ -82,10 +94,6 @@ DejaVu Sans at 6.67 points, the size whose x-height is that of the captions.
    `pymeosbmod10` and `pymeosbmod12_a/b`, `fig_pymeosbmod2_b.py` draws the map `pymeosbmod2_b`,
    `fig_pymeosbmod6.py` draws the maps `pymeosbmod6_a/b`, and `fig_pymeossimplifications_trip.py`
    the maps `pymeossimplifications-trip_a/b/c`.
-   `bmod_listings.py` runs with `pymeos==1.1.3 pymeos_cffi==1.1.3`: the MEOS library of
-   `pymeos_cffi` 1.2.0 answers `STBox.tile` with tiles that have no space dimension
-   (`STBOX T((null))`), so that `TGeomPoint.tile` of the tiling listings raises "The box must
-   have space dimension". The listings before the tiling print the same values with both versions.
 
 ### Exercises
 
@@ -94,8 +102,7 @@ exercises of the chapter. Run them in that folder with `aisinput.csv` (step 4 ab
 it: `mp_a.py`, `mp_b.py` and `mp_c.py` answer the MovingPandas exercise, and `pm_a.py`, `pm_b.py`
 and `pm_c.py` the PyMEOS one (`pm_b.py` and `pm_c.py` run the loading part of `pm_a.py`). `pm_d.py`
 answers the exercise on the design of the MEOS bindings and needs no data. `pm_e.py` answers
-the exercise on aggregation and tiling and needs no data either; it runs with `pymeos==1.1.3
-pymeos_cffi==1.1.3`, for the reason given in step 5 above.
+the exercise on aggregation and tiling and needs no data either.
 
 ### JMEOS Programs
 
