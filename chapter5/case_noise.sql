@@ -164,15 +164,21 @@ CREATE INDEX ON NoiseModels USING gist (DepthWind);
 ANALYZE NoiseModels;
 
 \echo == pairs of a vessel and a protected area its noise may reach under some model
+-- The pairs first, then the relationship of each model in a statement of its own, so that
+-- no statement runs for ten minutes
 DROP TABLE IF EXISTS NoisePairs;
 CREATE TABLE NoisePairs AS
-SELECT x.MMSI, n.Id AS AreaId,
-  eIntersects(n.Geom, x.Spherical) AS Spherical,
-  eIntersects(n.Geom, x.DepthAware) AS DepthAware,
-  eIntersects(n.Geom, x.DepthWind) AS DepthWind
+SELECT x.MMSI, n.Id AS AreaId, NULL::boolean AS Spherical,
+  NULL::boolean AS DepthAware, NULL::boolean AS DepthWind
 FROM NoiseModels x, NaturalAreas n
 WHERE x.Spherical && stbox(n.Geom) OR x.DepthAware && stbox(n.Geom)
   OR x.DepthWind && stbox(n.Geom);
+UPDATE NoisePairs p SET Spherical = eIntersects(n.Geom, x.Spherical)
+FROM NoiseModels x, NaturalAreas n WHERE x.MMSI = p.MMSI AND n.Id = p.AreaId;
+UPDATE NoisePairs p SET DepthAware = eIntersects(n.Geom, x.DepthAware)
+FROM NoiseModels x, NaturalAreas n WHERE x.MMSI = p.MMSI AND n.Id = p.AreaId;
+UPDATE NoisePairs p SET DepthWind = eIntersects(n.Geom, x.DepthWind)
+FROM NoiseModels x, NaturalAreas n WHERE x.MMSI = p.MMSI AND n.Id = p.AreaId;
 
 \echo == vessels, vessels over the bathymetry, and vessels for which the depth law applies at some instant (1499 | 972 | 944)
 SELECT COUNT(*) AS Vessels, COUNT(Depth) AS OverBathy,

@@ -16,7 +16,7 @@ SELECT 103
 == the six negative clearances: in a port area at the minimum, and the speed from the positions (m/s)
    mmsi    | minclear | inport | speed 
 -----------+----------+--------+-------
- 255805672 |    -12.5 | t      |   0.0
+ 255805672 |    -12.5 | t      |     0
  538010052 |     -8.1 | t      |   0.6
  636024484 |     -7.1 | t      |   0.5
  305530000 |     -5.3 | t      |      
@@ -31,7 +31,7 @@ SELECT 99
 -----------+---------+----------+-----------------+--------+--------
  636024511 |    13.2 |      0.7 | 00:48:00.708846 | 10.249 | 56.159
  636023850 |    10.5 |      1.9 | 00:00:26.658441 | 10.881 | 54.766
- 538010052 |      10 |      2.0 |                 | 10.362 | 56.242
+ 538010052 |      10 |        2 |                 | 10.362 | 56.242
  636024484 |      10 |      2.2 |                 | 10.238 | 56.153
  636023680 |      15 |      2.3 |                 | 12.668 | 54.748
  636018579 |      15 |      2.3 |                 | 12.362 | 54.632
@@ -53,7 +53,7 @@ SELECT 99
 == under way by the speed computed from the positions: the vessels with a negative clearance, the speed from the positions and the reported speed at the minimum (knots), and where (219018501 | 11.6 | -1.1 | 4.2 | 2.0 | 10.245 | 56.159)
    mmsi    | draught | minclear | speedpos | sog |  lon   |  lat   
 -----------+---------+----------+----------+-----+--------+--------
- 219018501 |    11.6 |     -1.1 |      4.2 | 2.0 | 10.245 | 56.159
+ 219018501 |    11.6 |     -1.1 |      4.2 |   2 | 10.245 | 56.159
 
 == Query: when was there water less than 20 m deep within 100 m of the vessel
  periods |      total      

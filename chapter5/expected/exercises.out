@@ -8,8 +8,8 @@ SET
 == 2. for each of the first 200 vessels, the highest wave met and when
    mmsi    | maxhs |            attime             
 -----------+-------+-------------------------------
- 209672000 |  2.30 | 2026-01-20 23:54:54.823452+00
- 205198000 |  1.50 | 2026-01-20 22:21:28.857571+00
+ 209672000 |   2.3 | 2026-01-20 23:54:54.823452+00
+ 205198000 |   1.5 | 2026-01-20 22:21:28.857571+00
  209313000 |  1.31 | 2026-01-20 00:54:27.336111+00
 
 == 3. time-weighted average surface temperature met by the first 200 vessels
@@ -41,7 +41,7 @@ SET
          4 |  0.49
 
 == 7. hours with the largest area of the sea with waves of at least 2 m
- validhour |  km2
+ validhour |  km2  
 -----------+-------
  23:00     | 69999
  22:00     | 64468

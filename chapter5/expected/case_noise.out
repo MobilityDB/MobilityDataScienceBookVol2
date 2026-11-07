@@ -41,6 +41,9 @@ ANALYZE
 == pairs of a vessel and a protected area its noise may reach under some model
 DROP TABLE
 SELECT 33473
+UPDATE 33473
+UPDATE 33473
+UPDATE 33473
 == vessels, vessels over the bathymetry, and vessels for which the depth law applies at some instant (1499 | 972 | 944)
  vessels | overbathy | depthmatters 
 ---------+-----------+--------------
@@ -54,7 +57,7 @@ SELECT 33473
 == the fishing vessel: type, length, period under way, sequences, km, source level, time over the bathymetry, depth (Fishing | 15 | 05:29:12 | 17:16:58 | 5 | 45.2 | 121.0 | 148.5 | 03:14:05.740078 | 0.3 | 60.7)
  shiptype | length |         startt         |          endt          | seqs |  km  | minsl | maxsl |   depthknown    | mindepth | maxdepth 
 ----------+--------+------------------------+------------------------+------+------+-------+-------+-----------------+----------+----------
- Fishing  |     15 | 2026-01-20 05:29:12+00 | 2026-01-20 17:16:58+00 |    5 | 45.2 | 121.0 | 148.5 | 03:14:05.740078 |      0.3 |     60.7
+ Fishing  |     15 | 2026-01-20 05:29:12+00 | 2026-01-20 17:16:58+00 |    5 | 45.2 |   121 | 148.5 | 03:14:05.740078 |      0.3 |     60.7
 
 == nearest port to the start and to the end of its trip (Vesterø Havn, Læsø, 11719 m and 11723 m)
    k   |      portname      |   d   
