@@ -66,9 +66,10 @@ DejaVu Sans at 6.67 points, the size whose x-height is that of the captions.
      the README of MobilityDB-BerlinMOD states, with `berlinmod_generate(scaleFactor := 0.01)`,
      over the road network of the extract of Brussels of OpenStreetMap that the book uses,
      [brussels.osm.zip](https://docs.mobilitydb.com/pub/brussels.osm.zip) (61.8 MB; its
-     `brussels.osm` is the file the generator expects). The generator fixes the seed of its
-     random numbers, so that this extract gives the trips of the book; an extract downloaded on
-     another day gives others. The extract is © OpenStreetMap contributors, under the
+     `brussels.osm` is the file the generator expects). The generator fixes the seeds of its
+     random numbers, that of PostgreSQL and that of the trip generator of MobilityDB, so that
+     this extract and MobilityDB 1.4 give the trips of the book; an extract downloaded on another
+     day, or another version of MobilityDB, gives others. The extract is © OpenStreetMap contributors, under the
      [Open Database License](https://www.openstreetmap.org/copyright);
    - `brussels_communes.csv` and `brussels_region.csv`, from `TheBook/src/main/resources` of
      `project-jmeos.zip`.
