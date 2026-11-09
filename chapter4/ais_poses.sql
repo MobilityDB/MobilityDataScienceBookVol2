@@ -65,11 +65,11 @@ FROM AISCleanPoly
 GROUP BY MMSI, SizeA, SizeB, SizeC, SizeD;
 
 CREATE TABLE ShipsRigid(MMSI, Trip) AS
-SELECT a.MMSI, trgeometry(s.Footprint,
-  tposeSeq(array_agg(tpose(pose(ST_Point(a.X, a.Y, 25832),
+SELECT a.MMSI, trgeometry(s.Footprint, transform(
+  tposeSeq(array_agg(tpose(pose(ST_Point(a.Longitude, a.Latitude, 4326),
     CASE WHEN a.Heading >= 270
       THEN pi() / 2 - radians(a.Heading) + 2 * pi()
-      ELSE pi() / 2 - radians(a.Heading) END), a.T) ORDER BY a.T)))
+      ELSE pi() / 2 - radians(a.Heading) END), a.T) ORDER BY a.T)), 25832))
 FROM AISCleanPoly a JOIN ShipShape s USING (MMSI)
 GROUP BY a.MMSI, s.Footprint;
 
