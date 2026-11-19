@@ -58,7 +58,7 @@ FROM Tracks
 WHERE Line = '20191022_085450_kh1910_400khz';
 
 \echo == Query: which part of the seabed did the vessel cover along the October line,
-\echo == and which part did its pings sound (1643152 | 2217 | 810 | 12931)
+\echo == and which part did its pings sound (1643152 | 2217 | 809 | 12931)
 SELECT ST_NPoints(traversedArea(tgeometry(s.Swath))) AS Soundings,
   round(ST_Area(traversedArea(tcbuffer(t.Trip, tfloat(3.75, timeSpan(t.Trip))),
     true))) AS Buffer,

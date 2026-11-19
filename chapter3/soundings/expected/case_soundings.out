@@ -19,10 +19,10 @@ SET
        5.12 |       5.58
 
 == Query: which part of the seabed did the vessel cover along the October line,
-== and which part did its pings sound (1643152 | 2217 | 810 | 12931)
+== and which part did its pings sound (1643152 | 2217 | 809 | 12931)
  soundings | buffer | vessel | swatharea 
 -----------+--------+--------+-----------
-   1643152 |   2217 |    810 |     12931
+   1643152 |   2217 |    809 |     12931
 
 == Listing: the same areas over the ten seconds from 08:54:50 to 08:55:00 (190 | 69 | 797)
  buffer | vessel | swatharea 
