@@ -132,7 +132,7 @@ it reads and writes lives in the AIS database of the book, built by `../ais/`.
 | `WPIPort`, `SeaAreas`, `EEZ`, `TerritorialSea`, `TSS` | The ports of the World Port Index, the IHO sea areas, the exclusive economic zones and territorial seas of the VLIZ Marine Regions, and the traffic separation schemes of OpenStreetMap | `fetch_context.sh`, `load_context.sh` |
 | `Gaps`, `TripPoints` | The gaps of at most 30 minutes and their windows, sampled every minute | `01_sequences.sql` |
 | `PointContext`, `PointDescriptor` | The context of every observed position and its description in the template of the corpus | `02_context.sql`, `03_descriptions.sql` |
-| `PointEmbedding` | The 256-dimensional embedding of every description | `embed.py` |
+| `PointEmbedding` | The 256-dimensional embedding of every description | `load_embeddings.py`, from `usecase/embeddings/`, or `embed.py` |
 | `EvalMasks`, view `ModelInput` | The positions every model is asked to reconstruct, and the sequences given to the model | `04_masks.sql` |
 | `ReconstructedLonLat`, `Reconstructed`, view `Errors` | The reconstructions of the models `crossdomain` and `coordinates` and of the baseline `linear`, and their errors | `run_model.py`, `05_evaluate.sql` |
 | `GapPaths`, `GapAreas` | The reconstructed path of every gap, and the protected areas the vessel could have entered | `06_exact.sql` |
@@ -153,7 +153,13 @@ it reads and writes lives in the AIS database of the book, built by `../ais/`.
   with the code of `2490c45`. The checkpoint `models/checkpoints/best.pt` of the
   code repository, at commit `8fc3ca2`, is a variant with a mixture of experts,
   which the chapter describes under *specialization* but does not use.
-- For the embeddings, a Hugging Face account that has accepted the license of
+- The embeddings of the descriptions are those of the book, in
+  `usecase/embeddings/`, which `load_embeddings.py` loads: EmbeddingGemma
+  computed them in bfloat16 on a GPU, and the files hold their bits exactly
+  (`export_embeddings.py` writes them). The script loads the embedding of a
+  description only when the description is the one of the book, and stops
+  otherwise. Computing them again (`EMBED=1`) needs a Hugging Face account that
+  has accepted the license of
   [EmbeddingGemma](https://huggingface.co/google/embeddinggemma-300m), and its
   token stored with `hf auth login`.
 
@@ -162,23 +168,24 @@ it reads and writes lives in the AIS database of the book, built by `../ais/`.
     cd usecase
     python3 -m venv venv && . venv/bin/activate
     pip install -r requirements.txt
-    hf auth login
     PGDATABASE=ais bash fetch_context.sh && PGDATABASE=ais bash load_context.sh
     PGDATABASE=ais bash run_usecase.sh
 
-On a laptop with an NVIDIA RTX 3060 GPU with 6 GB of memory, the whole run takes
-about 30 minutes, of which 19 for the embedding of the 160,439 descriptions. The
-use case can be reproduced without a GPU in two ways:
+The run loads the embeddings of the book, so it needs neither a Hugging Face
+account nor a GPU. On a laptop with an NVIDIA RTX 3060 GPU with 6 GB of memory,
+computing the embeddings of the 160,439 descriptions again (`EMBED=1`) takes 19
+minutes; without a GPU, the encoder runs in single precision instead of
+bfloat16, so the embeddings, and the errors of the model `crossdomain`, may
+differ slightly from those of the book. Smaller runs:
 
 | Command | What runs | Time on the processor of a laptop |
 |---|---|---|
 | `EMBED=0 SAMPLE=5 bash run_usecase.sh` | 5% of the gaps (439), without embeddings: the model `coordinates` and the baseline `linear` | 1 minute |
-| `SAMPLE=5 bash run_usecase.sh` | 5% of the gaps, with the embeddings of their 8,907 descriptions: every model | 43 minutes |
+| `SAMPLE=5 bash run_usecase.sh` | 5% of the gaps, with the embeddings of the book of their 8,907 descriptions: every model | SAMPLE5_TIME |
+| `EMBED=1 SAMPLE=5 bash run_usecase.sh` | the same, computing the 8,907 embeddings with EmbeddingGemma | 43 minutes |
 
 The share of gaps is chosen by a hash of the key of each gap, so every run with
-the same `SAMPLE` studies the same gaps. Without a GPU, the encoder runs in
-single precision instead of bfloat16, so the embeddings, and the errors of the
-model `crossdomain`, may differ slightly from those of the book.
+the same `SAMPLE` studies the same gaps.
 
 For the whole day, `05_evaluate.sql` prints the errors of the book:
 
