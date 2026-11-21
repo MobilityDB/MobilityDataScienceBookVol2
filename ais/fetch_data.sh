@@ -5,10 +5,11 @@
 # cleaning follows. Nothing is redistributed in this repository: each file comes from its
 # publisher. The helper fetch is #fetch of chapter5/fetch_data.sh.
 #
-#   bash fetch_data.sh [day | month]
+#   bash fetch_data.sh [day | month | YYYY-MM-DD]
 #
 # day (the default) fetches January 20, 2026, the day of the single-day chapters; month fetches
-# the 31 days of January 2026, the month of the lakehouse chapter.
+# the 31 days of January 2026, the month of the lakehouse chapter; a date fetches that day, such
+# as 2026-01-25 for the figure of the three cell grids of chapter 5.
 set -e
 DATA=${DATA:-$PWD/data}
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -23,6 +24,7 @@ fetch() { # url file
 case ${1:-day} in
   day) DAYS="2026-01-20" ;;
   month) DAYS=$(seq -f "2026-01-%02g" 1 31) ;;
+  [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) DAYS=$1 ;;
   *) echo "unknown period: $1"; exit 1 ;;
 esac
 for d in $DAYS; do

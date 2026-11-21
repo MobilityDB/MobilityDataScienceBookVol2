@@ -69,6 +69,13 @@ To build the database of the whole month, for chapter 10:
     bash build.sh month
     DUCKDB_ENGINE=/path/to/duckdb bash check_duckdb.sh month
 
+`fetch_data.sh` and `build.sh` also take a date, `YYYY-MM-DD`, to build that day alone in a database of its
+own. The figure of the three cell grids of chapter 5 draws a trip of January 25, 2026:
+
+    bash fetch_data.sh 2026-01-25
+    createdb ais_20260125
+    PGDATABASE=ais_20260125 bash build.sh 2026-01-25
+
 `fetch_data.sh` downloads the archives into `data/ais/` and the table of Maritime Identification
 Digits into `data/`. The Danish Maritime Authority does not allow its data to be redistributed,
 so the repository holds none of them. `build.sh` loads the archives into `AISInput` and runs

@@ -1,12 +1,20 @@
 -- Export the layers of the figure of the three cell grids (fig:tess_cellgrids): the track of the
--- pilot boat DANPILOT VENUS (MMSI 219002732) leaving Frederikshavn between 08:45:29 and 09:52:23
--- UTC, from the column TripLonLat of Ships, on the H3, QUADBIN, and S2 grids, with the cells it
--- crosses (th3index, tquadbin, ts2cell) and the protected area 17 of NaturalAreas. The left
--- column shows H3 8, QUADBIN 15, and S2 14 over the frame of the whole track, the right column one
--- resolution finer over the excerpt outlined in black on the left. Writes cellgrids.geojson and
--- cellgrids_frames.txt, which cellgrids_panels.py draws, to the directory :out.
+-- pilot boat VENUS (MMSI 219002732) leaving Frederikshavn on January 25, 2026, from 07:39:04 to
+-- 09:02:03 UTC, from the column TripLonLat of Ships, on the H3, QUADBIN, and S2 grids, with the
+-- cells it crosses (th3index, tquadbin, ts2cell) and the protected areas 3 (Waters around
+-- Hirsholmene) and 163 (Frederikshavn Kommune public) of NaturalAreas. One column per grid: the
+-- upper row draws H3 8, QUADBIN 15, and S2 14 over the whole track, the lower row one resolution
+-- finer over the excerpt outlined in black above, the exit of the harbour. Writes cellgrids.geojson
+-- and cellgrids_frames.txt, which cellgrids_panels.py draws, to the directory :out.
 --
+-- The database is the AIS database of that day, built by ais/build.sh 2026-01-25, with the
+-- ports and protected areas of load_aux_tables.sql:
 --   psql -v out=<dir> -f export_cellgrids.sql
+--
+-- The layout and the colours are those of the figure tcell_grids of the MobilityDB manual
+-- (doc/images/cellindex.png), whose lower frame the lower row keeps: the panels are 700 x 380
+-- pixels in EPSG:3857, the upper frame is the box of the track and of the excerpt widened by a
+-- fifth in that aspect, and the lower frame is the excerpt of the manual.
 \set ON_ERROR_STOP on
 \set QUIET on
 \pset tuples_only on
@@ -14,23 +22,27 @@
 SET TimeZone = 'UTC';
 
 CREATE TEMP TABLE Track AS
-SELECT MMSI, atTime(TripLonLat, tstzspan '[2026-01-20 08:45:29+00, 2026-01-20 09:52:23+00]') AS Trip
+SELECT MMSI, atTime(TripLonLat, tstzspan '[2026-01-25 07:39:04+00, 2026-01-25 09:02:03+00]') AS Trip
 FROM Ships WHERE MMSI = 219002732;
 CREATE TEMP TABLE Mpa AS
-SELECT Id, NameEng AS Name, GeomLonLat AS Geom FROM NaturalAreas WHERE Id = 17;
+SELECT Id, ST_Transform(Geom, 4326) AS Geom FROM NaturalAreas WHERE Id IN (3, 163);
 
--- The frames in EPSG:25832, in the aspect 700:380 of the panels
-CREATE TEMP TABLE Frame(Panel text PRIMARY KEY, Grid text, Res int, Geom geometry(Polygon, 25832));
+CREATE TEMP TABLE Frame(Panel text PRIMARY KEY, Grid text, Res int, Geom geometry(Polygon, 3857));
+-- The excerpt: the exit of the harbour
 INSERT INTO Frame
-SELECT g || '_' || r, g, r, ST_MakeEnvelope(cx - 4000, cy - 2171, cx + 4000, cy + 2171, 25832)
-FROM (SELECT (ST_XMin(e) + ST_XMax(e)) / 2 AS cx, (ST_YMin(e) + ST_YMax(e)) / 2 AS cy
-      FROM (SELECT ST_Envelope(ST_Transform(trajectory(Trip), 25832)) e FROM Track) a) b,
+SELECT g || '_' || r, g, r, ST_MakeEnvelope(1172401.8, 7846811.4, 1178676.0, 7850217.4, 3857)
+FROM (VALUES ('h3', 9), ('quadbin', 16), ('s2', 15)) AS v(g, r);
+-- The whole track: the box of the track and of the excerpt, widened by a fifth in the aspect of
+-- a panel
+INSERT INTO Frame
+SELECT g || '_' || r, g, r, ST_MakeEnvelope(cx - w / 2, cy - w * 380 / 700 / 2, cx + w / 2,
+  cy + w * 380 / 700 / 2, 3857)
+FROM (SELECT (ST_XMin(b) + ST_XMax(b)) / 2 AS cx, (ST_YMin(b) + ST_YMax(b)) / 2 AS cy,
+        greatest(ST_XMax(b) - ST_XMin(b), (ST_YMax(b) - ST_YMin(b)) * 700 / 380.0) * 1.2 AS w
+      FROM (SELECT ST_Extent(g) AS b FROM (
+              SELECT ST_Transform(trajectory(Trip), 3857) AS g FROM Track
+              UNION ALL SELECT Geom FROM Frame WHERE Panel = 'h3_9') x) e) c,
   (VALUES ('h3', 8), ('quadbin', 15), ('s2', 14)) AS v(g, r);
--- The excerpt: the exit of the harbour, from the start of the track
-INSERT INTO Frame
-SELECT g || '_' || r, g, r, ST_MakeEnvelope(ST_X(p) - 600, ST_Y(p) - 1100, ST_X(p) + 1426, ST_Y(p), 25832)
-FROM (SELECT ST_Transform(startValue(Trip), 25832) p FROM Track) a,
-  (VALUES ('h3', 9), ('quadbin', 16), ('s2', 15)) AS v(g, r);
 
 -- Every cell meeting each frame, and the cells the track crosses
 CREATE TEMP TABLE Grid AS
@@ -53,9 +65,10 @@ UNION ALL
 SELECT f.Panel, c::text, cellToBoundary(c), cellArea(c)
 FROM Frame f, Track t, unnest(getValues(ts2cell(t.Trip, f.Res))) c WHERE f.Grid = 's2';
 
--- Panel | cells of the grid drawn | cells crossed | mean area of a crossed cell
+-- Panel | cells of the grid drawn | cells crossed | mean area of a crossed cell (km2), the areas
+-- the panel titles of cellgrids_compose.tex state
 SELECT f.Panel, (SELECT count(*) FROM Grid g WHERE g.Panel = f.Panel) AS GridCells,
-  count(c.*) AS Crossed, avg(c.Area) AS MeanArea
+  count(c.*) AS Crossed, round((avg(c.Area) / 1e6)::numeric, 3) AS MeanAreaKm2
 FROM Frame f LEFT JOIN Crossed c USING (Panel) GROUP BY f.Panel ORDER BY f.Panel;
 
 \o :out/cellgrids.geojson

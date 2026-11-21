@@ -35,7 +35,9 @@ for j in bathymetry_laeso depth_under_vessel traffic_h3 seabed_slope seabed_tpi;
   (cd "$OUT" && timeout 900 "${RUN[@]}" hybrid_pdf.py "job_$j.json" "$j.pdf" 2>&1 |
     grep -E 'wrote|Error|Traceback' || true)
 done
-psql -X -v out="$OUT" -f "$HERE/export_cellgrids.sql"
+# The figure of the three cell grids reads the AIS database of January 25, 2026
+# (ais/build.sh 2026-01-25, with load_aux_tables.sql), named by CELLGRIDS_DB
+PGDATABASE=${CELLGRIDS_DB:-ais_20260125} psql -X -v out="$OUT" -f "$HERE/export_cellgrids.sql"
 cp "$HERE/cellgrids_panels.py" "$HERE/cellgrids_compose.tex" "$OUT/"
 (cd "$OUT" && timeout 900 "${RUN[@]}" cellgrids_panels.py . 2>&1 | grep -E 'wrote|Error|Traceback' || true)
 (cd "$OUT" && pdflatex -interaction=nonstopmode cellgrids_compose.tex > /dev/null &&

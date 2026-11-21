@@ -114,6 +114,13 @@ to that database:
     bash run_all.sh                    # every script, out/ compared with expected/
     OUT=/mnt/c/Temp/figs bash figures/make_figures.sh    # every map figure
 
+The figure of the three cell grids draws a trip of January 25, 2026, so it reads
+an AIS database of that day, with the ports and protected areas of the chapter:
+
+    (cd ../ais && bash fetch_data.sh 2026-01-25 && createdb ais_20260125 &&
+      PGDATABASE=ais_20260125 bash build.sh 2026-01-25)
+    PGDATABASE=ais_20260125 psql -f load_aux_tables.sql
+
 `load_all.sh` runs, in this order: `build_aux_data.sh` and
 `load_aux_tables.sql`; the reprojection of
 the bathymetry to EPSG:25832 with `gdalwarp` and its loading into the table
@@ -189,5 +196,5 @@ in blue, protected areas in green.
 | Bathymetry around the island of Læsø | `export_bathymetry_laeso.sh`, `job_bathymetry_laeso.json` |
 | The seabed of a reef area north-east of Læsø | `export_seabed.sh`, `job_seabed_slope.json`, `job_seabed_tpi.json` |
 | The depth under a vessel between two reports | `export_depth_under_vessel.sh`, `job_depth_under_vessel.json`, and `overlay_depth_under_vessel.py`, which writes `depth_under_vessel_overlay.tex`, the image with its labels and legend in the style of the captions, which the book inputs |
-| An AIS track on the H3, QUADBIN, and S2 grids | `export_cellgrids.sql`, which writes the track of the pilot boat 219002732 leaving Frederikshavn from `Ships`, the protected area 17 of `NaturalAreas`, and the cells of the six panels; `cellgrids_panels.py`, which draws each panel; and `cellgrids_compose.tex`, which sets them in `cellgrids.pdf` |
+| An AIS track on the H3, QUADBIN, and S2 grids | `export_cellgrids.sql`, run on the database of January 25, 2026 (`CELLGRIDS_DB`, by default `ais_20260125`), which writes the track of the pilot boat 219002732 leaving Frederikshavn from 07:39:04 to 09:02:03 UTC from `Ships`, the protected areas 3 and 163 of `NaturalAreas`, and the cells of the six panels; `cellgrids_panels.py`, which draws each panel; and `cellgrids_compose.tex`, which sets them in `cellgrids.pdf` |
 | Vessel-hours per H3 cell | `export_traffic_h3.sh`, `job_traffic_h3.json`, and `extract_base.py` of `chapter10/figures`, which merges the OSM Shortbread tiles of zoom 5 into the basemap `traffic_base.gpkg`, so that the map of Denmark stays near 1 MB and draws in under a second |
