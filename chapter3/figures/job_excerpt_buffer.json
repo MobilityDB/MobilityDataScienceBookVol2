@@ -112,7 +112,7 @@
    "kind": "marker",
    "style": {
     "name": "circle",
-    "color": "#e6b980",
+    "color": "#cc7b38",
     "outline_style": "no",
     "size": "1.2"
    }
@@ -125,7 +125,7 @@
    "kind": "marker",
    "style": {
     "name": "circle",
-    "color": "#d99a5a",
+    "color": "#cc7b38",
     "outline_style": "no",
     "size": "1.2"
    }
@@ -151,7 +151,7 @@
    "kind": "marker",
    "style": {
     "name": "circle",
-    "color": "#bf5f1f",
+    "color": "#cc7b38",
     "outline_style": "no",
     "size": "1.2"
    }
@@ -164,7 +164,7 @@
    "kind": "marker",
    "style": {
     "name": "circle",
-    "color": "#a84a10",
+    "color": "#cc7b38",
     "outline_style": "no",
     "size": "1.2"
    }
@@ -177,7 +177,7 @@
    "kind": "marker",
    "style": {
     "name": "circle",
-    "color": "#8c3a08",
+    "color": "#cc7b38",
     "outline_style": "no",
     "size": "1.2"
    }

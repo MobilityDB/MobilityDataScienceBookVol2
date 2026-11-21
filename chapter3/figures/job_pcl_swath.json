@@ -32,9 +32,10 @@
    "filter": "\"layer\" = 'hull0'",
    "kind": "fill",
    "style": {
-    "color": "246,220,174,235",
+    "color": "229,170,108,235",
     "outline_color": "#7a3d00",
-    "outline_width": "0.5"
+    "outline_width": "0.5",
+    "outline_style": "dash"
    }
   },
   {
@@ -44,9 +45,10 @@
    "filter": "\"layer\" = 'hull1'",
    "kind": "fill",
    "style": {
-    "color": "238,196,140,235",
+    "color": "229,170,108,235",
     "outline_color": "#7a3d00",
-    "outline_width": "0.5"
+    "outline_width": "0.5",
+    "outline_style": "dash"
    }
   },
   {
@@ -58,7 +60,8 @@
    "style": {
     "color": "229,170,108,235",
     "outline_color": "#7a3d00",
-    "outline_width": "0.5"
+    "outline_width": "0.5",
+    "outline_style": "dash"
    }
   },
   {
@@ -68,9 +71,10 @@
    "filter": "\"layer\" = 'hull3'",
    "kind": "fill",
    "style": {
-    "color": "220,145,79,235",
+    "color": "229,170,108,235",
     "outline_color": "#7a3d00",
-    "outline_width": "0.5"
+    "outline_width": "0.5",
+    "outline_style": "dash"
    }
   },
   {
@@ -80,9 +84,10 @@
    "filter": "\"layer\" = 'hull4'",
    "kind": "fill",
    "style": {
-    "color": "208,120,54,235",
+    "color": "229,170,108,235",
     "outline_color": "#7a3d00",
-    "outline_width": "0.5"
+    "outline_width": "0.5",
+    "outline_style": "dash"
    }
   },
   {
@@ -92,9 +97,88 @@
    "filter": "\"layer\" = 'hull5'",
    "kind": "fill",
    "style": {
-    "color": "194,95,30,235",
+    "color": "229,170,108,235",
     "outline_color": "#7a3d00",
-    "outline_width": "0.5"
+    "outline_width": "0.5",
+    "outline_style": "dash"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull0'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.5",
+    "outline_style": "dash"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull1'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.5",
+    "outline_style": "dash"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull2'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.5",
+    "outline_style": "dash"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull3'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.5",
+    "outline_style": "dash"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull4'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.5",
+    "outline_style": "dash"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull5'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.5",
+    "outline_style": "dash"
    }
   },
   {
@@ -104,7 +188,7 @@
    "filter": "\"layer\" = 'ping0'",
    "kind": "fill",
    "style": {
-    "color": "246,220,174,235",
+    "color": "229,170,108,235",
     "outline_color": "#7a3d00",
     "outline_width": "0.5"
    }
@@ -116,7 +200,7 @@
    "filter": "\"layer\" = 'ping1'",
    "kind": "fill",
    "style": {
-    "color": "238,196,140,235",
+    "color": "229,170,108,235",
     "outline_color": "#7a3d00",
     "outline_width": "0.5"
    }
@@ -140,7 +224,7 @@
    "filter": "\"layer\" = 'ping3'",
    "kind": "fill",
    "style": {
-    "color": "220,145,79,235",
+    "color": "229,170,108,235",
     "outline_color": "#7a3d00",
     "outline_width": "0.5"
    }
@@ -152,7 +236,7 @@
    "filter": "\"layer\" = 'ping4'",
    "kind": "fill",
    "style": {
-    "color": "208,120,54,235",
+    "color": "229,170,108,235",
     "outline_color": "#7a3d00",
     "outline_width": "0.5"
    }
@@ -164,7 +248,7 @@
    "filter": "\"layer\" = 'ping5'",
    "kind": "fill",
    "style": {
-    "color": "194,95,30,235",
+    "color": "229,170,108,235",
     "outline_color": "#7a3d00",
     "outline_width": "0.5"
    }
@@ -177,7 +261,7 @@
    "kind": "marker",
    "style": {
     "name": "circle",
-    "color": "#e6b980",
+    "color": "#cc7b38",
     "outline_style": "no",
     "size": "0.6"
    }
@@ -190,7 +274,7 @@
    "kind": "marker",
    "style": {
     "name": "circle",
-    "color": "#d99a5a",
+    "color": "#cc7b38",
     "outline_style": "no",
     "size": "0.6"
    }
@@ -216,7 +300,7 @@
    "kind": "marker",
    "style": {
     "name": "circle",
-    "color": "#bf5f1f",
+    "color": "#cc7b38",
     "outline_style": "no",
     "size": "0.6"
    }
@@ -229,7 +313,7 @@
    "kind": "marker",
    "style": {
     "name": "circle",
-    "color": "#a84a10",
+    "color": "#cc7b38",
     "outline_style": "no",
     "size": "0.6"
    }
@@ -242,7 +326,7 @@
    "kind": "marker",
    "style": {
     "name": "circle",
-    "color": "#8c3a08",
+    "color": "#cc7b38",
     "outline_style": "no",
     "size": "0.6"
    }

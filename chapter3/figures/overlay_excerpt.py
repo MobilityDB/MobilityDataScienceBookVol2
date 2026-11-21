@@ -39,14 +39,13 @@ import sys
 
 jobdir, imgdir, a_rigid, a_buffer, out = sys.argv[1:6]
 side = 5.4
-ramp = ["F6DCAE", "EEC48C", "E5AA6C", "DC914F", "D07836", "C25F1E"]
 # The panel, its caption, the corner of its scale bar, and its length in meters
 panels = [
     ("rigid", "\\textsf{trgeometry}: \\textsf{traversedArea}, %s m$^2$" % a_rigid, "west", 5),
     ("buffer", "\\textsf{tcbuffer}: \\textsf{traversedArea}, %s m$^2$" % a_buffer, "west", 5),
 ]
 lines = ["% Written by overlay_excerpt.py from the jobs and the areas."]
-lines += ["\\definecolor{r%d}{HTML}{%s}" % (i, c) for i, c in enumerate(ramp)]
+lines.append("\\definecolor{hull}{RGB}{229,170,108}")
 lines.append("\\definecolor{tablue}{RGB}{170,200,255}")
 for i, (name, caption, corner, meters) in enumerate(panels):
     job = json.load(open(os.path.join(jobdir, "job_excerpt_%s.json" % name), encoding="utf-8"))
@@ -67,11 +66,10 @@ for i, (name, caption, corner, meters) in enumerate(panels):
     ]
 # The legend, below the two subfloats
 lines += ["", "\\medskip", "\\begin{tikzpicture}[font=\\captionstyle]"]
-for i in range(6):
-    lines.append("\\fill[r%d, draw={rgb,255:red,122;green,61;blue,0}, line width=0.3pt] "
-                 "(%.2f, -0.09) rectangle (%.2f, 0.09);" % (i, 0.25 * i, 0.25 * i + 0.22))
 lines += [
-    "\\node[anchor=west, inner sep=1pt] at (1.55, 0) {Values every 2 s from 08:54:50 to 08:55:00};",
+    "\\fill[hull, draw={rgb,255:red,122;green,61;blue,0}, line width=0.3pt, dashed] "
+    "(0, -0.09) rectangle (0.47, 0.09);",
+    "\\node[anchor=west, inner sep=1pt] at (0.55, 0) {Values every 2 s from 08:54:50 to 08:55:00};",
     "\\fill[tablue, draw=blue, line width=0.3pt] (0, -0.6) rectangle (0.47, -0.42);",
     "\\node[anchor=west, inner sep=1pt] at (0.55, -0.51) {Traversed area};",
     "\\draw[blue, line width=0.6pt] (6.0, -0.51) -- (6.47, -0.51);",
