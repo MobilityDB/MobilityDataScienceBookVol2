@@ -30,78 +30,11 @@
    "type": "vector",
    "path": "excerpt.gpkg",
    "layer": "layers",
-   "filter": "\"layer\" = 'hull0'",
    "kind": "fill",
+   "filter": "\"layer\" = 'hulls'",
    "style": {
-    "color": "229,170,108,235",
-    "outline_color": "#7a3d00",
-    "outline_width": "0.25",
-    "outline_style": "dash"
-   }
-  },
-  {
-   "type": "vector",
-   "path": "excerpt.gpkg",
-   "layer": "layers",
-   "filter": "\"layer\" = 'hull1'",
-   "kind": "fill",
-   "style": {
-    "color": "229,170,108,235",
-    "outline_color": "#7a3d00",
-    "outline_width": "0.25",
-    "outline_style": "dash"
-   }
-  },
-  {
-   "type": "vector",
-   "path": "excerpt.gpkg",
-   "layer": "layers",
-   "filter": "\"layer\" = 'hull2'",
-   "kind": "fill",
-   "style": {
-    "color": "229,170,108,235",
-    "outline_color": "#7a3d00",
-    "outline_width": "0.25",
-    "outline_style": "dash"
-   }
-  },
-  {
-   "type": "vector",
-   "path": "excerpt.gpkg",
-   "layer": "layers",
-   "filter": "\"layer\" = 'hull3'",
-   "kind": "fill",
-   "style": {
-    "color": "229,170,108,235",
-    "outline_color": "#7a3d00",
-    "outline_width": "0.25",
-    "outline_style": "dash"
-   }
-  },
-  {
-   "type": "vector",
-   "path": "excerpt.gpkg",
-   "layer": "layers",
-   "filter": "\"layer\" = 'hull4'",
-   "kind": "fill",
-   "style": {
-    "color": "229,170,108,235",
-    "outline_color": "#7a3d00",
-    "outline_width": "0.25",
-    "outline_style": "dash"
-   }
-  },
-  {
-   "type": "vector",
-   "path": "excerpt.gpkg",
-   "layer": "layers",
-   "filter": "\"layer\" = 'hull5'",
-   "kind": "fill",
-   "style": {
-    "color": "229,170,108,235",
-    "outline_color": "#7a3d00",
-    "outline_width": "0.25",
-    "outline_style": "dash"
+    "color": "255,140,0,115",
+    "outline_style": "no"
    }
   },
   {
@@ -113,7 +46,7 @@
    "style": {
     "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.25",
+    "outline_width": "0.4",
     "outline_style": "dash"
    }
   },
@@ -126,7 +59,7 @@
    "style": {
     "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.25",
+    "outline_width": "0.4",
     "outline_style": "dash"
    }
   },
@@ -139,7 +72,7 @@
    "style": {
     "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.25",
+    "outline_width": "0.4",
     "outline_style": "dash"
    }
   },
@@ -152,7 +85,7 @@
    "style": {
     "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.25",
+    "outline_width": "0.4",
     "outline_style": "dash"
    }
   },
@@ -165,7 +98,7 @@
    "style": {
     "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.25",
+    "outline_width": "0.4",
     "outline_style": "dash"
    }
   },
@@ -178,7 +111,85 @@
    "style": {
     "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.25",
+    "outline_width": "0.4",
+    "outline_style": "dash"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull0'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.4",
+    "outline_style": "dash"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull1'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.4",
+    "outline_style": "dash"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull2'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.4",
+    "outline_style": "dash"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull3'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.4",
+    "outline_style": "dash"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull4'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.4",
+    "outline_style": "dash"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "excerpt.gpkg",
+   "layer": "layers",
+   "filter": "\"layer\" = 'hull5'",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
+    "outline_color": "#7a3d00",
+    "outline_width": "0.4",
     "outline_style": "dash"
    }
   },

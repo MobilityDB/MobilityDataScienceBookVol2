@@ -45,7 +45,7 @@ panels = [
     ("buffer", "\\textsf{tcbuffer}: \\textsf{traversedArea}, %s m$^2$" % a_buffer, "west", 5),
 ]
 lines = ["% Written by overlay_excerpt.py from the jobs and the areas."]
-lines.append("\\definecolor{hull}{RGB}{229,170,108}")
+lines.append("\\definecolor{hull}{RGB}{255,140,0}")
 lines.append("\\definecolor{tablue}{RGB}{170,200,255}")
 for i, (name, caption, corner, meters) in enumerate(panels):
     job = json.load(open(os.path.join(jobdir, "job_excerpt_%s.json" % name), encoding="utf-8"))
@@ -67,7 +67,7 @@ for i, (name, caption, corner, meters) in enumerate(panels):
 # The legend, below the two subfloats
 lines += ["", "\\medskip", "\\begin{tikzpicture}[font=\\captionstyle]"]
 lines += [
-    "\\fill[hull, draw={rgb,255:red,122;green,61;blue,0}, line width=0.3pt, dashed] "
+    "\\filldraw[fill=hull, fill opacity=0.45, draw={rgb,255:red,122;green,61;blue,0}, line width=0.3pt, dashed] "
     "(0, -0.09) rectangle (0.47, 0.09);",
     "\\node[anchor=west, inner sep=1pt] at (0.55, 0) {Values every 2 s from 08:54:50 to 08:55:00};",
     "\\fill[tablue, draw=blue, line width=0.3pt] (0, -0.6) rectangle (0.47, -0.42);",

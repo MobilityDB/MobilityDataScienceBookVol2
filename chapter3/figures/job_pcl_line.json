@@ -204,10 +204,21 @@
    "path": "fullline.gpkg",
    "layer": "layers",
    "kind": "fill",
+   "filter": "\"layer\" = 'hulls'",
    "style": {
-    "color": "229,170,108,235",
+    "color": "255,140,0,115",
+    "outline_style": "no"
+   }
+  },
+  {
+   "type": "vector",
+   "path": "fullline.gpkg",
+   "layer": "layers",
+   "kind": "fill",
+   "style": {
+    "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull0'"
@@ -218,9 +229,9 @@
    "layer": "layers",
    "kind": "fill",
    "style": {
-    "color": "229,170,108,235",
+    "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull1'"
@@ -231,9 +242,9 @@
    "layer": "layers",
    "kind": "fill",
    "style": {
-    "color": "229,170,108,235",
+    "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull2'"
@@ -244,9 +255,9 @@
    "layer": "layers",
    "kind": "fill",
    "style": {
-    "color": "229,170,108,235",
+    "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull3'"
@@ -257,9 +268,9 @@
    "layer": "layers",
    "kind": "fill",
    "style": {
-    "color": "229,170,108,235",
+    "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull4'"
@@ -270,9 +281,9 @@
    "layer": "layers",
    "kind": "fill",
    "style": {
-    "color": "229,170,108,235",
+    "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull5'"
@@ -283,9 +294,9 @@
    "layer": "layers",
    "kind": "fill",
    "style": {
-    "color": "229,170,108,235",
+    "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull6'"
@@ -298,7 +309,7 @@
    "style": {
     "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull0'"
@@ -311,7 +322,7 @@
    "style": {
     "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull1'"
@@ -324,7 +335,7 @@
    "style": {
     "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull2'"
@@ -337,7 +348,7 @@
    "style": {
     "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull3'"
@@ -350,7 +361,7 @@
    "style": {
     "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull4'"
@@ -363,7 +374,7 @@
    "style": {
     "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull5'"
@@ -376,7 +387,7 @@
    "style": {
     "color": "0,0,0,0",
     "outline_color": "#7a3d00",
-    "outline_width": "0.3",
+    "outline_width": "0.4",
     "outline_style": "dash"
    },
    "filter": "\"layer\" = 'hull6'"

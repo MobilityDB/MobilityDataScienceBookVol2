@@ -38,11 +38,12 @@
 #   the swath of the pings; and, at each instant k = 0..5 two seconds apart,
 #   hull<k> and buf<k>, the rigid geometry and the circular buffer, center<k>,
 #   the antenna, and ping<k> and dots<k>, the footprint (the convex hull) and
-#   the soundings of the ping nearest the instant;
+#   the soundings of the ping nearest the instant; hulls, the union of the
+#   hull<k>, which the maps fill as one so that overlapping hulls do not darken;
 # - fullline.gpkg, layer layers, the whole line (job_pcl_line.json): seven
 #   pings evenly spread over the line, ping<i> as the footprint of the ping and
 #   dots<i> as its soundings, and the rigid geometry at the same instants,
-#   hull<i>, with the time t of each;
+#   hull<i>, with the time t of each, and their union, hulls;
 # - swath.gpkg and track.gpkg, the swath of the line and the trajectory of its
 #   antenna, and frame.gpkg, the extent of job_pcl_swath.json, which
 #   job_pcl_line.json draws as the frame of the ten seconds.
@@ -70,6 +71,7 @@ ogr2ogr -f GPKG -a_srs EPSG:25832 excerpt.gpkg "$PG" -nln layers -overwrite -sql
    UNION ALL SELECT 'ta_rigid', traversedArea(atTime(Hull, $W), true) FROM v
    UNION ALL SELECT 'ta_buffer', traversedArea(atTime(Buf, $W), true) FROM v
    UNION ALL SELECT 'hull' || k, valueAtTimestamp(Hull, t) FROM v, k
+   UNION ALL SELECT 'hulls', ST_Union(valueAtTimestamp(Hull, t)) FROM v, k
    UNION ALL SELECT 'buf' || k, valueAtTimestamp(Buf, t)::geometry FROM v, k
    UNION ALL SELECT 'center' || k, valueAtTimestamp(Trip, t) FROM v, k
    UNION ALL SELECT 'ping' || k, ST_ConvexHull(ST_Force2D(geometry(Patch))) FROM p
@@ -87,6 +89,8 @@ ogr2ogr -f GPKG -a_srs EPSG:25832 fullline.gpkg "$PG" -nln layers -overwrite -sq
    FROM k
    UNION ALL SELECT 'dots' || i, T::text, ST_Force2D(geometry(Patch)) FROM k
    UNION ALL SELECT 'hull' || i, T::text, valueAtTimestamp($HULL, k.T)
+   FROM k, Tracks WHERE Line = '$LINE'
+   UNION ALL SELECT 'hulls', NULL, ST_Union(valueAtTimestamp($HULL, k.T))
    FROM k, Tracks WHERE Line = '$LINE'"
 ogr2ogr -f GPKG -a_srs EPSG:25832 -nlt POLYGON swath.gpkg "$PG" -nln swath -overwrite -sql \
   "SELECT swath(Swath) AS geom FROM Swaths WHERE Line = '$LINE'"
