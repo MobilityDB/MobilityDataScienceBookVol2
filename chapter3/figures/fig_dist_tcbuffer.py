@@ -31,11 +31,13 @@ Cbuffer(Point(16 15),5)@2001-01-04] and the point q = (14 3): the circle at the
 turning point, the end of the shortest line, and the fraction of the interval
 at which the turning point lies, as MobilityDB answers them
 (nearestApproachInstant, valueAtTimestamp and shortestLine).
-(b) The temporal circular buffers [Cbuffer(Point(1 4),0.5)@2001-01-01,
-Cbuffer(Point(4 1),0.5)@2001-01-03] (red, the first argument) and
-[Cbuffer(Point(1 1),0.5)@2001-01-01, Cbuffer(Point(4 4),0.5)@2001-01-03]
+(b) The temporal circular buffers [Cbuffer(Point(4 16),2)@2001-01-01,
+Cbuffer(Point(16 4),2)@2001-01-03] (red, the first argument) and
+[Cbuffer(Point(4 4),2)@2001-01-01, Cbuffer(Point(16 16),2)@2001-01-03]
 (blue): the fractions of the interval at which they begin and stop touching,
 the instants of their temporal distance whose value is 0.
+Both panels share one frame, FRAME: the plane from 0 to 22 at 0.21 cm a unit,
+with a grid every 2.5 and ticks every 5.
 
 The answers are passed on the command line, so that the figure draws what the
 database computes. The pictures are written to dist_tcbuffer_a.tex and
@@ -55,8 +57,14 @@ import sys
 # (a): the buffer at its two instants and the point
 C1, R1, C2, R2, Q = (4, 4), 2, (16, 15), 5, (14, 3)
 # (b): the two buffers, red then blue, from their first to their last instant
-RED, BLUE, RAD = ((1, 4), (4, 1)), ((1, 1), (4, 4)), 0.5
+RED, BLUE, RAD = ((4, 16), (16, 4)), ((4, 4), (16, 16)), 2
 BLUECOL = 'RoyalBlue!75!black'
+# The frame of both panels
+FRAME = [
+    r'  \draw[gray!25, very thin, step=2.5] (0,0) grid (22,22);',
+    r'  \draw[very thin] (0,0) rectangle (22,22);',
+    r'  \foreach \x in {0,5,...,20} {\draw[very thin] (\x,0) -- (\x,-0.25) node[below, inner sep=1.5pt] {\x};}',
+    r'  \foreach \y in {0,5,...,20} {\draw[very thin] (0,\y) -- (-0.25,\y) node[left, inner sep=1.5pt] {\y};}']
 
 
 def num(v):
@@ -118,11 +126,8 @@ def picture_a(cx, cy, r, lx, ly, frac):
     return '\n'.join([
         r'{\begin{tikzpicture}[x=0.21cm, y=0.21cm]',
         r'  % Cbuffer(Point(4 4), 2) at t_i and Cbuffer(Point(16 15), 5) at t_{i+1}, and the point',
-        r'  %% q = (14 3); the turning point is at the fraction %.4f of the interval' % frac,
-        r'  \draw[gray!25, very thin, step=2.5] (0,0) grid (22,22);',
-        r'  \draw[very thin] (0,0) rectangle (22,22);',
-        r'  \foreach \x in {0,5,...,20} {\draw[very thin] (\x,0) -- (\x,-0.25) node[below, inner sep=1.5pt] {\x};}',
-        r'  \foreach \y in {0,5,...,20} {\draw[very thin] (0,\y) -- (-0.25,\y) node[left, inner sep=1.5pt] {\y};}',
+        r'  %% q = (14 3); the turning point is at the fraction %.4f of the interval' % frac]
+        + FRAME + [
         r'  \begin{scope}[%s, thin]' % BLUECOL,
         r'  \draw %s -- %s %s -- %s;' % (pt(t1[0]), pt(t1[1]), pt(t2[0]), pt(t2[1])),
         r'  \filldraw[fill=%s, fill opacity=0.18] %s circle[radius=%s];' % (BLUECOL, pt(C1), num(R1)),
@@ -165,15 +170,11 @@ def picture_b(f_in, f_out):
     b_in, b_out = at(BLUE, f_in), at(BLUE, f_out)
     r_in, r_out = at(RED, f_in), at(RED, f_out)
     return '\n'.join([
-        r'{\begin{tikzpicture}[x=0.9cm, y=0.9cm]',
-        r'  % From 2001-01-01 to 2001-01-03, the blue buffer moves from (1 1) to (4 4) and the red one',
-        r'  % from (1 4) to (4 1), both of radius 0.5; they touch at 16:00 on January 1 and at 8:00 on',
-        r'  % January 2, the turning points',
-        r'  \draw[gray!25, very thin, step=1] (0,0) grid (5,5);',
-        r'  \draw[very thin] (0,0) rectangle (5,5);',
-        r'  \foreach \x in {0,...,5} {\draw[very thin] (\x,0) -- (\x,-0.25) node[below, inner sep=1.5pt] {\x};}',
-        r'  \foreach \y in {0,...,5} {\draw[very thin] (0,\y) -- (-0.25,\y) node[left, inner sep=1.5pt] {\y};}']
-        + buffer_b(BLUE, BLUECOL, f_in, f_out) + buffer_b(RED, 'red', f_in, f_out) + [
+        r'{\begin{tikzpicture}[x=0.21cm, y=0.21cm]',
+        r'  % From 2001-01-01 to 2001-01-03, the blue buffer moves from (4 4) to (16 16) and the red one',
+        r'  % from (4 16) to (16 4), both of radius 2; they touch at 16:00 on January 1 and at 8:00 on',
+        r'  % January 2, the turning points']
+        + FRAME + buffer_b(BLUE, BLUECOL, f_in, f_out) + buffer_b(RED, 'red', f_in, f_out) + [
         r'  \node[red, below, inner sep=2pt] at %s {$p_i$};' % pt(RED[0]),
         r'  \node[red, below, inner sep=2pt] at %s {$p_{i+1}$};' % pt(RED[1]),
         r'  \node[%s, below, inner sep=2pt] at %s {$q_i$};' % (BLUECOL, pt(BLUE[0])),
@@ -183,9 +184,15 @@ def picture_b(f_in, f_out):
         r'\end{tikzpicture}}'])
 
 
-def in_chapter(text, first):
-    """The tikzpicture of the chapter that begins with the line first"""
-    i = text.index(first + '\n')
+def in_chapter(text, head):
+    """The tikzpicture of the chapter that begins with the lines head (its
+    opening line, which both panels share, and the comment naming its
+    example), or None when the chapter holds none; no other script of the
+    companion reads the LaTeX of the chapter, the nearest being
+    #overlay_excerpt, which writes it"""
+    i = text.find(head + '\n')
+    if i < 0:
+        return None
     end = r'\end{tikzpicture}}'
     return text[i:text.index(end, i) + len(end)]
 
@@ -205,7 +212,7 @@ def main():
         text = open(sys.argv[10], encoding='utf-8').read()
         bad = 0
         for k, tikz in pictures.items():
-            same = in_chapter(text, tikz.split('\n', 1)[0]) == tikz
+            same = in_chapter(text, '\n'.join(tikz.split('\n', 2)[:2])) == tikz
             print('panel (%s) %s the one of %s' % (k, 'is' if same else 'differs from', sys.argv[10]))
             bad |= not same
         sys.exit(bad)

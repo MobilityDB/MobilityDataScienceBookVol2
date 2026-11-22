@@ -108,9 +108,9 @@ read -r CX CY R LX LY FRAC < <(PGTZ=UTC psql -d "$AIS_DB" -XAt -F ' ' -c "
 # The fractions of the interval at which the two buffers begin and stop
 # touching, the instants of their temporal distance whose value is 0
 read -r FIN FOUT < <(PGTZ=UTC psql -d "$AIS_DB" -XAt -F ' ' -c "
-  WITH d AS (SELECT tcbuffer '[Cbuffer(Point(1 4),0.5)@2001-01-01,
-    Cbuffer(Point(4 1),0.5)@2001-01-03]' <-> tcbuffer '[Cbuffer(Point(1 1),0.5)@2001-01-01,
-    Cbuffer(Point(4 4),0.5)@2001-01-03]' AS dist),
+  WITH d AS (SELECT tcbuffer '[Cbuffer(Point(4 16),2)@2001-01-01,
+    Cbuffer(Point(16 4),2)@2001-01-03]' <-> tcbuffer '[Cbuffer(Point(4 4),2)@2001-01-01,
+    Cbuffer(Point(16 16),2)@2001-01-03]' AS dist),
   z AS (SELECT extract(epoch FROM getTimestamp(i) - timestamptz '2001-01-01') / (2 * 86400) AS f
     FROM d, unnest(instants(dist)) i WHERE getValue(i) = 0)
   SELECT min(f), max(f) FROM z")
