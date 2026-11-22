@@ -178,8 +178,8 @@ def picture_b(f_in, f_out):
         r'  \node[red, below, inner sep=2pt] at %s {$p_{i+1}$};' % pt(RED[1]),
         r'  \node[%s, below, inner sep=2pt] at %s {$q_i$};' % (BLUECOL, pt(BLUE[0])),
         r'  \node[%s, below, inner sep=2pt] at %s {$q_{i+1}$};' % (BLUECOL, pt(BLUE[1])),
-        r'  \foreach \p in {%s, %s} {\node[below, inner sep=2pt] at \p {$t_{in}$};}' % (pt(b_in), pt(r_in)),
-        r'  \foreach \p in {%s, %s} {\node[below, inner sep=2pt] at \p {$t_{out}$};}' % (pt(b_out), pt(r_out)),
+        r'  \foreach \p in {%s, %s} {\node[below, inner sep=2pt] at \p {$t_\mathit{in}$};}' % (pt(b_in), pt(r_in)),
+        r'  \foreach \p in {%s, %s} {\node[below, inner sep=2pt] at \p {$t_\mathit{out}$};}' % (pt(b_out), pt(r_out)),
         r'\end{tikzpicture}}'])
 
 
