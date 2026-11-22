@@ -37,9 +37,11 @@
 # - storms_jobs.py writes the layers and the jobs of the three maps of the
 #   Atlantic storms from STORMS_DB (default: storms, built by storms/storms.sql
 #   with year=2024), and storms_qgis_map.py draws each job storms_<map>.json;
-# - fig_dist_tcbuffer_point.py draws the turning point of the temporal distance
-#   between a temporal circular buffer and a point, at the circle MobilityDB
-#   answers;
+# - fig_dist_tcbuffer.py writes the TikZ of the two panels of the turning points
+#   of the temporal distance of a temporal circular buffer, to a point and to
+#   another temporal circular buffer, at the instants MobilityDB answers, which
+#   the chapter holds inline; given the chapter as CHAPTER3 (its chapter3.tex),
+#   it checks that the chapter holds them unchanged;
 # - make_figures_soundings.sh draws the figures of the temporal point clouds and
 #   of the use case on seabed surveys, from the tables of
 #   ../soundings/load_soundings.sql in the same database, and the scale bars of
@@ -92,14 +94,26 @@ for m in ais_noise_region ais_encounter_sea_a ais_encounter_sea_b; do
     grep -E 'wrote|Error|Traceback' || true
 done
 
-# The circle at the turning point and the end of the shortest line, as the
-# database answers them
-read -r CX CY R LX LY < <(psql -d "$AIS_DB" -XAt -F ' ' -c "
+# The circle at the turning point, the end of the shortest line, and the
+# fraction of the interval at which the turning point lies, as the database
+# answers them
+read -r CX CY R LX LY FRAC < <(PGTZ=UTC psql -d "$AIS_DB" -XAt -F ' ' -c "
   WITH d AS (SELECT tcbuffer '[Cbuffer(Point(4 4),2)@2001-01-01,
     Cbuffer(Point(16 15),5)@2001-01-04]' AS cb, geometry 'Point(14 3)' AS q),
-  c AS (SELECT valueAtTimestamp(cb, getTimestamp(nearestApproachInstant(cb, q))) AS c,
-    ST_StartPoint(shortestLine(cb, q)) AS l FROM d)
-  SELECT ST_X(point(c)), ST_Y(point(c)), radius(c), ST_X(l), ST_Y(l) FROM c")
-python3 "$HERE/fig_dist_tcbuffer_point.py" "$CX" "$CY" "$R" "$LX" "$LY" \
-  "$OUT/dist_tcbuffer_point.pdf"
+  c AS (SELECT getTimestamp(nearestApproachInstant(cb, q)) AS t,
+    ST_StartPoint(shortestLine(cb, q)) AS l, cb FROM d),
+  v AS (SELECT valueAtTimestamp(cb, t) AS c, l, t FROM c)
+  SELECT ST_X(point(c)), ST_Y(point(c)), radius(c), ST_X(l), ST_Y(l),
+    extract(epoch FROM t - timestamptz '2001-01-01') / (3 * 86400) FROM v")
+# The fractions of the interval at which the two buffers begin and stop
+# touching, the instants of their temporal distance whose value is 0
+read -r FIN FOUT < <(PGTZ=UTC psql -d "$AIS_DB" -XAt -F ' ' -c "
+  WITH d AS (SELECT tcbuffer '[Cbuffer(Point(1 4),0.5)@2001-01-01,
+    Cbuffer(Point(4 1),0.5)@2001-01-03]' <-> tcbuffer '[Cbuffer(Point(1 1),0.5)@2001-01-01,
+    Cbuffer(Point(4 4),0.5)@2001-01-03]' AS dist),
+  z AS (SELECT extract(epoch FROM getTimestamp(i) - timestamptz '2001-01-01') / (2 * 86400) AS f
+    FROM d, unnest(instants(dist)) i WHERE getValue(i) = 0)
+  SELECT min(f), max(f) FROM z")
+python3 "$HERE/fig_dist_tcbuffer.py" "$OUT" "$CX" "$CY" "$R" "$LX" "$LY" "$FRAC" \
+  "$FIN" "$FOUT" ${CHAPTER3:+"$CHAPTER3"}
 AIS_DB="$AIS_DB" bash "$HERE/make_figures_soundings.sh"

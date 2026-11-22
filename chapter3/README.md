@@ -153,9 +153,12 @@ same job `storms_<map>.json` for each storm map, in longitude and latitude, and
 `storms_qgis_map.py` draws it; `pdf_simplify.py` of `chapter7/figures` simplifies the
 wind radii of `storms_tgeo.pdf` below half a pixel of the map as the book prints it,
 with the Python named by `PIKEPDF_PY` (with `pikepdf` and `shapely`). The script also
-draws with `fig_dist_tcbuffer_point.py` the turning point of the temporal
-distance between a temporal circular buffer and a point, at the circle
-MobilityDB answers. The databases are named by the PostgreSQL environment
+writes with `fig_dist_tcbuffer.py` the TikZ of the two panels of the turning points
+of the temporal distance of a temporal circular buffer, to a point and to another
+temporal circular buffer, at the instants MobilityDB answers
+(`dist_tcbuffer_a.tex`, `dist_tcbuffer_b.tex`); the chapter holds these pictures
+inline, and with `CHAPTER3` naming its `chapter3.tex` the script checks that the
+chapter holds them unchanged, failing otherwise. The databases are named by the PostgreSQL environment
 variables and by `AIS_DB`, `STORMS_DB` and `SOUNDINGS_DB` (default: `ais`, `storms` and
 `soundings`); `QGIS_PY` names the Python of QGIS, which is by default the QGIS
 3.40 installation of Windows called from WSL.
